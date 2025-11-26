@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/Example/">
+    <Project Path="Example.Video4Linux2/Example.Video4Linux2.csproj" />
+  </Folder>
+  <Folder Name="/Library/">
+    <Project Path="LinuxDotNet.Video4Linux2/LinuxDotNet.Video4Linux2.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
@@ -9,9 +15,5 @@
     <File Path="LICENSE" />
     <File Path="LinuxDotNet.sln.DotSettings" />
     <File Path="README.md" />
-  </Folder>
-  <Folder Name="/Library/">
-  </Folder>
-  <Folder Name="/Example/">
   </Folder>
 </Solution>
