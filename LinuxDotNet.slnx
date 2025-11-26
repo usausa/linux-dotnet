@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Analyzers.ruleset" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="LICENSE" />
+    <File Path="LinuxDotNet.sln.DotSettings" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Library/">
+  </Folder>
+  <Folder Name="/Example/">
+  </Folder>
+</Solution>
