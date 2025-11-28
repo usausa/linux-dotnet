@@ -5,7 +5,6 @@ using System.Text;
 
 internal static class VideoDeviceHelper
 {
-    // TODO fd
     public static IReadOnlyList<VideoFormat> GetSupportedFormats(string path)
     {
         var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
@@ -14,42 +13,47 @@ internal static class VideoDeviceHelper
             throw new FileNotFoundException($"Failed to open device. path=[{path}]");
         }
 
-        var formats = new List<VideoFormat>();
-
         try
         {
-            uint index = 0;
-            while (true)
-            {
-                var fmtDesc = new NativeMethods.v4l2_fmtdesc
-                {
-                    index = index,
-                    type = NativeMethods.V4L2_BUF_TYPE_VIDEO_CAPTURE
-                };
-                var fmtDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(fmtDesc));
-                Marshal.StructureToPtr(fmtDesc, fmtDescPtr, false);
-
-                if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_ENUM_FMT, fmtDescPtr) < 0)
-                {
-                    Marshal.FreeHGlobal(fmtDescPtr);
-                    break;
-                }
-
-                fmtDesc = Marshal.PtrToStructure<NativeMethods.v4l2_fmtdesc>(fmtDescPtr);
-                Marshal.FreeHGlobal(fmtDescPtr);
-
-                var format = new VideoFormat(
-                    fmtDesc.pixelformat,
-                    Encoding.ASCII.GetString(fmtDesc.description).TrimEnd('\0'),
-                    GetSupportedResolutions(fd, fmtDesc.pixelformat));
-
-                formats.Add(format);
-                index++;
-            }
+            return GetSupportedFormats(fd);
         }
         finally
         {
             _ = NativeMethods.close(fd);
+        }
+    }
+
+    public static IReadOnlyList<VideoFormat> GetSupportedFormats(int fd)
+    {
+        var formats = new List<VideoFormat>();
+
+        var index = 0u;
+        while (true)
+        {
+            var fmtDesc = new NativeMethods.v4l2_fmtdesc
+            {
+                index = index,
+                type = NativeMethods.V4L2_BUF_TYPE_VIDEO_CAPTURE
+            };
+            var fmtDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(fmtDesc));
+            Marshal.StructureToPtr(fmtDesc, fmtDescPtr, false);
+
+            if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_ENUM_FMT, fmtDescPtr) < 0)
+            {
+                Marshal.FreeHGlobal(fmtDescPtr);
+                break;
+            }
+
+            fmtDesc = Marshal.PtrToStructure<NativeMethods.v4l2_fmtdesc>(fmtDescPtr);
+            Marshal.FreeHGlobal(fmtDescPtr);
+
+            var format = new VideoFormat(
+                fmtDesc.pixelformat,
+                Encoding.ASCII.GetString(fmtDesc.description).TrimEnd('\0'),
+                GetSupportedResolutions(fd, fmtDesc.pixelformat));
+
+            formats.Add(format);
+            index++;
         }
 
         return formats.OrderBy(static x => x.PixelFormat).ToList();
@@ -58,8 +62,8 @@ internal static class VideoDeviceHelper
     private static List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
     {
         var resolutions = new List<Resolution>();
-        uint index = 0;
 
+        var index = 0u;
         while (true)
         {
             var frmSize = new NativeMethods.v4l2_frmsizeenum

@@ -42,9 +42,6 @@ public sealed class VideoFormat
 {
     public PixelFormat PixelFormat { get; }
 
-    // ReSharper disable once InconsistentNaming
-    public string FourCC { get; }
-
     public string Description { get; }
 
     public IReadOnlyList<Resolution> SupportedResolutions { get; }
@@ -52,12 +49,11 @@ public sealed class VideoFormat
     internal VideoFormat(uint pixelFormat, string description, IReadOnlyList<Resolution> supportedResolutions)
     {
         PixelFormat = (PixelFormat)pixelFormat;
-        FourCC = new string([(char)(pixelFormat & 0xFF), (char)((pixelFormat >> 8) & 0xFF), (char)((pixelFormat >> 16) & 0xFF), (char)((pixelFormat >> 24) & 0xFF)]);
         Description = description;
         SupportedResolutions = supportedResolutions;
     }
 
-    public override string ToString() => $"{Description} ({FourCC})";
+    public override string ToString() => $"{Description} ({PixelFormat})";
 }
 
 // TODO split info and control
@@ -123,7 +119,6 @@ public sealed class VideoInfo
 
             var isVideoCapture = (cap.capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
 
-            // TODO twice open
             var camera = new VideoInfo(
                 path,
                 Encoding.ASCII.GetString(cap.card).TrimEnd('\0'),
@@ -131,7 +126,7 @@ public sealed class VideoInfo
                 Encoding.ASCII.GetString(cap.bus_info).TrimEnd('\0'),
                 isVideoCapture,
                 cap.capabilities,
-                VideoDeviceHelper.GetSupportedFormats(path));
+                VideoDeviceHelper.GetSupportedFormats(fd));
 
             return camera;
         }

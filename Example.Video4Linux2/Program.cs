@@ -19,12 +19,10 @@ foreach (var device in VideoInfo.GetAllVideo())
     Console.WriteLine($"フォーマット数: {device.SupportedFormats.Count}");
     foreach (var format in device.SupportedFormats)
     {
-        Console.WriteLine($"  フォーマット: 0x{format.PixelFormat:X8} {format.FourCC}");
+        Console.WriteLine($"  フォーマット: {format.PixelFormat}");
         Console.WriteLine($"    詳細: {format.Description}");
-        Console.WriteLine("    解像度:");
-        Console.WriteLine(format.SupportedResolutions.Count > 0
-            ? $"      {String.Join(", ", format.SupportedResolutions)}"
-            : "      (解像度情報無し)");
+        var resolutions = format.SupportedResolutions.Count > 0 ? $"{String.Join(", ", format.SupportedResolutions)}" : "(解像度情報無し)";
+        Console.WriteLine($"    解像度: {resolutions}");
     }
 
     Console.WriteLine($"キャプチャ適性: {VideoInfoSelector.IsSuitableForCapture(device)}");
