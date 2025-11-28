@@ -10,7 +10,7 @@ for (var i = 0; i < 4; i++)
         break;
     }
 
-    var device = VideoDevice.GetCameraInfo(path);
+    var device = VideoInfo.GetCameraInfo(path);
 
     Console.WriteLine("==== Device ====");
 
@@ -30,23 +30,23 @@ for (var i = 0; i < 4; i++)
     foreach (var format in device.SupportedFormats)
     {
         Console.WriteLine($"  フォーマット: 0x{format.PixelFormat:X8} {format.FourCC}");
-        Console.WriteLine($"  詳細: {format.Description}");
-        Console.WriteLine("  解像度:");
+        Console.WriteLine($"    詳細: {format.Description}");
+        Console.WriteLine("    解像度:");
         if (format.SupportedResolutions.Count > 0)
         {
             foreach (var resolution in format.SupportedResolutions)
             {
-                Console.WriteLine($"    {resolution}");
+                Console.WriteLine($"      {resolution}");
             }
         }
         else
         {
-            Console.WriteLine("    (解像度情報無し)");
+            Console.WriteLine("      (解像度情報無し)");
         }
     }
 
-    Console.WriteLine($"キャプチャ適性: {CameraDeviceSelector.IsSuitableForCapture(device)}");
-    Console.WriteLine($"スコア: {CameraDeviceSelector.CalculateDeviceScore(device)}");
+    Console.WriteLine($"キャプチャ適性: {VideoInfoSelector.IsSuitableForCapture(device)}");
+    Console.WriteLine($"スコア: {VideoInfoSelector.CalculateDeviceScore(device)}");
 
     Console.WriteLine();
 }

@@ -28,6 +28,7 @@ public readonly struct Resolution : IEquatable<Resolution>
     public override string ToString() => $"{Width}x{Height}";
 }
 
+// TODO Format enum?
 public sealed class VideoFormat
 {
     public uint PixelFormat { get; }
@@ -51,7 +52,7 @@ public sealed class VideoFormat
 }
 
 // TODO split info and control
-public sealed class VideoDevice
+public sealed class VideoInfo
 {
     public string Path { get; }
 
@@ -75,7 +76,7 @@ public sealed class VideoDevice
 
     public bool IsStreaming => (RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
 
-    internal VideoDevice(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
+    internal VideoInfo(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
     {
         Path = path;
         Name = name;
@@ -88,7 +89,7 @@ public sealed class VideoDevice
 
     public override string ToString() => $"{Name} ({Path})";
 
-    public static VideoDevice GetCameraInfo(string path)
+    public static VideoInfo GetCameraInfo(string path)
     {
         var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
         if (fd < 0)
@@ -105,7 +106,7 @@ public sealed class VideoDevice
             if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_QUERYCAP, capPtr) < 0)
             {
                 Marshal.FreeHGlobal(capPtr);
-                return new VideoDevice(path, "Unknown", string.Empty, string.Empty, false, 0, []);
+                return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
             }
 
             cap = Marshal.PtrToStructure<NativeMethods.v4l2_capability>(capPtr);
@@ -114,14 +115,14 @@ public sealed class VideoDevice
             var isVideoCapture = (cap.capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
 
             // TODO twice open
-            var camera = new VideoDevice(
+            var camera = new VideoInfo(
                 path,
                 Encoding.ASCII.GetString(cap.card).TrimEnd('\0'),
                 Encoding.ASCII.GetString(cap.driver).TrimEnd('\0'),
                 Encoding.ASCII.GetString(cap.bus_info).TrimEnd('\0'),
                 isVideoCapture,
                 cap.capabilities,
-                CameraDeviceHelper.GetSupportedFormats(path));
+                VideoDeviceHelper.GetSupportedFormats(path));
 
             return camera;
         }

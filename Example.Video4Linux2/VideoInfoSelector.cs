@@ -2,23 +2,23 @@ namespace Example.Video4Linux2;
 
 using LinuxDotNet.Video4Linux2;
 
-internal static class CameraDeviceSelector
+internal static class VideoInfoSelector
 {
     // TODO
 
-    public static bool IsSuitableForCapture(VideoDevice device)
+    public static bool IsSuitableForCapture(VideoInfo info)
     {
-        if (!device.IsVideoCapture)
+        if (!info.IsVideoCapture)
         {
             return false;
         }
 
-        if (device.SupportedFormats.Count == 0)
+        if (info.SupportedFormats.Count == 0)
         {
             return false;
         }
 
-        var hasResolutions = device.SupportedFormats.Any(static x => x.SupportedResolutions.Count > 0);
+        var hasResolutions = info.SupportedFormats.Any(static x => x.SupportedResolutions.Count > 0);
         if (!hasResolutions)
         {
             return false;
@@ -27,41 +27,41 @@ internal static class CameraDeviceSelector
         return true;
     }
 
-    public static int CalculateDeviceScore(VideoDevice device)
+    public static int CalculateDeviceScore(VideoInfo info)
     {
         // Ignore non-video-capture devices
-        if (!device.IsVideoCapture)
+        if (!info.IsVideoCapture)
         {
             return -500;
         }
 
         // Basic score calculation
-        var score = device.SupportedFormats.Count * 100;
+        var score = info.SupportedFormats.Count * 100;
 
         // Device number: lower is better
-        var deviceNumber = device.Path.Replace("/dev/video", string.Empty, StringComparison.Ordinal);
+        var deviceNumber = info.Path.Replace("/dev/video", string.Empty, StringComparison.Ordinal);
         if (int.TryParse(deviceNumber, out var number))
         {
             score += 100 - number;
         }
 
         // Has streaming capability
-        if (device.IsStreaming)
+        if (info.IsStreaming)
         {
             score += 50;
         }
 
         // Higher score for more supported resolutions
-        score += device.SupportedFormats.Sum(static x => x.SupportedResolutions.Count) * 10;
+        score += info.SupportedFormats.Sum(static x => x.SupportedResolutions.Count) * 10;
 
         // Has YUYV format support
-        if (device.SupportedFormats.Any(static x => x.FourCC == "YUYV"))
+        if (info.SupportedFormats.Any(static x => x.FourCC == "YUYV"))
         {
             score += 30;
         }
 
         // Has MJPEG format support
-        if (device.SupportedFormats.Any(static x => x.FourCC == "MJPG"))
+        if (info.SupportedFormats.Any(static x => x.FourCC == "MJPG"))
         {
             score += 20;
         }

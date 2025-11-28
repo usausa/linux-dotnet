@@ -3,9 +3,9 @@ namespace LinuxDotNet.Video4Linux2;
 using System.Runtime.InteropServices;
 using System.Text;
 
-// TODO internal
-public static class CameraDeviceHelper
+internal static class VideoDeviceHelper
 {
+    // TODO fd
     public static IReadOnlyList<VideoFormat> GetSupportedFormats(string path)
     {
         var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
