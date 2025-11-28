@@ -6,13 +6,8 @@ internal static class CameraDeviceSelector
 {
     // TODO
 
-    public static bool IsSuitableForCapture(CameraDevice device)
+    public static bool IsSuitableForCapture(VideoDevice device)
     {
-        if (device.IsMetadata)
-        {
-            return false;
-        }
-
         if (!device.IsVideoCapture)
         {
             return false;
@@ -32,14 +27,8 @@ internal static class CameraDeviceSelector
         return true;
     }
 
-    public static int CalculateDeviceScore(CameraDevice device)
+    public static int CalculateDeviceScore(VideoDevice device)
     {
-        // Ignore metadata devices
-        if (device.IsMetadata)
-        {
-            return -1000;
-        }
-
         // Ignore non-video-capture devices
         if (!device.IsVideoCapture)
         {
@@ -66,13 +55,13 @@ internal static class CameraDeviceSelector
         score += device.SupportedFormats.Sum(static x => x.SupportedResolutions.Count) * 10;
 
         // Has YUYV format support
-        if (device.SupportedFormats.Any(static x => x.PixelFormat == PixelFormatType.Yuyv))
+        if (device.SupportedFormats.Any(static x => x.FourCC == "YUYV"))
         {
             score += 30;
         }
 
         // Has MJPEG format support
-        if (device.SupportedFormats.Any(static x => x.PixelFormat == PixelFormatType.MotionJpeg))
+        if (device.SupportedFormats.Any(static x => x.FourCC == "MJPG"))
         {
             score += 20;
         }

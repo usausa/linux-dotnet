@@ -129,7 +129,7 @@ public static class CameraDeviceHelper
             return new Resolution(640, 480);
         }
 
-        var targetFormat = formats.FirstOrDefault(f => f.RawPixelFormat == pixelFormat) ?? formats[0];
+        var targetFormat = formats.FirstOrDefault(f => f.PixelFormat == pixelFormat) ?? formats[0];
 
         if (targetFormat.SupportedResolutions.Count == 0)
         {

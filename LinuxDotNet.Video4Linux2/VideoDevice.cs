@@ -28,37 +28,22 @@ public readonly struct Resolution : IEquatable<Resolution>
     public override string ToString() => $"{Width}x{Height}";
 }
 
-public enum PixelFormatType
-{
-    Unknown = 0,
-    Yuyv,
-    MotionJpeg
-}
-
 public sealed class VideoFormat
 {
-    public PixelFormatType PixelFormat { get; }
-
-    public uint RawPixelFormat { get; }
-
-    public string Description { get; }
+    public uint PixelFormat { get; }
 
     // ReSharper disable once InconsistentNaming
     public string FourCC { get; }
+
+    public string Description { get; }
 
     public IReadOnlyList<Resolution> SupportedResolutions { get; }
 
     internal VideoFormat(uint pixelFormat, string description, IReadOnlyList<Resolution> supportedResolutions)
     {
-        PixelFormat = pixelFormat switch
-        {
-            0x56595559 => PixelFormatType.Yuyv,
-            0x47504A4D => PixelFormatType.MotionJpeg,
-            _ => PixelFormatType.Unknown
-        };
-        RawPixelFormat = pixelFormat;
-        Description = description;
+        PixelFormat = pixelFormat;
         FourCC = new string([(char)(pixelFormat & 0xFF), (char)((pixelFormat >> 8) & 0xFF), (char)((pixelFormat >> 16) & 0xFF), (char)((pixelFormat >> 24) & 0xFF)]);
+        Description = description;
         SupportedResolutions = supportedResolutions;
     }
 
@@ -66,7 +51,7 @@ public sealed class VideoFormat
 }
 
 // TODO split info and control
-public sealed class CameraDevice
+public sealed class VideoDevice
 {
     public string Path { get; }
 
@@ -90,7 +75,7 @@ public sealed class CameraDevice
 
     public bool IsStreaming => (RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
 
-    internal CameraDevice(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
+    internal VideoDevice(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
     {
         Path = path;
         Name = name;
@@ -103,7 +88,7 @@ public sealed class CameraDevice
 
     public override string ToString() => $"{Name} ({Path})";
 
-    public static CameraDevice GetCameraInfo(string path)
+    public static VideoDevice GetCameraInfo(string path)
     {
         var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
         if (fd < 0)
@@ -120,24 +105,23 @@ public sealed class CameraDevice
             if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_QUERYCAP, capPtr) < 0)
             {
                 Marshal.FreeHGlobal(capPtr);
-                return new CameraDevice(path, "Unknown", string.Empty, string.Empty, false, 0, []);
+                return new VideoDevice(path, "Unknown", string.Empty, string.Empty, false, 0, []);
             }
 
             cap = Marshal.PtrToStructure<NativeMethods.v4l2_capability>(capPtr);
             Marshal.FreeHGlobal(capPtr);
 
             var isVideoCapture = (cap.capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
-            var isMetadata = (cap.capabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
 
             // TODO twice open
-            var camera = new CameraDevice(
+            var camera = new VideoDevice(
                 path,
                 Encoding.ASCII.GetString(cap.card).TrimEnd('\0'),
                 Encoding.ASCII.GetString(cap.driver).TrimEnd('\0'),
                 Encoding.ASCII.GetString(cap.bus_info).TrimEnd('\0'),
                 isVideoCapture,
                 cap.capabilities,
-                isVideoCapture && !isMetadata ? CameraDeviceHelper.GetSupportedFormats(path) : []);
+                CameraDeviceHelper.GetSupportedFormats(path));
 
             return camera;
         }
