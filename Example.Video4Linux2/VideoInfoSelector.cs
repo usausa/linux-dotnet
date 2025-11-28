@@ -55,13 +55,13 @@ internal static class VideoInfoSelector
         score += info.SupportedFormats.Sum(static x => x.SupportedResolutions.Count) * 10;
 
         // Has YUYV format support
-        if (info.SupportedFormats.Any(static x => x.FourCC == "YUYV"))
+        if (info.SupportedFormats.Any(static x => x.PixelFormat == PixelFormat.YUYV))
         {
             score += 30;
         }
 
         // Has MJPEG format support
-        if (info.SupportedFormats.Any(static x => x.FourCC == "MJPG"))
+        if (info.SupportedFormats.Any(static x => x.PixelFormat == PixelFormat.MJPG))
         {
             score += 20;
         }

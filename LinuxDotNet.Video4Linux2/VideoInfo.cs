@@ -28,10 +28,19 @@ public readonly struct Resolution : IEquatable<Resolution>
     public override string ToString() => $"{Width}x{Height}";
 }
 
-// TODO Format enum?
+// ReSharper disable InconsistentNaming
+#pragma warning disable CA1008
+public enum PixelFormat
+{
+    YUYV = 0x56595559, // 'YUYV'
+    MJPG = 0x47504a4d  // 'MJPG'
+}
+#pragma warning restore CA1008
+// ReSharper restore InconsistentNaming
+
 public sealed class VideoFormat
 {
-    public uint PixelFormat { get; }
+    public PixelFormat PixelFormat { get; }
 
     // ReSharper disable once InconsistentNaming
     public string FourCC { get; }
@@ -42,7 +51,7 @@ public sealed class VideoFormat
 
     internal VideoFormat(uint pixelFormat, string description, IReadOnlyList<Resolution> supportedResolutions)
     {
-        PixelFormat = pixelFormat;
+        PixelFormat = (PixelFormat)pixelFormat;
         FourCC = new string([(char)(pixelFormat & 0xFF), (char)((pixelFormat >> 8) & 0xFF), (char)((pixelFormat >> 16) & 0xFF), (char)((pixelFormat >> 24) & 0xFF)]);
         Description = description;
         SupportedResolutions = supportedResolutions;
