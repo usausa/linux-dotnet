@@ -39,7 +39,7 @@ internal static class VideoInfoSelector
         var score = info.SupportedFormats.Count * 100;
 
         // Device number: lower is better
-        var deviceNumber = info.Path.Replace("/dev/video", string.Empty, StringComparison.Ordinal);
+        var deviceNumber = info.Device.Replace("/dev/video", string.Empty, StringComparison.Ordinal);
         if (int.TryParse(deviceNumber, out var number))
         {
             score += 100 - number;
