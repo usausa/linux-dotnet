@@ -1,12 +1,15 @@
 namespace LinuxDotNet.Video4Linux2;
 
+using System.Runtime.InteropServices;
+using System.Text;
+
 public readonly struct Resolution : IEquatable<Resolution>
 {
     public int Width { get; }
 
     public int Height { get; }
 
-    public Resolution(int width, int height)
+    internal Resolution(int width, int height)
     {
         Width = width;
         Height = height;
@@ -25,9 +28,18 @@ public readonly struct Resolution : IEquatable<Resolution>
     public override string ToString() => $"{Width}x{Height}";
 }
 
+public enum PixelFormatType
+{
+    Unknown = 0,
+    Yuyv,
+    MotionJpeg
+}
+
 public sealed class VideoFormat
 {
-    public uint PixelFormat { get; }
+    public PixelFormatType PixelFormat { get; }
+
+    public uint RawPixelFormat { get; }
 
     public string Description { get; }
 
@@ -36,9 +48,15 @@ public sealed class VideoFormat
 
     public IReadOnlyList<Resolution> SupportedResolutions { get; }
 
-    public VideoFormat(uint pixelFormat, string description, IReadOnlyList<Resolution> supportedResolutions)
+    internal VideoFormat(uint pixelFormat, string description, IReadOnlyList<Resolution> supportedResolutions)
     {
-        PixelFormat = pixelFormat;
+        PixelFormat = pixelFormat switch
+        {
+            0x56595559 => PixelFormatType.Yuyv,
+            0x47504A4D => PixelFormatType.MotionJpeg,
+            _ => PixelFormatType.Unknown
+        };
+        RawPixelFormat = pixelFormat;
         Description = description;
         FourCC = new string([(char)(pixelFormat & 0xFF), (char)((pixelFormat >> 8) & 0xFF), (char)((pixelFormat >> 16) & 0xFF), (char)((pixelFormat >> 24) & 0xFF)]);
         SupportedResolutions = supportedResolutions;
@@ -49,7 +67,7 @@ public sealed class VideoFormat
 
 public sealed class CameraDevice
 {
-    public string DevicePath { get; }
+    public string Path { get; }
 
     public string Name { get; }
 
@@ -59,26 +77,72 @@ public sealed class CameraDevice
 
     public bool IsAvailable { get; }
 
-    public uint Capabilities { get; }
+    public uint RawCapabilities { get; }
 
     public IReadOnlyList<VideoFormat> SupportedFormats { get; }
 
-    public bool IsVideoCapture => (Capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
+    public bool IsVideoCapture => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
 
-    public bool IsMetadata => (Capabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
+    public bool IsOutputDevice => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
 
-    public bool IsOutputDevice => (Capabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
+    public bool IsMetadata => (RawCapabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
 
-    public CameraDevice(string devicePath, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
+    public bool IsStreaming => (RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
+
+    internal CameraDevice(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
     {
-        DevicePath = devicePath;
+        Path = path;
         Name = name;
         Driver = driver;
         BusInfo = busInfo;
         IsAvailable = isAvailable;
-        Capabilities = capabilities;
+        RawCapabilities = capabilities;
         SupportedFormats = supportedFormats;
     }
 
-    public override string ToString() => $"{Name} ({DevicePath})";
+    public override string ToString() => $"{Name} ({Path})";
+
+    public static CameraDevice GetCameraInfo(string path)
+    {
+        var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
+        if (fd < 0)
+        {
+            throw new FileNotFoundException($"Failed to open device. path=[{path}]");
+        }
+
+        try
+        {
+            var cap = default(NativeMethods.v4l2_capability);
+            var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
+            Marshal.StructureToPtr(cap, capPtr, false);
+
+            if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_QUERYCAP, capPtr) < 0)
+            {
+                Marshal.FreeHGlobal(capPtr);
+                return new CameraDevice(path, "Unknown", string.Empty, string.Empty, false, 0, []);
+            }
+
+            cap = Marshal.PtrToStructure<NativeMethods.v4l2_capability>(capPtr);
+            Marshal.FreeHGlobal(capPtr);
+
+            var isVideoCapture = (cap.capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
+            var isMetadata = (cap.capabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
+
+            // TODO twice open
+            var camera = new CameraDevice(
+                path,
+                Encoding.ASCII.GetString(cap.card).TrimEnd('\0'),
+                Encoding.ASCII.GetString(cap.driver).TrimEnd('\0'),
+                Encoding.ASCII.GetString(cap.bus_info).TrimEnd('\0'),
+                isVideoCapture,
+                cap.capabilities,
+                isVideoCapture && !isMetadata ? CameraDeviceHelper.GetSupportedFormats(path) : []);
+
+            return camera;
+        }
+        finally
+        {
+            _ = NativeMethods.close(fd);
+        }
+    }
 }
