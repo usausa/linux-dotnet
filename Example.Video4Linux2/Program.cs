@@ -2,19 +2,9 @@ using Example.Video4Linux2;
 
 using LinuxDotNet.Video4Linux2;
 
-for (var i = 0; i < 4; i++)
+foreach (var device in VideoInfo.GetAllVideo())
 {
-    var path = $"/dev/video{i}";
-    if (!File.Exists(path))
-    {
-        break;
-    }
-
-    var device = VideoInfo.GetCameraInfo(path);
-
-    Console.WriteLine("==== Device ====");
-
-    Console.WriteLine($"デバイス: {device.Path}");
+    Console.WriteLine($"デバイス: {device.Device}");
     Console.WriteLine($"利用可能: {device.IsAvailable}");
     Console.WriteLine($"名前: {device.Name}");
     Console.WriteLine($"ドライバー: {device.Driver}");
@@ -32,17 +22,9 @@ for (var i = 0; i < 4; i++)
         Console.WriteLine($"  フォーマット: 0x{format.PixelFormat:X8} {format.FourCC}");
         Console.WriteLine($"    詳細: {format.Description}");
         Console.WriteLine("    解像度:");
-        if (format.SupportedResolutions.Count > 0)
-        {
-            foreach (var resolution in format.SupportedResolutions)
-            {
-                Console.WriteLine($"      {resolution}");
-            }
-        }
-        else
-        {
-            Console.WriteLine("      (解像度情報無し)");
-        }
+        Console.WriteLine(format.SupportedResolutions.Count > 0
+            ? $"      {String.Join(", ", format.SupportedResolutions)}"
+            : "      (解像度情報無し)");
     }
 
     Console.WriteLine($"キャプチャ適性: {VideoInfoSelector.IsSuitableForCapture(device)}");

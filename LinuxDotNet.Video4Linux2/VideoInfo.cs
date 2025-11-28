@@ -54,7 +54,7 @@ public sealed class VideoFormat
 // TODO split info and control
 public sealed class VideoInfo
 {
-    public string Path { get; }
+    public string Device { get; }
 
     public string Name { get; }
 
@@ -76,9 +76,9 @@ public sealed class VideoInfo
 
     public bool IsStreaming => (RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
 
-    internal VideoInfo(string path, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
+    internal VideoInfo(string device, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
     {
-        Path = path;
+        Device = device;
         Name = name;
         Driver = driver;
         BusInfo = busInfo;
@@ -87,9 +87,9 @@ public sealed class VideoInfo
         SupportedFormats = supportedFormats;
     }
 
-    public override string ToString() => $"{Name} ({Path})";
+    public override string ToString() => $"{Name} ({Device})";
 
-    public static VideoInfo GetCameraInfo(string path)
+    public static VideoInfo GetVideoInfo(string path)
     {
         var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
         if (fd < 0)
@@ -129,6 +129,21 @@ public sealed class VideoInfo
         finally
         {
             _ = NativeMethods.close(fd);
+        }
+    }
+
+    public static IEnumerable<VideoInfo> GetAllVideo()
+    {
+        const string sysfsPath = "/sys/class/video4linux";
+
+        if (!Directory.Exists(sysfsPath))
+        {
+            yield break;
+        }
+
+        foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => x))
+        {
+            yield return GetVideoInfo($"/dev/{name}");
         }
     }
 }
