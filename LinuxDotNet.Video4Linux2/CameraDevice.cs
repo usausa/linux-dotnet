@@ -65,6 +65,7 @@ public sealed class VideoFormat
     public override string ToString() => $"{Description} ({FourCC})";
 }
 
+// TODO split info and control
 public sealed class CameraDevice
 {
     public string Path { get; }
@@ -83,7 +84,7 @@ public sealed class CameraDevice
 
     public bool IsVideoCapture => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
 
-    public bool IsOutputDevice => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
+    public bool IsVideoOutput => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
 
     public bool IsMetadata => (RawCapabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
 
