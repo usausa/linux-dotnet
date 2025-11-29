@@ -75,14 +75,6 @@ public sealed class VideoInfo
 
     public IReadOnlyList<VideoFormat> SupportedFormats { get; }
 
-    public bool IsVideoCapture => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
-
-    public bool IsVideoOutput => (RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
-
-    public bool IsMetadata => (RawCapabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
-
-    public bool IsStreaming => (RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
-
     internal VideoInfo(string device, string name, string driver, string busInfo, bool isAvailable, uint capabilities, IReadOnlyList<VideoFormat> supportedFormats)
     {
         Device = device;
@@ -151,5 +143,20 @@ public sealed class VideoInfo
         {
             yield return GetVideoInfo($"/dev/{name}");
         }
+    }
+}
+
+[SupportedOSPlatform("linux")]
+public static class Extensions
+{
+    extension(VideoInfo info)
+    {
+        public bool IsVideoCapture => (info.RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
+
+        public bool IsVideoOutput => (info.RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
+
+        public bool IsMetadata => (info.RawCapabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
+
+        public bool IsStreaming => (info.RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
     }
 }
