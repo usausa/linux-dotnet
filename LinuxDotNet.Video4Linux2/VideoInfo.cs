@@ -1,6 +1,7 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 public readonly struct Resolution : IEquatable<Resolution>
@@ -57,6 +58,7 @@ public sealed class VideoFormat
 }
 
 // TODO split info and control
+[SupportedOSPlatform("linux")]
 public sealed class VideoInfo
 {
     public string Device { get; }

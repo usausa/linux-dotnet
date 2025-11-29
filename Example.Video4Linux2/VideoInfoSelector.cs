@@ -1,3 +1,4 @@
+#pragma warning disable CA1416
 namespace Example.Video4Linux2;
 
 using LinuxDotNet.Video4Linux2;
