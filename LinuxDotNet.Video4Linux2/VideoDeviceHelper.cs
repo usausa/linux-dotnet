@@ -3,11 +3,13 @@ namespace LinuxDotNet.Video4Linux2;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using static LinuxDotNet.Video4Linux2.NativeMethods;
+
 internal static class VideoDeviceHelper
 {
     public static IReadOnlyList<VideoFormat> GetSupportedFormats(string path)
     {
-        var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
+        var fd = open(path, O_RDWR);
         if (fd < 0)
         {
             throw new FileNotFoundException($"Failed to open device. path=[{path}]");
@@ -19,7 +21,7 @@ internal static class VideoDeviceHelper
         }
         finally
         {
-            _ = NativeMethods.close(fd);
+            _ = close(fd);
         }
     }
 
@@ -30,21 +32,21 @@ internal static class VideoDeviceHelper
         var index = 0u;
         while (true)
         {
-            var fmtDesc = new NativeMethods.v4l2_fmtdesc
+            var fmtDesc = new v4l2_fmtdesc
             {
                 index = index,
-                type = NativeMethods.V4L2_BUF_TYPE_VIDEO_CAPTURE
+                type = V4L2_BUF_TYPE_VIDEO_CAPTURE
             };
             var fmtDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(fmtDesc));
             Marshal.StructureToPtr(fmtDesc, fmtDescPtr, false);
 
-            if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_ENUM_FMT, fmtDescPtr) < 0)
+            if (ioctl(fd, VIDIOC_ENUM_FMT, fmtDescPtr) < 0)
             {
                 Marshal.FreeHGlobal(fmtDescPtr);
                 break;
             }
 
-            fmtDesc = Marshal.PtrToStructure<NativeMethods.v4l2_fmtdesc>(fmtDescPtr);
+            fmtDesc = Marshal.PtrToStructure<v4l2_fmtdesc>(fmtDescPtr);
             Marshal.FreeHGlobal(fmtDescPtr);
 
             var format = new VideoFormat(
@@ -66,7 +68,7 @@ internal static class VideoDeviceHelper
         var index = 0u;
         while (true)
         {
-            var frmSize = new NativeMethods.v4l2_frmsizeenum
+            var frmSize = new v4l2_frmsizeenum
             {
                 index = index,
                 pixel_format = pixelFormat
@@ -74,20 +76,20 @@ internal static class VideoDeviceHelper
             var frmSizePtr = Marshal.AllocHGlobal(Marshal.SizeOf(frmSize));
             Marshal.StructureToPtr(frmSize, frmSizePtr, false);
 
-            if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_ENUM_FRAMESIZES, frmSizePtr) < 0)
+            if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, frmSizePtr) < 0)
             {
                 Marshal.FreeHGlobal(frmSizePtr);
                 break;
             }
 
-            frmSize = Marshal.PtrToStructure<NativeMethods.v4l2_frmsizeenum>(frmSizePtr);
+            frmSize = Marshal.PtrToStructure<v4l2_frmsizeenum>(frmSizePtr);
             Marshal.FreeHGlobal(frmSizePtr);
 
-            if (frmSize.type == NativeMethods.V4L2_FRMSIZE_TYPE_DISCRETE)
+            if (frmSize.type == V4L2_FRMSIZE_TYPE_DISCRETE)
             {
                 resolutions.Add(new Resolution((int)frmSize.size.discrete.width, (int)frmSize.size.discrete.height));
             }
-            else if ((frmSize.type == NativeMethods.V4L2_FRMSIZE_TYPE_STEPWISE) || (frmSize.type == NativeMethods.V4L2_FRMSIZE_TYPE_CONTINUOUS))
+            else if ((frmSize.type == V4L2_FRMSIZE_TYPE_STEPWISE) || (frmSize.type == V4L2_FRMSIZE_TYPE_CONTINUOUS))
             {
                 AddCommonResolutions(resolutions, frmSize.size.stepwise);
                 break;
@@ -99,7 +101,7 @@ internal static class VideoDeviceHelper
         return resolutions.OrderBy(static x => x.Width).ThenBy(static x => x.Height).ToList();
     }
 
-    private static void AddCommonResolutions(List<Resolution> resolutions, NativeMethods.v4l2_frmsize_stepwise stepwise)
+    private static void AddCommonResolutions(List<Resolution> resolutions, v4l2_frmsize_stepwise stepwise)
     {
         // ReSharper disable CommentTypo
         var commonResolutions = new[]
@@ -126,7 +128,7 @@ internal static class VideoDeviceHelper
         }
     }
 
-    //private static Resolution SelectBestResolution(IReadOnlyList<VideoFormat> formats, uint pixelFormat = NativeMethods.V4L2_PIX_FMT_YUYV)
+    //private static Resolution SelectBestResolution(IReadOnlyList<VideoFormat> formats, uint pixelFormat = V4L2_PIX_FMT_YUYV)
     //{
     //    if (formats.Count == 0)
     //    {

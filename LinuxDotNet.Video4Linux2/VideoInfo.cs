@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
+using static LinuxDotNet.Video4Linux2.NativeMethods;
+
 public readonly struct Resolution : IEquatable<Resolution>
 {
     public int Width { get; }
@@ -90,7 +92,7 @@ public sealed class VideoInfo
 
     public static VideoInfo GetVideoInfo(string path)
     {
-        var fd = NativeMethods.open(path, NativeMethods.O_RDWR);
+        var fd = open(path, O_RDWR);
         if (fd < 0)
         {
             throw new FileNotFoundException($"Failed to open device. path=[{path}]");
@@ -98,20 +100,20 @@ public sealed class VideoInfo
 
         try
         {
-            var cap = default(NativeMethods.v4l2_capability);
+            var cap = default(v4l2_capability);
             var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
             Marshal.StructureToPtr(cap, capPtr, false);
 
-            if (NativeMethods.ioctl(fd, NativeMethods.VIDIOC_QUERYCAP, capPtr) < 0)
+            if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
             {
                 Marshal.FreeHGlobal(capPtr);
                 return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
             }
 
-            cap = Marshal.PtrToStructure<NativeMethods.v4l2_capability>(capPtr);
+            cap = Marshal.PtrToStructure<v4l2_capability>(capPtr);
             Marshal.FreeHGlobal(capPtr);
 
-            var isVideoCapture = (cap.capabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
+            var isVideoCapture = (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0;
 
             var camera = new VideoInfo(
                 path,
@@ -126,7 +128,7 @@ public sealed class VideoInfo
         }
         finally
         {
-            _ = NativeMethods.close(fd);
+            _ = close(fd);
         }
     }
 
@@ -151,12 +153,12 @@ public static class Extensions
 {
     extension(VideoInfo info)
     {
-        public bool IsVideoCapture => (info.RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_CAPTURE) != 0;
+        public bool IsVideoCapture => (info.RawCapabilities & V4L2_CAP_VIDEO_CAPTURE) != 0;
 
-        public bool IsVideoOutput => (info.RawCapabilities & NativeMethods.V4L2_CAP_VIDEO_OUTPUT) != 0;
+        public bool IsVideoOutput => (info.RawCapabilities & V4L2_CAP_VIDEO_OUTPUT) != 0;
 
-        public bool IsMetadata => (info.RawCapabilities & NativeMethods.V4L2_CAP_META_CAPTURE) != 0;
+        public bool IsMetadata => (info.RawCapabilities & V4L2_CAP_META_CAPTURE) != 0;
 
-        public bool IsStreaming => (info.RawCapabilities & NativeMethods.V4L2_CAP_STREAMING) != 0;
+        public bool IsStreaming => (info.RawCapabilities & V4L2_CAP_STREAMING) != 0;
     }
 }
