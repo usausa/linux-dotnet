@@ -114,7 +114,7 @@ public sealed class GameController : IDisposable
 
     public bool GetButtonPressed(byte address) => Volatile.Read(ref buttons[address]);
 
-    public short GetAxis(byte address) => Volatile.Read(ref axis[address]);
+    public short GetAxisValue(byte address) => Volatile.Read(ref axis[address]);
 
     private void UpdateConnectionState(bool value)
     {
@@ -244,12 +244,12 @@ public sealed class GameController : IDisposable
                 if (IsButton(message))
                 {
                     buttonInitialized[address] = true;
-                    buttons[address] = false;
+                    buttons[address] = IsButtonPressed(message);
                 }
                 if (IsAxis(message))
                 {
                     axisInitialized[address] = true;
-                    axis[address] = 0;
+                    axis[address] = GetAxisValue(message);
                 }
             }
             else
