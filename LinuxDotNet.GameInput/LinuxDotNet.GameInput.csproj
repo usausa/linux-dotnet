@@ -9,7 +9,7 @@
     <PackageId>LinuxDotNet.GameInput</PackageId>
     <Title>LinuxDotNet.GameInput</Title>
     <Description>LinuxDotNet.GameInput.</Description>
-    <PackageTags>linux</PackageTags>
+    <PackageTags>linux gamepad</PackageTags>
   </PropertyGroup>
 
 </Project>

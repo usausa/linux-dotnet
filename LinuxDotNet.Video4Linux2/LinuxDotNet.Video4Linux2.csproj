@@ -9,7 +9,7 @@
     <PackageId>LinuxDotNet.Video4Linux2</PackageId>
     <Title>LinuxDotNet.Video4Linux2</Title>
     <Description>LinuxDotNet.Video4Linux2.</Description>
-    <PackageTags>linux</PackageTags>
+    <PackageTags>linux video camera</PackageTags>
   </PropertyGroup>
 
 </Project>
