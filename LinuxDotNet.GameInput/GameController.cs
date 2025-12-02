@@ -227,7 +227,7 @@ public sealed class GameController : IDisposable
                 events = POLLIN
             };
             var result = poll(ref pollFd, 1, DevicePollTimeout);
-            if (result <= 0 || (pollFd.revents & POLLIN) == 0)
+            if ((result <= 0) || ((pollFd.revents & POLLIN) == 0))
             {
                 continue;
             }
