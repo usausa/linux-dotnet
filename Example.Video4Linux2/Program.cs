@@ -5,29 +5,29 @@ using LinuxDotNet.Video4Linux2;
 
 foreach (var device in VideoInfo.GetAllVideo())
 {
-    Console.WriteLine($"デバイス: {device.Device}");
-    Console.WriteLine($"利用可能: {device.IsAvailable}");
-    Console.WriteLine($"名前: {device.Name}");
-    Console.WriteLine($"ドライバー: {device.Driver}");
-    Console.WriteLine($"バス: {device.BusInfo}");
+    Console.WriteLine($"Device: {device.Device}");
+    Console.WriteLine($"Available: {device.IsAvailable}");
+    Console.WriteLine($"Name: {device.Name}");
+    Console.WriteLine($"Driver: {device.Driver}");
+    Console.WriteLine($"Bus: {device.BusInfo}");
 
     Console.WriteLine($"Capabilities: 0x{device.RawCapabilities:X8}");
-    Console.WriteLine($"  キャプチャ: {device.IsVideoCapture}");
-    Console.WriteLine($"  出力: {device.IsVideoOutput}");
-    Console.WriteLine($"  メタデータ: {device.IsMetadata}");
-    Console.WriteLine($"  ストリーミング: {device.IsStreaming}");
+    Console.WriteLine($"  Capture: {device.IsVideoCapture}");
+    Console.WriteLine($"  Output: {device.IsVideoOutput}");
+    Console.WriteLine($"  Metadata: {device.IsMetadata}");
+    Console.WriteLine($"  Streaming: {device.IsStreaming}");
 
-    Console.WriteLine($"フォーマット数: {device.SupportedFormats.Count}");
+    Console.WriteLine($"Formats: {device.SupportedFormats.Count}");
     foreach (var format in device.SupportedFormats)
     {
-        Console.WriteLine($"  フォーマット: {format.PixelFormat}");
-        Console.WriteLine($"    詳細: {format.Description}");
-        var resolutions = format.SupportedResolutions.Count > 0 ? $"{String.Join(", ", format.SupportedResolutions)}" : "(解像度情報無し)";
-        Console.WriteLine($"    解像度: {resolutions}");
+        Console.WriteLine($"  Format: {format.PixelFormat}");
+        Console.WriteLine($"    Description: {format.Description}");
+        var resolutions = format.SupportedResolutions.Count > 0 ? $"{String.Join(", ", format.SupportedResolutions)}" : "(Nothing)";
+        Console.WriteLine($"    Resolution: {resolutions}");
     }
 
-    Console.WriteLine($"キャプチャ適性: {VideoInfoSelector.IsSuitableForCapture(device)}");
-    Console.WriteLine($"スコア: {VideoInfoSelector.CalculateDeviceScore(device)}");
+    Console.WriteLine($"Suitable: {VideoInfoSelector.IsSuitableForCapture(device)}");
+    Console.WriteLine($"Score: {VideoInfoSelector.CalculateDeviceScore(device)}");
 
     Console.WriteLine();
 }
