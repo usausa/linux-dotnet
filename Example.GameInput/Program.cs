@@ -1,5 +1,6 @@
 // ReSharper disable UseObjectOrCollectionInitializer
 #pragma warning disable IDE0017
+#pragma warning disable CA1416
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 

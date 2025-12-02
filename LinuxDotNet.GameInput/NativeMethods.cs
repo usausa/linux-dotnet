@@ -29,6 +29,7 @@ internal static class NativeMethods
         public short events;
         public short revents;
     }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------

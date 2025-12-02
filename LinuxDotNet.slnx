@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/Example/">
+    <Project Path="Example.Cups/Example.Cups.csproj" Id="04c688c4-f84c-4c22-983b-39f61379caae" />
     <Project Path="Example.GameInput/Example.GameInput.csproj" />
     <Project Path="Example.Video4Linux2/Example.Video4Linux2.csproj" />
   </Folder>
   <Folder Name="/Library/">
+    <Project Path="LinuxDotNet.Cups/LinuxDotNet.Cups.csproj" Id="7e3ae3fd-c8cf-4d9e-84b4-734383a089b2" />
     <Project Path="LinuxDotNet.GameInput/LinuxDotNet.GameInput.csproj" />
     <Project Path="LinuxDotNet.Video4Linux2/LinuxDotNet.Video4Linux2.csproj" />
   </Folder>
