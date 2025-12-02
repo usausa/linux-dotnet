@@ -5,7 +5,6 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
-// TODO Start/Stop
 public sealed class GameController : IDisposable
 {
     public event Action<byte, bool>? ButtonChanged;
@@ -16,13 +15,13 @@ public sealed class GameController : IDisposable
 
     private static readonly TimeSpan ReconnectInterval = TimeSpan.FromSeconds(2);
 
-    private static readonly TimeSpan ShutdownWait = TimeSpan.FromSeconds(5);
-
-    private readonly CancellationTokenSource cts = new();
-
-    private readonly Task processingTask;
+    private static readonly TimeSpan StopWait = TimeSpan.FromSeconds(5);
 
     private readonly string deviceFile;
+
+    private CancellationTokenSource? cts;
+
+    private Task? processingTask;
 
     private bool connected;
 
@@ -45,12 +44,26 @@ public sealed class GameController : IDisposable
         axisInitialized.AsSpan().Clear();
         buttons.AsSpan().Clear();
         axis.AsSpan().Clear();
+    }
 
+    public void Start()
+    {
+        if (processingTask is not null)
+        {
+            return;
+        }
+
+        cts = new CancellationTokenSource();
         processingTask = Task.Run(() => ProcessAsync(cts.Token), cts.Token);
     }
 
-    public void Dispose()
+    public void Stop()
     {
+        if ((cts is null) || (processingTask is null))
+        {
+            return;
+        }
+
         if (!cts.IsCancellationRequested)
         {
             cts.Cancel();
@@ -58,13 +71,20 @@ public sealed class GameController : IDisposable
 
         try
         {
-            processingTask.Wait(ShutdownWait);
+            processingTask.Wait(StopWait);
         }
         catch (AggregateException)
         {
         }
 
         cts.Dispose();
+        cts = null;
+        processingTask = null;
+    }
+
+    public void Dispose()
+    {
+        Stop();
 
         if (buttonInitialized.Length > 0)
         {
