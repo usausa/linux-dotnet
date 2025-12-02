@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>LinuxDotNet.GameInput</PackageId>
+    <Title>LinuxDotNet.GameInput</Title>
+    <Description>LinuxDotNet.GameInput.</Description>
+    <PackageTags>linux</PackageTags>
+  </PropertyGroup>
+
+</Project>

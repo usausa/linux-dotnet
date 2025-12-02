@@ -1,9 +1,10 @@
 <Solution>
   <Folder Name="/Example/">
+    <Project Path="Example.GameInput/Example.GameInput.csproj" />
     <Project Path="Example.Video4Linux2/Example.Video4Linux2.csproj" />
-    <Project Path="Example.XInput/Example.XInput.csproj" Id="427d101c-dd0d-43ac-97b1-7e24926a289a" />
   </Folder>
   <Folder Name="/Library/">
+    <Project Path="LinuxDotNet.GameInput/LinuxDotNet.GameInput.csproj" />
     <Project Path="LinuxDotNet.Video4Linux2/LinuxDotNet.Video4Linux2.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
