@@ -5,6 +5,8 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
+using static LinuxDotNet.GameInput.NativeMethods;
+
 public sealed class GameController : IDisposable
 {
     public event Action<byte, bool>? ButtonChanged;
@@ -213,8 +215,21 @@ public sealed class GameController : IDisposable
         const int messageSize = 8;
         var message = ArrayPool<byte>.Shared.Rent(messageSize);
 
+        var fd = (int)stream.SafeFileHandle.DangerousGetHandle();
+
         while (!token.IsCancellationRequested)
         {
+            var pollFd = new PollFd
+            {
+                fd = fd,
+                events = POLLIN
+            };
+            var result = poll(ref pollFd, 1, 100);
+            if (result <= 0 || (pollFd.revents & POLLIN) == 0)
+            {
+                continue;
+            }
+
             var bytesRead = await stream.ReadAsync(message.AsMemory(0, messageSize), token).ConfigureAwait(false);
             if (bytesRead < messageSize)
             {
