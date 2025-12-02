@@ -9,6 +9,8 @@ using static LinuxDotNet.GameInput.NativeMethods;
 
 public sealed class GameController : IDisposable
 {
+    private const int DevicePollTimeout = 100;
+
     public event Action<byte, bool>? ButtonChanged;
 
     public event Action<byte, short>? AxisChanged;
@@ -224,7 +226,7 @@ public sealed class GameController : IDisposable
                 fd = fd,
                 events = POLLIN
             };
-            var result = poll(ref pollFd, 1, 100);
+            var result = poll(ref pollFd, 1, DevicePollTimeout);
             if (result <= 0 || (pollFd.revents & POLLIN) == 0)
             {
                 continue;
