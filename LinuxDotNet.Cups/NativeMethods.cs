@@ -36,7 +36,7 @@ internal static class NativeMethods
     public static extern IntPtr cupsGetDefault();
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr cupsGetDests(out int num_dests);
+    public static extern int cupsGetDests(out IntPtr dests);
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
     public static extern void cupsFreeDests(int num_dests, IntPtr dests);
