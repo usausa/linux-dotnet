@@ -1,2 +1,4 @@
 #pragma warning disable CA1416
-Console.WriteLine("Hello, World!");
+using LinuxDotNet.Cups;
+
+Console.WriteLine($"Default: {CupsPrinter.GetDefaultPrinter()}");
