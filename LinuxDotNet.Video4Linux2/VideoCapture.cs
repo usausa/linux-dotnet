@@ -1,7 +1,6 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -39,7 +38,7 @@ public sealed class VideoCapture : IDisposable
         Close();
     }
 
-    public bool Open(int width = 640, int height = 480)
+    public unsafe bool Open(int width = 640, int height = 480)
     {
         if (IsOpen)
         {
@@ -52,81 +51,46 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
-        //var cap = default(v4l2_capability);
-        //var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
-        //Marshal.StructureToPtr(cap, capPtr, false);
-        //if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
-        //{
-        //    Marshal.FreeHGlobal(capPtr);
-        //    Close();
-        //    return false;
-        //}
-
-        //Marshal.FreeHGlobal(capPtr);
-
         // Set format
         var format = new v4l2_format
         {
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-            fmt = new v4l2_pix_format
-            {
-                width = (uint)width,
-                height = (uint)height,
-                pixelformat = V4L2_PIX_FMT_YUYV,
-                field = V4L2_FIELD_NONE
-            }
+            type = V4L2_BUF_TYPE_VIDEO_CAPTURE
         };
 
-        var fmtPtr = Marshal.AllocHGlobal(Marshal.SizeOf(format));
-        try
-        {
-            Marshal.StructureToPtr(format, fmtPtr, false);
-            if (ioctl(fd, VIDIOC_S_FMT, fmtPtr) < 0)
-            {
-                Close();
-                return false;
-            }
+        var pix = (v4l2_pix_format*)format.data;
+        pix->width = (uint)width;
+        pix->height = (uint)height;
+        pix->pixelformat = V4L2_PIX_FMT_YUYV;
+        pix->field = V4L2_FIELD_NONE;
 
-            format = Marshal.PtrToStructure<v4l2_format>(fmtPtr);
-        }
-        finally
+        if (ioctl(fd, VIDIOC_S_FMT, (IntPtr)(&format)) < 0)
         {
-            Marshal.FreeHGlobal(fmtPtr);
+            Close();
+            return false;
         }
 
-        Width = (int)format.fmt.width;
-        Height = (int)format.fmt.height;
+        Width = (int)pix->width;
+        Height = (int)pix->height;
 
-        //// Request buffers
-        //var requestBuffer = new v4l2_requestbuffers
-        //{
-        //    count = 4,
-        //    type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-        //    memory = V4L2_MEMORY_MMAP,
-        //    reserved = new uint[2]
-        //};
+        // Request buffers
+        v4l2_requestbuffers requestBuffers;
+        requestBuffers.count = 4;
+        requestBuffers.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        requestBuffers.memory = V4L2_MEMORY_MMAP;
+        requestBuffers.reserved[0] = 0;
+        requestBuffers.reserved[1] = 0;
 
-        //var requestBufferPtr = Marshal.AllocHGlobal(Marshal.SizeOf(requestBuffer));
-        //try
-        //{
-        //    Marshal.StructureToPtr(requestBuffer, requestBufferPtr, false);
-        //    if (ioctl(fd, VIDIOC_REQBUFS, requestBufferPtr) < 0)
-        //    {
-        //        Close();
-        //        return false;
-        //    }
+        if (ioctl(fd, VIDIOC_REQBUFS, (IntPtr)(&requestBuffers)) < 0)
+        {
+            Close();
+            return false;
+        }
 
-        //    requestBuffer = Marshal.PtrToStructure<v4l2_requestbuffers>(requestBufferPtr);
-        //}
-        //finally
-        //{
-        //    Marshal.FreeHGlobal(requestBufferPtr);
-        //}
+        buffers = new IntPtr[requestBuffers.count];
+        bufferLengths = new int[requestBuffers.count];
 
-        //buffers = new IntPtr[requestBuffer.count];
-        //bufferLengths = new int[requestBuffer.count];
-
-        //// Map buffers
+        // Map buffers
+        // TODO
         //for (uint i = 0; i < requestBuffer.count; i++)
         //{
         //    var buffer = new v4l2_buffer
@@ -170,7 +134,7 @@ public sealed class VideoCapture : IDisposable
 
     public void Close()
     {
-        if (IsOpen)
+        if (!IsOpen)
         {
             return;
         }

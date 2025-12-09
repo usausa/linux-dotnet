@@ -117,20 +117,19 @@ internal static class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_format
+    public unsafe struct v4l2_format
     {
         public uint type;
-        public v4l2_pix_format fmt;
+        public fixed byte data[200];
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_requestbuffers
+    public unsafe struct v4l2_requestbuffers
     {
         public uint count;
         public uint type;
         public uint memory;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-        public uint[] reserved;
+        public fixed uint reserved[2];
     }
 
     [StructLayout(LayoutKind.Sequential)]
