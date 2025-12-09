@@ -78,75 +78,90 @@ public sealed class VideoCapture : IDisposable
         };
 
         var fmtPtr = Marshal.AllocHGlobal(Marshal.SizeOf(format));
-        Marshal.StructureToPtr(format, fmtPtr, false);
-        if (ioctl(fd, VIDIOC_S_FMT, fmtPtr) < 0)
+        try
+        {
+            Marshal.StructureToPtr(format, fmtPtr, false);
+            if (ioctl(fd, VIDIOC_S_FMT, fmtPtr) < 0)
+            {
+                Close();
+                return false;
+            }
+
+            format = Marshal.PtrToStructure<v4l2_format>(fmtPtr);
+        }
+        finally
         {
             Marshal.FreeHGlobal(fmtPtr);
-            Close();
-            return false;
         }
-
-        format = Marshal.PtrToStructure<v4l2_format>(fmtPtr);
-        Marshal.FreeHGlobal(fmtPtr);
 
         Width = (int)format.fmt.width;
         Height = (int)format.fmt.height;
 
-        // Request buffers
-        var requestBuffer = new v4l2_requestbuffers
-        {
-            count = 4,
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-            memory = V4L2_MEMORY_MMAP
-        };
+        //// Request buffers
+        //var requestBuffer = new v4l2_requestbuffers
+        //{
+        //    count = 4,
+        //    type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
+        //    memory = V4L2_MEMORY_MMAP,
+        //    reserved = new uint[2]
+        //};
 
-        var requestBufferPtr = Marshal.AllocHGlobal(Marshal.SizeOf(requestBuffer));
-        Marshal.StructureToPtr(requestBuffer, requestBufferPtr, false);
+        //var requestBufferPtr = Marshal.AllocHGlobal(Marshal.SizeOf(requestBuffer));
+        //try
+        //{
+        //    Marshal.StructureToPtr(requestBuffer, requestBufferPtr, false);
+        //    if (ioctl(fd, VIDIOC_REQBUFS, requestBufferPtr) < 0)
+        //    {
+        //        Close();
+        //        return false;
+        //    }
 
-        if (ioctl(fd, VIDIOC_REQBUFS, requestBufferPtr) < 0)
-        {
-            Marshal.FreeHGlobal(requestBufferPtr);
-            Close();
-            return false;
-        }
+        //    requestBuffer = Marshal.PtrToStructure<v4l2_requestbuffers>(requestBufferPtr);
+        //}
+        //finally
+        //{
+        //    Marshal.FreeHGlobal(requestBufferPtr);
+        //}
 
-        requestBuffer = Marshal.PtrToStructure<v4l2_requestbuffers>(requestBufferPtr);
-        Marshal.FreeHGlobal(requestBufferPtr);
+        //buffers = new IntPtr[requestBuffer.count];
+        //bufferLengths = new int[requestBuffer.count];
 
-        buffers = new IntPtr[requestBuffer.count];
-        bufferLengths = new int[requestBuffer.count];
+        //// Map buffers
+        //for (uint i = 0; i < requestBuffer.count; i++)
+        //{
+        //    var buffer = new v4l2_buffer
+        //    {
+        //        type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
+        //        memory = V4L2_MEMORY_MMAP,
+        //        index = i
+        //    };
 
-        // Map buffers
-        for (uint i = 0; i < requestBuffer.count; i++)
-        {
-            var buf = new v4l2_buffer
-            {
-                type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-                memory = V4L2_MEMORY_MMAP,
-                index = i
-            };
+        //    var bufferPtr = Marshal.AllocHGlobal(Marshal.SizeOf(buffer));
+        //    try
+        //    {
+        //        Marshal.StructureToPtr(buffer, bufferPtr, false);
+        //        if (ioctl(fd, VIDIOC_QUERYBUF, bufferPtr) < 0)
+        //        {
+        //            Close();
+        //            return false;
+        //        }
 
-            var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(buf));
-            Marshal.StructureToPtr(buf, bufPtr, false);
-            if (ioctl(fd, VIDIOC_QUERYBUF, bufPtr) < 0)
-            {
-                Marshal.FreeHGlobal(bufPtr);
-                Close();
-                return false;
-            }
+        //        buffer = Marshal.PtrToStructure<v4l2_buffer>(bufferPtr);
+        //    }
+        //    finally
+        //    {
+        //        Marshal.FreeHGlobal(bufferPtr);
+        //    }
 
-            buf = Marshal.PtrToStructure<v4l2_buffer>(bufPtr);
-            Marshal.FreeHGlobal(bufPtr);
+        //    buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.offset);
+        //    bufferLengths[i] = (int)buffer.length;
 
-            buffers[i] = mmap(IntPtr.Zero, (int)buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buf.offset);
-            bufferLengths[i] = (int)buf.length;
-
-            if (buffers[i] == new IntPtr(-1))
-            {
-                Close();
-                return false;
-            }
-        }
+        //    if (buffers[i] == new IntPtr(-1))
+        //    {
+        //        Close();
+        //        return false;
+        //    }
+        //}
 
         // TODO
 

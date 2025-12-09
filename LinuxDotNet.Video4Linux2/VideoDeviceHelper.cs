@@ -32,27 +32,32 @@ internal static class VideoDeviceHelper
         var index = 0u;
         while (true)
         {
-            var fmtDesc = new v4l2_fmtdesc
+            var formatDesc = new v4l2_fmtdesc
             {
                 index = index,
                 type = V4L2_BUF_TYPE_VIDEO_CAPTURE
             };
-            var fmtDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(fmtDesc));
-            Marshal.StructureToPtr(fmtDesc, fmtDescPtr, false);
 
-            if (ioctl(fd, VIDIOC_ENUM_FMT, fmtDescPtr) < 0)
+            var formatDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(formatDesc));
+            try
             {
-                Marshal.FreeHGlobal(fmtDescPtr);
-                break;
+                Marshal.StructureToPtr(formatDesc, formatDescPtr, false);
+                if (ioctl(fd, VIDIOC_ENUM_FMT, formatDescPtr) < 0)
+                {
+                    break;
+                }
+
+                formatDesc = Marshal.PtrToStructure<v4l2_fmtdesc>(formatDescPtr);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(formatDescPtr);
             }
 
-            fmtDesc = Marshal.PtrToStructure<v4l2_fmtdesc>(fmtDescPtr);
-            Marshal.FreeHGlobal(fmtDescPtr);
-
             var format = new VideoFormat(
-                fmtDesc.pixelformat,
-                Encoding.ASCII.GetString(fmtDesc.description).TrimEnd('\0'),
-                GetSupportedResolutions(fd, fmtDesc.pixelformat));
+                formatDesc.pixelformat,
+                Encoding.ASCII.GetString(formatDesc.description).TrimEnd('\0'),
+                GetSupportedResolutions(fd, formatDesc.pixelformat));
 
             formats.Add(format);
             index++;
@@ -73,17 +78,22 @@ internal static class VideoDeviceHelper
                 index = index,
                 pixel_format = pixelFormat
             };
-            var frmSizePtr = Marshal.AllocHGlobal(Marshal.SizeOf(frmSize));
-            Marshal.StructureToPtr(frmSize, frmSizePtr, false);
 
-            if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, frmSizePtr) < 0)
+            var frmSizePtr = Marshal.AllocHGlobal(Marshal.SizeOf(frmSize));
+            try
+            {
+                Marshal.StructureToPtr(frmSize, frmSizePtr, false);
+                if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, frmSizePtr) < 0)
+                {
+                    break;
+                }
+
+                frmSize = Marshal.PtrToStructure<v4l2_frmsizeenum>(frmSizePtr);
+            }
+            finally
             {
                 Marshal.FreeHGlobal(frmSizePtr);
-                break;
             }
-
-            frmSize = Marshal.PtrToStructure<v4l2_frmsizeenum>(frmSizePtr);
-            Marshal.FreeHGlobal(frmSizePtr);
 
             if (frmSize.type == V4L2_FRMSIZE_TYPE_DISCRETE)
             {

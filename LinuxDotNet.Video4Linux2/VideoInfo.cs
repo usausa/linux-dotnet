@@ -101,16 +101,22 @@ public sealed class VideoInfo
         try
         {
             var cap = default(v4l2_capability);
+
             var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
-            Marshal.StructureToPtr(cap, capPtr, false);
-            if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
+            try
+            {
+                Marshal.StructureToPtr(cap, capPtr, false);
+                if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
+                {
+                    return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
+                }
+
+                cap = Marshal.PtrToStructure<v4l2_capability>(capPtr);
+            }
+            finally
             {
                 Marshal.FreeHGlobal(capPtr);
-                return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
             }
-
-            cap = Marshal.PtrToStructure<v4l2_capability>(capPtr);
-            Marshal.FreeHGlobal(capPtr);
 
             var isVideoCapture = (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0;
 
