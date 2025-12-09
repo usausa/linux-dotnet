@@ -1,6 +1,5 @@
 namespace LinuxDotNet.Video4Linux2;
 
-using System.Runtime.InteropServices;
 using System.Text;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -25,39 +24,24 @@ internal static class VideoDeviceHelper
         }
     }
 
-    public static IReadOnlyList<VideoFormat> GetSupportedFormats(int fd)
+    public static unsafe IReadOnlyList<VideoFormat> GetSupportedFormats(int fd)
     {
         var formats = new List<VideoFormat>();
 
         var index = 0u;
         while (true)
         {
-            var formatDesc = new v4l2_fmtdesc
-            {
-                index = index,
-                type = V4L2_BUF_TYPE_VIDEO_CAPTURE
-            };
+            v4l2_fmtdesc formatDesc;
+            formatDesc.index = index;
+            formatDesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-            var formatDescPtr = Marshal.AllocHGlobal(Marshal.SizeOf(formatDesc));
-            try
+            if (ioctl(fd, VIDIOC_ENUM_FMT, (IntPtr)(&formatDesc)) < 0)
             {
-                Marshal.StructureToPtr(formatDesc, formatDescPtr, false);
-                if (ioctl(fd, VIDIOC_ENUM_FMT, formatDescPtr) < 0)
-                {
-                    break;
-                }
-
-                formatDesc = Marshal.PtrToStructure<v4l2_fmtdesc>(formatDescPtr);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(formatDescPtr);
+                break;
             }
 
-            var format = new VideoFormat(
-                formatDesc.pixelformat,
-                Encoding.ASCII.GetString(formatDesc.description).TrimEnd('\0'),
-                GetSupportedResolutions(fd, formatDesc.pixelformat));
+            var description = Encoding.ASCII.GetString(formatDesc.description, v4l2_fmtdesc.DescriptionSize).TrimEnd('\0');
+            var format = new VideoFormat(formatDesc.pixelformat, description, GetSupportedResolutions(fd, formatDesc.pixelformat));
 
             formats.Add(format);
             index++;
@@ -66,33 +50,20 @@ internal static class VideoDeviceHelper
         return formats.OrderBy(static x => x.PixelFormat).ToList();
     }
 
-    private static List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
+    private static unsafe List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
     {
         var resolutions = new List<Resolution>();
 
         var index = 0u;
         while (true)
         {
-            var frmSize = new v4l2_frmsizeenum
-            {
-                index = index,
-                pixel_format = pixelFormat
-            };
+            v4l2_frmsizeenum frmSize;
+            frmSize.index = index;
+            frmSize.pixel_format = pixelFormat;
 
-            var frmSizePtr = Marshal.AllocHGlobal(Marshal.SizeOf(frmSize));
-            try
+            if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, (IntPtr)(&frmSize)) < 0)
             {
-                Marshal.StructureToPtr(frmSize, frmSizePtr, false);
-                if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, frmSizePtr) < 0)
-                {
-                    break;
-                }
-
-                frmSize = Marshal.PtrToStructure<v4l2_frmsizeenum>(frmSizePtr);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(frmSizePtr);
+                break;
             }
 
             if (frmSize.type == V4L2_FRMSIZE_TYPE_DISCRETE)

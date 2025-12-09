@@ -1,6 +1,7 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -52,10 +53,8 @@ public sealed class VideoCapture : IDisposable
         }
 
         // Set format
-        var format = new v4l2_format
-        {
-            type = V4L2_BUF_TYPE_VIDEO_CAPTURE
-        };
+        v4l2_format format;
+        format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
         var pix = (v4l2_pix_format*)format.data;
         pix->width = (uint)width;
@@ -90,44 +89,37 @@ public sealed class VideoCapture : IDisposable
         bufferLengths = new int[requestBuffers.count];
 
         // Map buffers
-        // TODO
-        //for (uint i = 0; i < requestBuffer.count; i++)
-        //{
-        //    var buffer = new v4l2_buffer
-        //    {
-        //        type = V4L2_BUF_TYPE_VIDEO_CAPTURE,
-        //        memory = V4L2_MEMORY_MMAP,
-        //        index = i
-        //    };
+        for (uint i = 0; i < requestBuffers.count; i++)
+        {
+            // Query buffer
+            v4l2_buffer buffer;
+            buffer.index = i;
+            buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buffer.memory = V4L2_MEMORY_MMAP;
 
-        //    var bufferPtr = Marshal.AllocHGlobal(Marshal.SizeOf(buffer));
-        //    try
-        //    {
-        //        Marshal.StructureToPtr(buffer, bufferPtr, false);
-        //        if (ioctl(fd, VIDIOC_QUERYBUF, bufferPtr) < 0)
-        //        {
-        //            Close();
-        //            return false;
-        //        }
+            if (ioctl(fd, VIDIOC_QUERYBUF, (IntPtr)(&buffer)) < 0)
+            {
+                Console.WriteLine("*1 " + Marshal.GetLastWin32Error());
+                Close();
+                return false;
+            }
 
-        //        buffer = Marshal.PtrToStructure<v4l2_buffer>(bufferPtr);
-        //    }
-        //    finally
-        //    {
-        //        Marshal.FreeHGlobal(bufferPtr);
-        //    }
+            // Memory map
+            buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.offset);
+            bufferLengths[i] = (int)buffer.length;
 
-        //    buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.offset);
-        //    bufferLengths[i] = (int)buffer.length;
+            // Queue buffer
+            v4l2_buffer buffer2;
+            buffer2.index = i;
+            buffer2.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buffer2.memory = V4L2_MEMORY_MMAP;
 
-        //    if (buffers[i] == new IntPtr(-1))
-        //    {
-        //        Close();
-        //        return false;
-        //    }
-        //}
-
-        // TODO
+            if (ioctl(fd, VIDIOC_QBUF, (IntPtr)(&buffer2)) < 0)
+            {
+                Close();
+                return false;
+            }
+        }
 
         return true;
     }
@@ -151,6 +143,9 @@ public sealed class VideoCapture : IDisposable
 
             buffers[i] = IntPtr.Zero;
         }
+
+        Width = 0;
+        Height = 0;
 
         close(fd);
         fd = -1;

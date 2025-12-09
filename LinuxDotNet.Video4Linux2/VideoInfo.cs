@@ -1,6 +1,5 @@
 namespace LinuxDotNet.Video4Linux2;
 
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
@@ -90,7 +89,7 @@ public sealed class VideoInfo
 
     public override string ToString() => $"{Name} ({Device})";
 
-    public static VideoInfo GetVideoInfo(string path)
+    public static unsafe VideoInfo GetVideoInfo(string path)
     {
         var fd = open(path, O_RDWR);
         if (fd < 0)
@@ -100,36 +99,22 @@ public sealed class VideoInfo
 
         try
         {
-            var cap = default(v4l2_capability);
+            v4l2_capability capability;
 
-            var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
-            try
+            if (ioctl(fd, VIDIOC_QUERYCAP, (IntPtr)(&capability)) < 0)
             {
-                Marshal.StructureToPtr(cap, capPtr, false);
-                if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
-                {
-                    return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
-                }
-
-                cap = Marshal.PtrToStructure<v4l2_capability>(capPtr);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(capPtr);
+                return new VideoInfo(path, "Unknown", string.Empty, string.Empty, false, 0, []);
             }
 
-            var isVideoCapture = (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0;
-
-            var camera = new VideoInfo(
+            var isVideoCapture = (capability.capabilities & V4L2_CAP_VIDEO_CAPTURE) != 0;
+            return new VideoInfo(
                 path,
-                Encoding.ASCII.GetString(cap.card).TrimEnd('\0'),
-                Encoding.ASCII.GetString(cap.driver).TrimEnd('\0'),
-                Encoding.ASCII.GetString(cap.bus_info).TrimEnd('\0'),
+                Encoding.ASCII.GetString(capability.card, v4l2_capability.CardSize).TrimEnd('\0'),
+                Encoding.ASCII.GetString(capability.driver, v4l2_capability.DriverSize).TrimEnd('\0'),
+                Encoding.ASCII.GetString(capability.bus_info, v4l2_capability.BusInfoSize).TrimEnd('\0'),
                 isVideoCapture,
-                cap.capabilities,
+                capability.capabilities,
                 VideoDeviceHelper.GetSupportedFormats(fd));
-
-            return camera;
         }
         finally
         {

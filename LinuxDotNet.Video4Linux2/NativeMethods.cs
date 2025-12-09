@@ -16,19 +16,20 @@ internal static class NativeMethods
     // Const
     //------------------------------------------------------------------------
 
+    // TODO 不要削除、値再確認
+
     // ioctl
     public const uint VIDIOC_QUERYCAP = 0x80685600;
     public const uint VIDIOC_S_FMT = 0xc0d05605;
     public const uint VIDIOC_G_FMT = 0xc0cc5604;
     public const uint VIDIOC_REQBUFS = 0xc0145608;
-    public const uint VIDIOC_QUERYBUF = 0xc0445609;
-    public const uint VIDIOC_QBUF = 0xc044560f;
-    public const uint VIDIOC_DQBUF = 0xc0445611;
+    public const uint VIDIOC_QUERYBUF = 0xc0585609;
+    public const uint VIDIOC_QBUF = 0xc058560f;
+    public const uint VIDIOC_DQBUF = 0xc0585611;
     public const uint VIDIOC_STREAMON = 0x40045612;
     public const uint VIDIOC_STREAMOFF = 0x40045613;
     public const uint VIDIOC_ENUM_FMT = 0xc0405602;
     public const uint VIDIOC_ENUM_FRAMESIZES = 0xc02c564a;
-    public const uint VIDIOC_ENUM_FRAMEINTERVALS = 0xc034564b;
 
     // open
     public const int O_RDWR = 2;
@@ -48,7 +49,7 @@ internal static class NativeMethods
     public const uint V4L2_PIX_FMT_YUYV = 0x56595559;
     public const uint V4L2_PIX_FMT_MJPEG = 0x47504a4d;
 
-    // Fmame size
+    // Frame size
     public const uint V4L2_FRMSIZE_TYPE_DISCRETE = 1;
     public const uint V4L2_FRMSIZE_TYPE_CONTINUOUS = 2;
     public const uint V4L2_FRMSIZE_TYPE_STEPWISE = 3;
@@ -89,18 +90,18 @@ internal static class NativeMethods
     //------------------------------------------------------------------------
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_capability
+    public unsafe struct v4l2_capability
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-        public byte[] driver;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-        public byte[] card;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-        public byte[] bus_info;
+        public const int DriverSize = 16;
+        public const int CardSize = 32;
+        public const int BusInfoSize = 32;
+
+        public fixed byte driver[DriverSize];
+        public fixed byte card[CardSize];
+        public fixed byte bus_info[BusInfoSize];
         public uint version;
         public uint capabilities;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public uint[] reserved;
+        public fixed uint reserved[4];
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -133,55 +134,51 @@ internal static class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_buffer
+    public unsafe struct v4l2_buffer
     {
         public uint index;
         public uint type;
         public uint bytesused;
         public uint flags;
         public uint field;
-        public timeval timestamp;
-        public v4l2_timecode timecode;
+
+        // struct timeval
+        public long tv_sec;
+        public long tv_usec;
+
+        // struct v4l2_timecode
+        public uint timecode_type;
+        public uint timecode_flags;
+        public byte timecode_frames;
+        public byte timecode_seconds;
+        public byte timecode_minutes;
+        public byte timecode_hours;
+        public fixed byte timecode_userbits[4];
+
         public uint sequence;
         public uint memory;
+
+        // union m
         public uint offset;
-        public IntPtr userptr;
+        public uint m_padding;
+
         public uint length;
+
         public uint reserved2;
         public uint reserved;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct timeval
+    public unsafe struct v4l2_fmtdesc
     {
-        public IntPtr tv_sec;
-        public IntPtr tv_usec;
-    }
+        public const int DescriptionSize = 32;
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_timecode
-    {
-        public uint type;
-        public uint flags;
-        public byte frames;
-        public byte seconds;
-        public byte minutes;
-        public byte hours;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public byte[] userbits;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_fmtdesc
-    {
         public uint index;
         public uint type;
         public uint flags;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-        public byte[] description;
+        public fixed byte description[DescriptionSize];
         public uint pixelformat;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public uint[] reserved;
+        public fixed uint reserved[4];
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -213,14 +210,13 @@ internal static class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct v4l2_frmsizeenum
+    public unsafe struct v4l2_frmsizeenum
     {
         public uint index;
         public uint pixel_format;
         public uint type;
         public v4l2_frmsizeenum_union size;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-        public uint[] reserved;
+        public fixed uint reserved[2];
     }
 
     //------------------------------------------------------------------------
