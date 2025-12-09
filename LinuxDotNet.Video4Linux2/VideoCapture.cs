@@ -1,7 +1,6 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -46,7 +45,7 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
-        fd = NativeMethods.open(path, NativeMethods.O_RDWR);
+        fd = open(path, NativeMethods.O_RDWR);
         if (fd < 0)
         {
             return false;
@@ -64,7 +63,7 @@ public sealed class VideoCapture : IDisposable
 
         if (ioctl(fd, VIDIOC_S_FMT, (IntPtr)(&format)) < 0)
         {
-            Close();
+            CloseInternal();
             return false;
         }
 
@@ -81,7 +80,7 @@ public sealed class VideoCapture : IDisposable
 
         if (ioctl(fd, VIDIOC_REQBUFS, (IntPtr)(&requestBuffers)) < 0)
         {
-            Close();
+            CloseInternal();
             return false;
         }
 
@@ -99,8 +98,7 @@ public sealed class VideoCapture : IDisposable
 
             if (ioctl(fd, VIDIOC_QUERYBUF, (IntPtr)(&buffer)) < 0)
             {
-                Console.WriteLine("*1 " + Marshal.GetLastWin32Error());
-                Close();
+                CloseInternal();
                 return false;
             }
 
@@ -116,7 +114,7 @@ public sealed class VideoCapture : IDisposable
 
             if (ioctl(fd, VIDIOC_QBUF, (IntPtr)(&buffer2)) < 0)
             {
-                Close();
+                CloseInternal();
                 return false;
             }
         }
@@ -131,9 +129,12 @@ public sealed class VideoCapture : IDisposable
             return;
         }
 
-        // TODO
-        //StopCapture();
+        StopCapture();
+        CloseInternal();
+    }
 
+    private void CloseInternal()
+    {
         for (var i = 0; i < buffers.Length; i++)
         {
             if ((buffers[i] != IntPtr.Zero) && (buffers[i] != new IntPtr(-1)))
@@ -144,21 +145,24 @@ public sealed class VideoCapture : IDisposable
             buffers[i] = IntPtr.Zero;
         }
 
+        if (fd >= 0)
+        {
+            close(fd);
+        }
+        fd = -1;
+
         Width = 0;
         Height = 0;
-
-        close(fd);
-        fd = -1;
     }
 
-    //public bool StartCapture()
-    //{
-    //    // TODO
-    //    return false;
-    //}
+    public bool StartCapture()
+    {
+        // TODO
+        return false;
+    }
 
-    //public void StopCapture()
-    //{
-    //    // TODO
-    //}
+    public void StopCapture()
+    {
+        // TODO
+    }
 }
