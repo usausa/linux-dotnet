@@ -103,7 +103,6 @@ public sealed class VideoInfo
             var cap = default(v4l2_capability);
             var capPtr = Marshal.AllocHGlobal(Marshal.SizeOf(cap));
             Marshal.StructureToPtr(cap, capPtr, false);
-
             if (ioctl(fd, VIDIOC_QUERYCAP, capPtr) < 0)
             {
                 Marshal.FreeHGlobal(capPtr);
