@@ -290,7 +290,7 @@ internal static class NativeMethods
     public static extern int munmap(IntPtr addr, int length);
 
     [DllImport("libc", SetLastError = true)]
-    public static extern unsafe int poll(ref pollfd fds, uint nfds, int timeout);
+    public static extern int poll(ref pollfd fds, uint nfds, int timeout);
 
     //------------------------------------------------------------------------
     // Initialize
