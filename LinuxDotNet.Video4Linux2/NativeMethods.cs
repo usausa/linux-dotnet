@@ -97,6 +97,9 @@ internal static class NativeMethods
     public const uint V4L2_CAP_TOUCH = 0x10000000;
     public const uint V4L2_CAP_DEVICE_CAPS = 0x80000000;
 
+    // poll
+    public const short POLLIN = 0x0001;
+
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
@@ -259,6 +262,14 @@ internal static class NativeMethods
         public fixed uint reserved[2];
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct pollfd
+    {
+        public int fd;
+        public short events;
+        public short revents;
+    }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
@@ -277,6 +288,9 @@ internal static class NativeMethods
 
     [DllImport("libc", SetLastError = true)]
     public static extern int munmap(IntPtr addr, int length);
+
+    [DllImport("libc", SetLastError = true)]
+    public static extern unsafe int poll(ref pollfd fds, uint nfds, int timeout);
 
     //------------------------------------------------------------------------
     // Initialize

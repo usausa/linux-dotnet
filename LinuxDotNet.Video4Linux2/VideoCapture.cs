@@ -1,7 +1,6 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
-using System.Buffers;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -11,7 +10,7 @@ using static LinuxDotNet.Video4Linux2.NativeMethods;
 [SupportedOSPlatform("linux")]
 public sealed class VideoCapture : IDisposable
 {
-    //public event Action<byte[], int, int>? FrameCaptured;
+    public event Action<FrameBuffer>? FrameCaptured;
 
     private readonly string path;
 
@@ -24,8 +23,6 @@ public sealed class VideoCapture : IDisposable
     private Thread? captureThread;
 
     private CancellationTokenSource? captureCts;
-
-    private byte[] frameBuffer = [];
 
     public int Width { get; private set; }
 
@@ -126,9 +123,6 @@ public sealed class VideoCapture : IDisposable
             }
         }
 
-        var maxSize = bufferLengths.Max();
-        frameBuffer = ArrayPool<byte>.Shared.Rent(maxSize);
-
         return true;
     }
 
@@ -160,12 +154,6 @@ public sealed class VideoCapture : IDisposable
             close(fd);
         }
         fd = -1;
-
-        if (frameBuffer.Length > 0)
-        {
-            ArrayPool<byte>.Shared.Return(frameBuffer);
-            frameBuffer = [];
-        }
 
         Width = 0;
         Height = 0;
@@ -218,6 +206,61 @@ public sealed class VideoCapture : IDisposable
 
     private unsafe void CaptureLoop(CancellationToken cancellationToken)
     {
-        // TODO
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var fds = new pollfd
+            {
+                fd = fd,
+                events = POLLIN
+            };
+            if (poll(ref fds, 1, 100) <= 0)
+            {
+                continue;
+            }
+
+            v4l2_buffer buffer;
+            buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buffer.memory = V4L2_MEMORY_MMAP;
+
+            if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
+            {
+                continue;
+            }
+
+            if (buffer.index < buffer.length)
+            {
+                FrameCaptured?.Invoke(new FrameBuffer(buffers[buffer.index], (int)buffer.bytesused));
+            }
+
+            // Re-queue buffer
+            var requeueBuffer = default(v4l2_buffer);
+            requeueBuffer.index = buffer.index;
+            requeueBuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            requeueBuffer.memory = V4L2_MEMORY_MMAP;
+
+            ioctl(fd, VIDIOC_QBUF, (IntPtr)(&requeueBuffer));
+        }
     }
 }
+
+// ReSharper disable StructCanBeMadeReadOnly
+#pragma warning disable CA1815
+public unsafe struct FrameBuffer
+{
+    private readonly IntPtr buffer;
+
+    private readonly int length;
+
+    public FrameBuffer(IntPtr buffer, int length)
+    {
+        this.buffer = buffer;
+        this.length = length;
+    }
+
+    public Span<byte> AsSpan()
+    {
+        return new Span<byte>((void*)buffer, length);
+    }
+}
+#pragma warning restore CA1815
+// ReSharper restore StructCanBeMadeReadOnly

@@ -6,24 +6,6 @@ using static LinuxDotNet.Video4Linux2.NativeMethods;
 
 internal static class VideoDeviceHelper
 {
-    public static IReadOnlyList<VideoFormat> GetSupportedFormats(string path)
-    {
-        var fd = open(path, O_RDWR);
-        if (fd < 0)
-        {
-            throw new FileNotFoundException($"Failed to open device. path=[{path}]");
-        }
-
-        try
-        {
-            return GetSupportedFormats(fd);
-        }
-        finally
-        {
-            _ = close(fd);
-        }
-    }
-
     public static unsafe IReadOnlyList<VideoFormat> GetSupportedFormats(int fd)
     {
         var formats = new List<VideoFormat>();
