@@ -56,7 +56,7 @@ public sealed class VideoCapture : IDisposable
         }
 
         // Set format
-        v4l2_format format;
+        v4l2_format format = default;
         format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         format.fmt.pix.width = (uint)width;
         format.fmt.pix.height = (uint)height;
@@ -182,7 +182,7 @@ public sealed class VideoCapture : IDisposable
         };
         captureThread.Start();
 
-        return false;
+        return true;
     }
 
     public unsafe void StopCapture()
@@ -227,9 +227,10 @@ public sealed class VideoCapture : IDisposable
                 continue;
             }
 
-            if (buffer.index < buffer.length)
+            if (buffer.index < buffers.Length)
             {
-                FrameCaptured?.Invoke(new FrameBuffer(buffers[buffer.index], (int)buffer.bytesused));
+                var handler = FrameCaptured;
+                handler?.Invoke(new FrameBuffer(buffers[buffer.index], (int)buffer.bytesused));
             }
 
             // Re-queue buffer
@@ -245,7 +246,7 @@ public sealed class VideoCapture : IDisposable
 
 // ReSharper disable StructCanBeMadeReadOnly
 #pragma warning disable CA1815
-public unsafe struct FrameBuffer
+public readonly unsafe struct FrameBuffer
 {
     private readonly IntPtr buffer;
 

@@ -116,7 +116,7 @@ internal static class NativeMethods
         public fixed byte bus_info[BusInfoSize];
         public uint version;
         public uint capabilities;
-        public fixed uint reserved[4];
+        public fixed uint reserved[3];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
