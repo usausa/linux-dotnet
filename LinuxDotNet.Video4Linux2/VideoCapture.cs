@@ -5,7 +5,7 @@ using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
 
-// TODO
+// TODO *
 #pragma warning disable CA1806
 [SupportedOSPlatform("linux")]
 public sealed class VideoCapture : IDisposable

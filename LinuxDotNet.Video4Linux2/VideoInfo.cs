@@ -58,7 +58,6 @@ public sealed class VideoFormat
     public override string ToString() => $"{Description} ({PixelFormat})";
 }
 
-// TODO split info and control
 [SupportedOSPlatform("linux")]
 public sealed class VideoInfo
 {
@@ -114,7 +113,7 @@ public sealed class VideoInfo
                 Encoding.ASCII.GetString(capability.bus_info, v4l2_capability.BusInfoSize).TrimEnd('\0'),
                 isVideoCapture,
                 capability.capabilities,
-                VideoDeviceHelper.GetSupportedFormats(fd));
+                GetSupportedFormats(fd));
         }
         finally
         {
@@ -134,6 +133,91 @@ public sealed class VideoInfo
         foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => x))
         {
             yield return GetVideoInfo($"/dev/{name}");
+        }
+    }
+
+    private static unsafe List<VideoFormat> GetSupportedFormats(int fd)
+    {
+        var formats = new List<VideoFormat>();
+
+        var index = 0u;
+        while (true)
+        {
+            v4l2_fmtdesc formatDesc;
+            formatDesc.index = index;
+            formatDesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+            if (ioctl(fd, VIDIOC_ENUM_FMT, (IntPtr)(&formatDesc)) < 0)
+            {
+                break;
+            }
+
+            var description = Encoding.ASCII.GetString(formatDesc.description, v4l2_fmtdesc.DescriptionSize).TrimEnd('\0');
+            var format = new VideoFormat(formatDesc.pixelformat, description, GetSupportedResolutions(fd, formatDesc.pixelformat));
+
+            formats.Add(format);
+            index++;
+        }
+
+        return formats.OrderBy(static x => x.PixelFormat).ToList();
+    }
+
+    private static unsafe List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
+    {
+        var resolutions = new List<Resolution>();
+
+        var index = 0u;
+        while (true)
+        {
+            v4l2_frmsizeenum frmSize;
+            frmSize.index = index;
+            frmSize.pixel_format = pixelFormat;
+
+            if (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, (IntPtr)(&frmSize)) < 0)
+            {
+                break;
+            }
+
+            if (frmSize.type == V4L2_FRMSIZE_TYPE_DISCRETE)
+            {
+                resolutions.Add(new Resolution((int)frmSize.size.discrete.width, (int)frmSize.size.discrete.height));
+            }
+            else if ((frmSize.type == V4L2_FRMSIZE_TYPE_STEPWISE) || (frmSize.type == V4L2_FRMSIZE_TYPE_CONTINUOUS))
+            {
+                AddCommonResolutions(resolutions, frmSize.size.stepwise);
+                break;
+            }
+
+            index++;
+        }
+
+        return resolutions.OrderBy(static x => x.Width).ThenBy(static x => x.Height).ToList();
+    }
+
+    private static void AddCommonResolutions(List<Resolution> resolutions, v4l2_frmsize_stepwise stepwise)
+    {
+        // ReSharper disable CommentTypo
+        var commonResolutions = new[]
+        {
+            new Resolution(160, 120),   // QQVGA
+            new Resolution(320, 240),   // QVGA
+            new Resolution(640, 480),   // VGA
+            new Resolution(800, 600),   // SVGA
+            new Resolution(1024, 768),  // XGA
+            new Resolution(1280, 720),  // HD
+            new Resolution(1280, 960),
+            new Resolution(1920, 1080), // Full HD
+            new Resolution(2560, 1440), // 2K
+            new Resolution(3840, 2160)  // 4K
+        };
+        // ReSharper restore CommentTypo
+
+        foreach (var res in commonResolutions)
+        {
+            if ((res.Width >= stepwise.min_width) && (res.Width <= stepwise.max_width) && (res.Height >= stepwise.min_height) && (res.Height <= stepwise.max_height))
+            {
+                resolutions.Add(res);
+            }
         }
     }
 }

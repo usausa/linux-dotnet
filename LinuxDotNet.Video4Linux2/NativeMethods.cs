@@ -16,8 +16,6 @@ internal static class NativeMethods
     // Const
     //------------------------------------------------------------------------
 
-    // TODO 不要削除、値再確認
-
     // ioctl
     private const uint IOC_NRBITS = 8;
     private const uint IOC_TYPEBITS = 8;
