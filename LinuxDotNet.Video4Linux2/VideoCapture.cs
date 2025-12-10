@@ -61,12 +61,12 @@ public sealed class VideoCapture : IDisposable
         // Set format
         v4l2_format format;
         format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-        var pix = (v4l2_pix_format*)format.data;
-        pix->width = (uint)width;
-        pix->height = (uint)height;
-        pix->pixelformat = V4L2_PIX_FMT_YUYV;
-        pix->field = V4L2_FIELD_NONE;
+        format.fmt.pix.width = (uint)width;
+        format.fmt.pix.height = (uint)height;
+        format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        format.fmt.pix.field = V4L2_FIELD_NONE;
+        format.fmt.pix.bytesperline = 0;
+        format.fmt.pix.sizeimage = 0;
 
         if (ioctl(fd, VIDIOC_S_FMT, (IntPtr)(&format)) < 0)
         {
@@ -74,8 +74,8 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
-        Width = (int)pix->width;
-        Height = (int)pix->height;
+        Width = (int)format.fmt.pix.width;
+        Height = (int)format.fmt.pix.height;
 
         // Request buffers
         v4l2_requestbuffers requestBuffers;
@@ -110,10 +110,8 @@ public sealed class VideoCapture : IDisposable
             }
 
             // Memory map
-            buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.offset);
+            buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.m.offset);
             bufferLengths[i] = (int)buffer.length;
-
-            Console.WriteLine($"Length = {buffer.length}");
 
             // Queue buffer
             v4l2_buffer buffer2;

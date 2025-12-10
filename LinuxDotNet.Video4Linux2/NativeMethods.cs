@@ -19,17 +19,29 @@ internal static class NativeMethods
     // TODO 不要削除、値再確認
 
     // ioctl
-    public const uint VIDIOC_QUERYCAP = 0x80685600;
-    public const uint VIDIOC_S_FMT = 0xc0d05605;
-    public const uint VIDIOC_G_FMT = 0xc0cc5604;
-    public const uint VIDIOC_REQBUFS = 0xc0145608;
-    public const uint VIDIOC_QUERYBUF = 0xc0585609;
-    public const uint VIDIOC_QBUF = 0xc058560f;
-    public const uint VIDIOC_DQBUF = 0xc0585611;
-    public const uint VIDIOC_STREAMON = 0x40045612;
-    public const uint VIDIOC_STREAMOFF = 0x40045613;
-    public const uint VIDIOC_ENUM_FMT = 0xc0405602;
-    public const uint VIDIOC_ENUM_FRAMESIZES = 0xc02c564a;
+    private const uint IOC_NRBITS = 8;
+    private const uint IOC_TYPEBITS = 8;
+    private const uint IOC_SIZEBITS = 14;
+
+    private const uint IOC_NRSHIFT = 0;
+    private const uint IOC_TYPESHIFT = IOC_NRSHIFT + IOC_NRBITS;
+    private const uint IOC_SIZESHIFT = IOC_TYPESHIFT + IOC_TYPEBITS;
+    private const uint IOC_DIRSHIFT = IOC_SIZESHIFT + IOC_SIZEBITS;
+
+    private const uint IOC_WRITE = 1;
+    private const uint IOC_READ = 2;
+
+    public static readonly uint VIDIOC_QUERYCAP;
+    public static readonly uint VIDIOC_G_FMT;
+    public static readonly uint VIDIOC_S_FMT;
+    public static readonly uint VIDIOC_REQBUFS;
+    public static readonly uint VIDIOC_QUERYBUF;
+    public static readonly uint VIDIOC_QBUF;
+    public static readonly uint VIDIOC_DQBUF;
+    public static readonly uint VIDIOC_STREAMON;
+    public static readonly uint VIDIOC_STREAMOFF;
+    public static readonly uint VIDIOC_ENUM_FMT;
+    public static readonly uint VIDIOC_ENUM_FRAMESIZES;
 
     // open
     public const int O_RDWR = 2;
@@ -89,7 +101,7 @@ internal static class NativeMethods
     // Struct
     //------------------------------------------------------------------------
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public unsafe struct v4l2_capability
     {
         public const int DriverSize = 16;
@@ -104,7 +116,7 @@ internal static class NativeMethods
         public fixed uint reserved[4];
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct v4l2_pix_format
     {
         public uint width;
@@ -115,16 +127,34 @@ internal static class NativeMethods
         public uint sizeimage;
         public uint colorspace;
         public uint priv;
+        public uint flags;
+        public uint ycbcr_enc;
+        public uint quantization;
+        public uint xfer_func;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct v4l2_format
+    [StructLayout(LayoutKind.Explicit, Pack = 8)]
+    public unsafe struct v4l2_format_fmt
+    {
+        [FieldOffset(0)]
+        public v4l2_pix_format pix;
+
+        [FieldOffset(0)]
+        public fixed byte raw_data[200];
+
+        // alignment purpose
+        [FieldOffset(0)]
+        private long align;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_format
     {
         public uint type;
-        public fixed byte data[200];
+        public v4l2_format_fmt fmt;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public unsafe struct v4l2_requestbuffers
     {
         public uint count;
@@ -133,7 +163,20 @@ internal static class NativeMethods
         public fixed uint reserved[2];
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit, Pack = 8)]
+    public struct v4l2_buffer_m
+    {
+        [FieldOffset(0)]
+        public uint offset;
+
+        [FieldOffset(0)]
+        public nuint userptr;
+
+        [FieldOffset(0)]
+        public int fd;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public unsafe struct v4l2_buffer
     {
         public uint index;
@@ -143,8 +186,8 @@ internal static class NativeMethods
         public uint field;
 
         // struct timeval
-        public long tv_sec;
-        public long tv_usec;
+        public nint tv_sec;
+        public nint tv_usec;
 
         // struct v4l2_timecode
         public uint timecode_type;
@@ -159,16 +202,14 @@ internal static class NativeMethods
         public uint memory;
 
         // union m
-        public uint offset;
-        public uint m_padding;
+        public v4l2_buffer_m m;
 
         public uint length;
-
         public uint reserved2;
         public uint reserved;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public unsafe struct v4l2_fmtdesc
     {
         public const int DescriptionSize = 32;
@@ -181,14 +222,14 @@ internal static class NativeMethods
         public fixed uint reserved[4];
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct v4l2_frmsize_discrete
     {
         public uint width;
         public uint height;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct v4l2_frmsize_stepwise
     {
         public uint min_width;
@@ -199,17 +240,16 @@ internal static class NativeMethods
         public uint step_height;
     }
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Explicit, Pack = 8)]
     public struct v4l2_frmsizeenum_union
     {
         [FieldOffset(0)]
         public v4l2_frmsize_discrete discrete;
-
         [FieldOffset(0)]
         public v4l2_frmsize_stepwise stepwise;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public unsafe struct v4l2_frmsizeenum
     {
         public uint index;
@@ -237,4 +277,34 @@ internal static class NativeMethods
 
     [DllImport("libc", SetLastError = true)]
     public static extern int munmap(IntPtr addr, int length);
+
+    //------------------------------------------------------------------------
+    // Initialize
+    //------------------------------------------------------------------------
+
+    private static uint IOC(uint dir, uint type, uint nr, int size) =>
+        (dir << (int)IOC_DIRSHIFT) | (type << (int)IOC_TYPESHIFT) | (nr << (int)IOC_NRSHIFT) | ((uint)size << (int)IOC_SIZESHIFT);
+
+    private static uint IOR(char type, uint nr, int size) => IOC(IOC_READ, (byte)type, nr, size);
+
+    private static uint IOW(char type, uint nr, int size) => IOC(IOC_WRITE, (byte)type, nr, size);
+
+    private static uint IOWR(char type, uint nr, int size) => IOC(IOC_READ | IOC_WRITE, (byte)type, nr, size);
+
+#pragma warning disable CA1810
+    static unsafe NativeMethods()
+    {
+        VIDIOC_QUERYCAP = IOR('V', 0, sizeof(v4l2_capability));
+        VIDIOC_G_FMT = IOWR('V', 4, sizeof(v4l2_format));
+        VIDIOC_S_FMT = IOWR('V', 5, sizeof(v4l2_format));
+        VIDIOC_REQBUFS = IOWR('V', 8, sizeof(v4l2_requestbuffers));
+        VIDIOC_QUERYBUF = IOWR('V', 9, sizeof(v4l2_buffer));
+        VIDIOC_QBUF = IOWR('V', 15, sizeof(v4l2_buffer));
+        VIDIOC_DQBUF = IOWR('V', 17, sizeof(v4l2_buffer));
+        VIDIOC_STREAMON = IOW('V', 18, sizeof(int));
+        VIDIOC_STREAMOFF = IOW('V', 19, sizeof(int));
+        VIDIOC_ENUM_FMT = IOWR('V', 2, sizeof(v4l2_fmtdesc));
+        VIDIOC_ENUM_FRAMESIZES = IOWR('V', 74, sizeof(v4l2_frmsizeenum));
+    }
+#pragma warning restore CA1810
 }
