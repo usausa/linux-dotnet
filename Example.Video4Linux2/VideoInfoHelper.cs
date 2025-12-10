@@ -3,9 +3,32 @@ namespace Example.Video4Linux2;
 
 using LinuxDotNet.Video4Linux2;
 
-internal static class VideoInfoSelector
+internal static class VideoInfoHelper
 {
-    // TODO
+    public static Resolution SelectBestResolution(IReadOnlyList<VideoFormat> formats, PixelFormat pixelFormat = PixelFormat.YUYV)
+    {
+        if (formats.Count == 0)
+        {
+            return new Resolution(640, 480);
+        }
+
+        var targetFormat = formats.FirstOrDefault(x => x.PixelFormat == pixelFormat) ?? formats[0];
+        if (targetFormat.SupportedResolutions.Count == 0)
+        {
+            return new Resolution(640, 480);
+        }
+
+        var best = targetFormat.SupportedResolutions[0];
+        foreach (var res in targetFormat.SupportedResolutions)
+        {
+            if ((res.Width * res.Height) > (best.Width * best.Height))
+            {
+                best = res;
+            }
+        }
+
+        return best;
+    }
 
     public static bool IsSuitableForCapture(VideoInfo info)
     {

@@ -40,8 +40,9 @@ infoCommand.Handler = CommandHandler.Create(static () =>
             Console.WriteLine($"    Resolution: {resolutions}");
         }
 
-        Console.WriteLine($"Suitable: {VideoInfoSelector.IsSuitableForCapture(device)}");
-        Console.WriteLine($"Score: {VideoInfoSelector.CalculateDeviceScore(device)}");
+        Console.WriteLine($"Suitable: {VideoInfoHelper.IsSuitableForCapture(device)}");
+        Console.WriteLine($"Score: {VideoInfoHelper.CalculateDeviceScore(device)}");
+        Console.WriteLine($"Best: {VideoInfoHelper.SelectBestResolution(device.SupportedFormats)}");
 
         Console.WriteLine();
     }

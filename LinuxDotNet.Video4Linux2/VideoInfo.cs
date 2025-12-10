@@ -11,7 +11,7 @@ public readonly struct Resolution : IEquatable<Resolution>
 
     public int Height { get; }
 
-    internal Resolution(int width, int height)
+    public Resolution(int width, int height)
     {
         Width = width;
         Height = height;
