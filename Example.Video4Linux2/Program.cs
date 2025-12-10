@@ -1,12 +1,15 @@
 // ReSharper disable UseObjectOrCollectionInitializer
 #pragma warning disable IDE0017
 #pragma warning disable CA1416
+
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 
 using Example.Video4Linux2;
 
 using LinuxDotNet.Video4Linux2;
+
+using SkiaSharp;
 
 var rootCommand = new RootCommand("Camera example");
 
@@ -51,14 +54,35 @@ captureCommand.Handler = CommandHandler.Create(static () =>
 {
     using var capture = new VideoCapture("/dev/video0");
 
-    // TODO
-    capture.FrameCaptured += static _ =>
-    {
-        Console.Write("*");
-    };
-
     var ret = capture.Open();
     Console.WriteLine($"Open: {ret} {capture.Width}x{capture.Height}");
+
+    if (!ret)
+    {
+        return;
+    }
+
+    var width = capture.Width;
+    var height = capture.Height;
+    var processed = false;
+    capture.FrameCaptured += x =>
+    {
+        if (!processed)
+        {
+            var buffer = new byte[width * height * 4];
+            ImageHelper.ConvertYUYV2RGBA(x.AsSpan(), buffer);
+
+            var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+            using var image = SKImage.FromPixelCopy(info, buffer, width * 4);
+            using var data = image.Encode(SKEncodedImageFormat.Jpeg, 90);
+            using var stream = File.OpenWrite("output.jpg");
+            data.SaveTo(stream);
+
+            processed = true;
+
+            Console.WriteLine("Captured.");
+        }
+    };
 
     capture.StartCapture();
 
