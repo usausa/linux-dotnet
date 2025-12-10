@@ -1,6 +1,7 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
+using System.Buffers;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -20,13 +21,19 @@ public sealed class VideoCapture : IDisposable
 
     private int[] bufferLengths = [];
 
-    // TODO
+    private Thread? captureThread;
+
+    private CancellationTokenSource? captureCts;
+
+    private byte[] frameBuffer = [];
 
     public int Width { get; private set; }
 
     public int Height { get; private set; }
 
     public bool IsOpen => fd >= 0;
+
+    public bool IsCapturing => captureCts is { IsCancellationRequested: false };
 
     public VideoCapture(string path)
     {
@@ -45,7 +52,7 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
-        fd = open(path, NativeMethods.O_RDWR);
+        fd = open(path, O_RDWR);
         if (fd < 0)
         {
             return false;
@@ -106,6 +113,8 @@ public sealed class VideoCapture : IDisposable
             buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.offset);
             bufferLengths[i] = (int)buffer.length;
 
+            Console.WriteLine($"Length = {buffer.length}");
+
             // Queue buffer
             v4l2_buffer buffer2;
             buffer2.index = i;
@@ -118,6 +127,9 @@ public sealed class VideoCapture : IDisposable
                 return false;
             }
         }
+
+        var maxSize = bufferLengths.Max();
+        frameBuffer = ArrayPool<byte>.Shared.Rent(maxSize);
 
         return true;
     }
@@ -151,17 +163,62 @@ public sealed class VideoCapture : IDisposable
         }
         fd = -1;
 
+        if (frameBuffer.Length > 0)
+        {
+            ArrayPool<byte>.Shared.Return(frameBuffer);
+            frameBuffer = [];
+        }
+
         Width = 0;
         Height = 0;
     }
 
-    public bool StartCapture()
+    public unsafe bool StartCapture()
     {
-        // TODO
+        if (!IsOpen || IsCapturing)
+        {
+            return false;
+        }
+
+        // Start streaming
+        var type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (ioctl(fd, VIDIOC_STREAMON, (IntPtr)(&type)) < 0)
+        {
+            return false;
+        }
+
+        // Start capture loop
+        captureCts = new CancellationTokenSource();
+        captureThread = new Thread(() => CaptureLoop(captureCts.Token))
+        {
+            IsBackground = true,
+            Name = "V4L2 Capture"
+        };
+        captureThread.Start();
+
         return false;
     }
 
-    public void StopCapture()
+    public unsafe void StopCapture()
+    {
+        if (!IsCapturing)
+        {
+            return;
+        }
+
+        captureCts?.Cancel();
+        captureThread?.Join(2000);
+        captureThread = null;
+
+        captureCts?.Dispose();
+        captureCts = null;
+
+        // Stop streaming
+        var type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        ioctl(fd, VIDIOC_STREAMOFF, (IntPtr)(&type));
+    }
+
+    private unsafe void CaptureLoop(CancellationToken cancellationToken)
     {
         // TODO
     }
