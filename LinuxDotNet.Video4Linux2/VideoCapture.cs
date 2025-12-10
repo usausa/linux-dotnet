@@ -1,11 +1,51 @@
 namespace LinuxDotNet.Video4Linux2;
 
 using System;
+using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
 
-// TODO *
+// ReSharper disable StructCanBeMadeReadOnly
+#pragma warning disable CA1815
+public readonly unsafe struct FrameBuffer
+{
+    private readonly IntPtr buffer;
+
+    private readonly int length;
+
+    public int Length => length;
+
+    public bool IsEmpty => buffer == IntPtr.Zero || length == 0;
+
+    internal FrameBuffer(IntPtr buffer, int length)
+    {
+        this.buffer = buffer;
+        this.length = length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> AsSpan()
+    {
+        return IsEmpty ? Span<byte>.Empty : new Span<byte>((void*)buffer, length);
+    }
+
+    public byte[] ToArray()
+    {
+        if (IsEmpty)
+        {
+            return [];
+        }
+
+        var array = new byte[length];
+        AsSpan().CopyTo(array);
+        return array;
+    }
+}
+#pragma warning restore CA1815
+// ReSharper restore StructCanBeMadeReadOnly
+
 #pragma warning disable CA1806
 [SupportedOSPlatform("linux")]
 public sealed class VideoCapture : IDisposable
@@ -64,7 +104,6 @@ public sealed class VideoCapture : IDisposable
         format.fmt.pix.field = V4L2_FIELD_NONE;
         format.fmt.pix.bytesperline = 0;
         format.fmt.pix.sizeimage = 0;
-
         if (ioctl(fd, VIDIOC_S_FMT, (IntPtr)(&format)) < 0)
         {
             CloseInternal();
@@ -81,7 +120,6 @@ public sealed class VideoCapture : IDisposable
         requestBuffers.memory = V4L2_MEMORY_MMAP;
         requestBuffers.reserved[0] = 0;
         requestBuffers.reserved[1] = 0;
-
         if (ioctl(fd, VIDIOC_REQBUFS, (IntPtr)(&requestBuffers)) < 0)
         {
             CloseInternal();
@@ -99,7 +137,6 @@ public sealed class VideoCapture : IDisposable
             buffer.index = i;
             buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer.memory = V4L2_MEMORY_MMAP;
-
             if (ioctl(fd, VIDIOC_QUERYBUF, (IntPtr)(&buffer)) < 0)
             {
                 CloseInternal();
@@ -115,7 +152,6 @@ public sealed class VideoCapture : IDisposable
             buffer2.index = i;
             buffer2.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer2.memory = V4L2_MEMORY_MMAP;
-
             if (ioctl(fd, VIDIOC_QBUF, (IntPtr)(&buffer2)) < 0)
             {
                 CloseInternal();
@@ -159,6 +195,67 @@ public sealed class VideoCapture : IDisposable
         Height = 0;
     }
 
+    public unsafe bool Snapshot(IBufferWriter<byte> writer, int timeout = 5000)
+    {
+        if (!IsOpen || IsCapturing)
+        {
+            return false;
+        }
+
+        // Start streaming
+        var type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (ioctl(fd, VIDIOC_STREAMON, (IntPtr)(&type)) < 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (timeout > 0)
+            {
+                var fds = new pollfd
+                {
+                    fd = fd,
+                    events = POLLIN
+                };
+                if (poll(ref fds, 1, timeout) <= 0)
+                {
+                    return false;
+                }
+            }
+
+            // De-queue buffer
+            v4l2_buffer buffer;
+            buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buffer.memory = V4L2_MEMORY_MMAP;
+            if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
+            {
+                return false;
+            }
+
+            if (buffer.index < buffers.Length)
+            {
+                var source = new Span<byte>((void*)buffers[buffer.index], (int)buffer.bytesused);
+                var span = writer.GetSpan(source.Length);
+                source.CopyTo(span);
+                writer.Advance(source.Length);
+            }
+
+            // Re-queue buffer
+            var requeueBuffer = default(v4l2_buffer);
+            requeueBuffer.index = buffer.index;
+            requeueBuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            requeueBuffer.memory = V4L2_MEMORY_MMAP;
+            ioctl(fd, VIDIOC_QBUF, (IntPtr)(&requeueBuffer));
+        }
+        finally
+        {
+            ioctl(fd, VIDIOC_STREAMOFF, (IntPtr)(&type));
+        }
+
+        return true;
+    }
+
     public unsafe bool StartCapture()
     {
         if (!IsOpen || IsCapturing)
@@ -193,7 +290,7 @@ public sealed class VideoCapture : IDisposable
         }
 
         captureCts?.Cancel();
-        captureThread?.Join(2000);
+        captureThread?.Join();
         captureThread = null;
 
         captureCts?.Dispose();
@@ -218,10 +315,10 @@ public sealed class VideoCapture : IDisposable
                 continue;
             }
 
+            // De-queue buffer
             v4l2_buffer buffer;
             buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer.memory = V4L2_MEMORY_MMAP;
-
             if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
             {
                 continue;
@@ -238,30 +335,7 @@ public sealed class VideoCapture : IDisposable
             requeueBuffer.index = buffer.index;
             requeueBuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             requeueBuffer.memory = V4L2_MEMORY_MMAP;
-
             ioctl(fd, VIDIOC_QBUF, (IntPtr)(&requeueBuffer));
         }
     }
 }
-
-// ReSharper disable StructCanBeMadeReadOnly
-#pragma warning disable CA1815
-public readonly unsafe struct FrameBuffer
-{
-    private readonly IntPtr buffer;
-
-    private readonly int length;
-
-    public FrameBuffer(IntPtr buffer, int length)
-    {
-        this.buffer = buffer;
-        this.length = length;
-    }
-
-    public Span<byte> AsSpan()
-    {
-        return new Span<byte>((void*)buffer, length);
-    }
-}
-#pragma warning restore CA1815
-// ReSharper restore StructCanBeMadeReadOnly
