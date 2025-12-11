@@ -15,6 +15,19 @@ internal static class NativeMethods
     private const string LibCups = "libcups.so.2";
 
     //------------------------------------------------------------------------
+    // const
+    //------------------------------------------------------------------------
+
+    public const int IPP_OP_GET_PRINTER_ATTRIBUTES = 0x000B;
+
+    public const int IPP_TAG_OPERATION = 0x01;
+    public const int IPP_TAG_URI = 0x45;
+    public const int IPP_TAG_KEYWORD = 0x44;
+
+    public const int IPP_RES_PER_INCH = 3;
+    public const int IPP_RES_PER_CM = 4;
+
+    //------------------------------------------------------------------------
     // Enum
     //------------------------------------------------------------------------
 
@@ -59,6 +72,37 @@ internal static class NativeMethods
         IPP_MULTIPLE_JOBS_NOT_SUPPORTED = 0x0509
     }
 
+    public enum IppTag
+    {
+        IPP_TAG_ZERO = 0x00,
+        IPP_TAG_OPERATION = 0x01,
+        IPP_TAG_JOB = 0x02,
+        IPP_TAG_END = 0x03,
+        IPP_TAG_PRINTER = 0x04,
+        IPP_TAG_UNSUPPORTED_GROUP = 0x05,
+        IPP_TAG_SUBSCRIPTION = 0x06,
+        IPP_TAG_EVENT_NOTIFICATION = 0x07,
+        IPP_TAG_INTEGER = 0x21,
+        IPP_TAG_BOOLEAN = 0x22,
+        IPP_TAG_ENUM = 0x23,
+        IPP_TAG_STRING = 0x30,
+        IPP_TAG_DATE = 0x31,
+        IPP_TAG_RESOLUTION = 0x32,
+        IPP_TAG_RANGE = 0x33,
+        IPP_TAG_BEGIN_COLLECTION = 0x34,
+        IPP_TAG_TEXTLANG = 0x35,
+        IPP_TAG_NAMELANG = 0x36,
+        IPP_TAG_END_COLLECTION = 0x37,
+        IPP_TAG_TEXT = 0x41,
+        IPP_TAG_NAME = 0x42,
+        IPP_TAG_KEYWORD = 0x44,
+        IPP_TAG_URI = 0x45,
+        IPP_TAG_URISCHEME = 0x46,
+        IPP_TAG_CHARSET = 0x47,
+        IPP_TAG_LANGUAGE = 0x48,
+        IPP_TAG_MIMETYPE = 0x49
+    }
+
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
@@ -99,6 +143,12 @@ internal static class NativeMethods
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IppStatus cupsLastError();
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr cupsLastErrorString();
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr cupsGetDefault();
@@ -170,12 +220,6 @@ internal static class NativeMethods
         [MarshalAs(UnmanagedType.LPStr)] string printer);
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IppStatus cupsLastError();
-
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr cupsLastErrorString();
-
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
     public static extern int cupsGetJobs(
         ref IntPtr jobs,
         [MarshalAs(UnmanagedType.LPStr)] string name,
@@ -184,4 +228,66 @@ internal static class NativeMethods
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
     public static extern void cupsFreeJobs(int num_jobs, IntPtr jobs);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippNewRequest(int op);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void ippDelete(IntPtr ipp);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippAddString(
+        IntPtr ipp,
+        int group,
+        int value_tag,
+        [MarshalAs(UnmanagedType.LPStr)] string name,
+        [MarshalAs(UnmanagedType.LPStr)] string? language,
+        [MarshalAs(UnmanagedType.LPStr)] string value);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr cupsDoRequest(
+        IntPtr http,
+        IntPtr request,
+        [MarshalAs(UnmanagedType.LPStr)] string resource);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippFindAttribute(
+        IntPtr ipp,
+        [MarshalAs(UnmanagedType.LPStr)] string name,
+        int type);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippGetString(
+        IntPtr attr,
+        int element,
+        IntPtr language);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int ippGetInteger(IntPtr attr, int element);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int ippGetBoolean(IntPtr attr, int element);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int ippGetCount(IntPtr attr);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippFirstAttribute(IntPtr ipp);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippNextAttribute(IntPtr ipp);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr ippGetName(IntPtr attr);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int ippGetValueTag(IntPtr attr);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int ippGetResolution(
+        IntPtr attr,
+        int element,
+        out int xres,
+        out int yres,
+        out int units);
 }
