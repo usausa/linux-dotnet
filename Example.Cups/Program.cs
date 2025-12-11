@@ -4,6 +4,8 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 
+using Example.Cups;
+
 using LinuxDotNet.Cups;
 
 var rootCommand = new RootCommand("Cups example");
@@ -20,19 +22,35 @@ listCommand.Handler = CommandHandler.Create(static () =>
             Console.Write(" (Default)");
         }
         Console.WriteLine();
+
+        foreach (var (name, value) in printer.Options)
+        {
+            Console.WriteLine($"  {name}: {value}");
+        }
     }
 });
 rootCommand.Add(listCommand);
 
-// Print
-var printCommand = new Command("print", "Print file");
-printCommand.AddOption(new Option<string>(["--file", "-f"]) { IsRequired = true });
-printCommand.AddOption(new Option<string>(["--printer", "-p"]));
-printCommand.Handler = CommandHandler.Create(static (string file, string? printer) =>
+// Print file
+var fileCommand = new Command("file", "Print file");
+fileCommand.AddOption(new Option<string>(["--file", "-f"]) { IsRequired = true });
+fileCommand.AddOption(new Option<string>(["--printer", "-p"]));
+fileCommand.Handler = CommandHandler.Create(static (string file, string? printer) =>
 {
     var jobId = CupsPrinter.PrintFile(file, printer);
     Console.WriteLine($"JobId: {jobId}");
 });
-rootCommand.Add(printCommand);
+rootCommand.Add(fileCommand);
+
+// TODO image
+
+// TODO
+// Test
+var testCommand = new Command("test", "Test");
+testCommand.Handler = CommandHandler.Create(static () =>
+{
+    File.WriteAllBytes("test.png", SampleImage.Create().ToArray());
+});
+rootCommand.Add(testCommand);
 
 return await rootCommand.InvokeAsync(args).ConfigureAwait(false);

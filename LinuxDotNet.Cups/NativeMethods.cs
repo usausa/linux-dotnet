@@ -68,8 +68,8 @@ internal static class NativeMethods
     {
         public IntPtr name;
         public IntPtr instance;
-        public int isDefault;
-        public int numOptions;
+        public int is_default;
+        public int num_options;
         public IntPtr options;
     }
 

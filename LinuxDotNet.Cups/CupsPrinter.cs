@@ -18,7 +18,7 @@ public static class CupsPrinter
         return Marshal.PtrToStringAnsi(printerPtr);
     }
 
-    public static IReadOnlyList<PrinterInfo> GetPrinters()
+    public static unsafe IReadOnlyList<PrinterInfo> GetPrinters()
     {
         var printers = new List<PrinterInfo>();
 
@@ -32,16 +32,30 @@ public static class CupsPrinter
                 return printers;
             }
 
-            // TODO unsafe & options
-            var size = Marshal.SizeOf<cups_dest_t>();
             for (var i = 0; i < num; i++)
             {
-                var currentPtr = IntPtr.Add(ptr, i * size);
-                var dest = Marshal.PtrToStructure<cups_dest_t>(currentPtr);
-                var printerName = Marshal.PtrToStringAnsi(dest.name);
+                var dest = (cups_dest_t*)IntPtr.Add(ptr, i * sizeof(cups_dest_t));
+                var printerName = Marshal.PtrToStringAnsi(dest->name);
                 if (!String.IsNullOrEmpty(printerName))
                 {
-                    printers.Add(new PrinterInfo(printerName, dest.isDefault != 0));
+                    var info = new PrinterInfo(
+                        printerName,
+                        dest->instance != IntPtr.Zero ? Marshal.PtrToStringAnsi(dest->instance) : null,
+                        dest->is_default != 0);
+
+                    for (var j = 0; j < dest->num_options; j++)
+                    {
+                        var option = (cups_option_t*)IntPtr.Add(dest->options, j * sizeof(cups_option_t));
+                        var name = Marshal.PtrToStringAnsi(option->name);
+                        var value = Marshal.PtrToStringAnsi(option->value);
+
+                        if ((name is not null) && (value is not null))
+                        {
+                            info.Options[name] = value;
+                        }
+                    }
+
+                    printers.Add(info);
                 }
             }
         }
