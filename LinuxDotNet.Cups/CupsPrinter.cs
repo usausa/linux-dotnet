@@ -32,6 +32,7 @@ public static class CupsPrinter
                 return printers;
             }
 
+            // TODO unsafe & options
             var size = Marshal.SizeOf<cups_dest_t>();
             for (var i = 0; i < num; i++)
             {
