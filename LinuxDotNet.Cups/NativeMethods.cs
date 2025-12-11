@@ -27,6 +27,12 @@ internal static class NativeMethods
     public const int IPP_RES_PER_INCH = 3;
     public const int IPP_RES_PER_CM = 4;
 
+    public const int HTTP_CONTINUE = 100;
+
+    public const int HTTP_ENCRYPTION_IF_REQUESTED = 0;
+    public const int HTTP_ENCRYPTION_NEVER = 1;
+    public const int HTTP_ENCRYPTION_REQUIRED = 2;
+
     //------------------------------------------------------------------------
     // Enum
     //------------------------------------------------------------------------

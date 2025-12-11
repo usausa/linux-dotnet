@@ -4,7 +4,7 @@ using SkiaSharp;
 
 internal static class SampleImage
 {
-    public static MemoryStream Create(int? page = null, int? maxPage = null)
+    public static MemoryStream Create()
     {
         using var bitmap = new SKBitmap(800, 600);
         using var canvas = new SKCanvas(bitmap);
@@ -12,22 +12,12 @@ internal static class SampleImage
         // Background
         canvas.Clear(SKColors.White);
 
-        // Page
-        if ((page is not null) && (maxPage is not null))
-        {
-            using var pagePaint = new SKPaint();
-            pagePaint.Color = SKColors.Gray;
-            pagePaint.IsAntialias = true;
-            using var pageFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 14);
-            canvas.DrawText($"Page {page} / {maxPage}", 50, 30, pageFont, pagePaint);
-        }
-
         // Title
         using var titlePaint = new SKPaint();
         titlePaint.Color = SKColors.Black;
         titlePaint.IsAntialias = true;
         using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 48);
-        canvas.DrawText("CUPS API Test", 50, 80, titleFont, titlePaint);
+        canvas.DrawText("CUPS API Test", 50, 50, titleFont, titlePaint);
 
         // DateTime
         using var textPaint = new SKPaint();

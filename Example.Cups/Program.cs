@@ -95,15 +95,25 @@ fileCommand.Handler = CommandHandler.Create(static (string file, string? printer
 });
 rootCommand.Add(fileCommand);
 
-// Print direct
-var directCommand = new Command("direct", "Print direct");
-directCommand.AddOption(new Option<string>(["--printer", "-p"]));
-directCommand.Handler = CommandHandler.Create(static () =>
+// Print stream
+var streamCommand = new Command("stream", "Print stream");
+streamCommand.AddOption(new Option<string>(["--printer", "-p"]));
+streamCommand.Handler = CommandHandler.Create(static (string? printer) =>
 {
-    // TODO printer option
-    // TODO image
-    File.WriteAllBytes("test.png", SampleImage.Create(1, 2).ToArray());
+    using var image = SampleImage.Create();
+    var options = new PrintOptions
+    {
+        Printer = printer,
+        Copies = 1,
+        MediaSize = "A4",
+        ColorMode = true,
+        Orientation = PrintOrientation.Portrait,
+        Quality = PrintQuality.Normal
+    };
+
+    var jobId = CupsPrinter.PrintStream(image, options);
+    Console.WriteLine($"JobId: {jobId}");
 });
-rootCommand.Add(directCommand);
+rootCommand.Add(streamCommand);
 
 return await rootCommand.InvokeAsync(args).ConfigureAwait(false);

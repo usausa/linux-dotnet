@@ -387,11 +387,120 @@ public static class CupsPrinter
         return jobId;
     }
 
-    //public static int PrintStream(Stream stream, PrintOptions? options)
-    //{
-    //    // TODO direct
-    //    return 0;
-    //}
+    public static int PrintStream(Stream stream, PrintOptions? options)
+    {
+        options ??= PrintOptions.Default;
+        var printer = options.Printer ?? GetDefaultPrinter();
+        if (String.IsNullOrEmpty(printer))
+        {
+            throw new InvalidOperationException("No printer specified and no default printer found.");
+        }
+
+        var http = IntPtr.Zero;
+        var optionsPtr = IntPtr.Zero;
+        var numOptions = 0;
+        try
+        {
+            // Options
+            numOptions = BuildOptions(options, ref optionsPtr);
+
+            http = httpConnectEncrypt("localhost", 631, HTTP_ENCRYPTION_IF_REQUESTED);
+            if (http == IntPtr.Zero)
+            {
+                throw new InvalidOperationException($"Failed to connect cups server. error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Create job
+            var jobId = cupsCreateJob(http, printer, options.JobTitle, numOptions, optionsPtr);
+            if (jobId == 0)
+            {
+                throw new InvalidOperationException($"Failed to create job. error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Start document
+            var status = cupsStartDocument(http, printer, jobId, options.JobTitle, options.Format, 1);
+            if (status != HTTP_CONTINUE)
+            {
+                throw new InvalidOperationException($"Failed to start document. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Write data
+            var buffer = new byte[8192];
+            int read;
+            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                status = cupsWriteRequestData(http, buffer, read);
+                if (status != HTTP_CONTINUE)
+                {
+                    throw new InvalidOperationException($"Failed to write request data. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+                }
+            }
+
+            // Finish document
+            status = cupsFinishDocument(http, printer);
+            if (status != 0)
+            {
+                throw new InvalidOperationException($"Failed to finish document. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            return jobId;
+        }
+        finally
+        {
+            if (optionsPtr != IntPtr.Zero)
+            {
+                cupsFreeOptions(numOptions, optionsPtr);
+            }
+            if (http != IntPtr.Zero)
+            {
+                httpClose(http);
+            }
+        }
+    }
+
+    private static int BuildOptions(PrintOptions options, ref IntPtr optionsPtr)
+    {
+        var numOptions = 0;
+
+        if (options.Copies > 1)
+        {
+            numOptions = cupsAddOption("copies", $"{options.Copies}", numOptions, ref optionsPtr);
+        }
+
+        if (!string.IsNullOrEmpty(options.MediaSize))
+        {
+            numOptions = cupsAddOption("media", options.MediaSize, numOptions, ref optionsPtr);
+        }
+
+        if (!string.IsNullOrEmpty(options.MediaType))
+        {
+            numOptions = cupsAddOption("media-type", options.MediaType, numOptions, ref optionsPtr);
+        }
+
+        numOptions = cupsAddOption("print-color-mode", options.ColorMode ? "color" : "monochrome", numOptions, ref optionsPtr);
+
+        if (options.Orientation.HasValue)
+        {
+            numOptions = cupsAddOption("orientation-requested", $"{(int)options.Orientation}", numOptions, ref optionsPtr);
+        }
+
+        if (!String.IsNullOrEmpty(options.Sides))
+        {
+            numOptions = cupsAddOption("sides", options.Sides, numOptions, ref optionsPtr);
+        }
+
+        if (options.Quality.HasValue)
+        {
+            numOptions = cupsAddOption("print-quality", $"{(int)options.Quality}", numOptions, ref optionsPtr);
+        }
+
+        foreach (var (key, value) in options.CustomOptions)
+        {
+            numOptions = cupsAddOption(key, value, numOptions, ref optionsPtr);
+        }
+
+        return numOptions;
+    }
 
     //--------------------------------------------------------------------------------
     // Job
