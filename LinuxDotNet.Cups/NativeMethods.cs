@@ -80,6 +80,22 @@ internal static class NativeMethods
         public IntPtr value;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct cups_job_t
+    {
+        public int id;
+        public IntPtr dest;
+        public IntPtr title;
+        public IntPtr user;
+        public IntPtr format;
+        public int state;
+        public int size;
+        public int priority;
+        public long completed_time;
+        public long creation_time;
+        public long processing_time;
+    }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
@@ -158,4 +174,14 @@ internal static class NativeMethods
 
     [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr cupsLastErrorString();
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern int cupsGetJobs(
+        ref IntPtr jobs,
+        [MarshalAs(UnmanagedType.LPStr)] string name,
+        int myjobs,
+        int whichjobs);
+
+    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void cupsFreeJobs(int num_jobs, IntPtr jobs);
 }

@@ -10,9 +10,9 @@ using LinuxDotNet.Cups;
 
 var rootCommand = new RootCommand("Cups example");
 
-// List
-var listCommand = new Command("list", "List printers");
-listCommand.Handler = CommandHandler.Create(static () =>
+// Printer
+var printerCommand = new Command("printer", "List printers");
+printerCommand.Handler = CommandHandler.Create(static () =>
 {
     foreach (var printer in CupsPrinter.GetPrinters())
     {
@@ -29,7 +29,22 @@ listCommand.Handler = CommandHandler.Create(static () =>
         }
     }
 });
-rootCommand.Add(listCommand);
+rootCommand.Add(printerCommand);
+
+// Job
+var jobCommand = new Command("job", "List jobs");
+jobCommand.Handler = CommandHandler.Create(static () =>
+{
+    // TODO Option printer, myself
+    foreach (var job in CupsPrinter.GetJobs())
+    {
+        Console.WriteLine($"[{job.JobId}] {job.Title}");
+        Console.WriteLine($"  State: {job.State}");
+        Console.WriteLine($"  Printer: {job.Printer}");
+        Console.WriteLine($"  DateTime: {job.SubmitTime:yyyy/MM/dd HH:mm:ss}");
+    }
+});
+rootCommand.Add(jobCommand);
 
 // Print file
 var fileCommand = new Command("file", "Print file");
@@ -49,7 +64,7 @@ rootCommand.Add(fileCommand);
 var testCommand = new Command("test", "Test");
 testCommand.Handler = CommandHandler.Create(static () =>
 {
-    File.WriteAllBytes("test.png", SampleImage.Create().ToArray());
+    File.WriteAllBytes("test.png", SampleImage.Create(1, 2).ToArray());
 });
 rootCommand.Add(testCommand);
 

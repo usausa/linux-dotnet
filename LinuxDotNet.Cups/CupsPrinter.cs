@@ -8,6 +8,10 @@ using static LinuxDotNet.Cups.NativeMethods;
 [SupportedOSPlatform("linux")]
 public static class CupsPrinter
 {
+    //--------------------------------------------------------------------------------
+    // Information
+    //--------------------------------------------------------------------------------
+
     public static string? GetDefaultPrinter()
     {
         var printerPtr = cupsGetDefault();
@@ -70,6 +74,10 @@ public static class CupsPrinter
         return printers;
     }
 
+    //--------------------------------------------------------------------------------
+    // Print
+    //--------------------------------------------------------------------------------
+
     public static int PrintFile(string path, string? printer = null, string jobTitle = "Print Job")
     {
         var printerName = printer ?? GetDefaultPrinter();
@@ -87,5 +95,41 @@ public static class CupsPrinter
         }
 
         return jobId;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Job
+    //--------------------------------------------------------------------------------
+
+    public static unsafe IReadOnlyList<PrintJob> GetJobs(string? printerName = null, bool myJobsOnly = false)
+    {
+        var jobs = new List<PrintJob>();
+        var jobsPtr = IntPtr.Zero;
+        try
+        {
+            var numJobs = cupsGetJobs(ref jobsPtr, printerName ?? string.Empty, myJobsOnly ? 1 : 0, -1);
+            for (var i = 0; i < numJobs; i++)
+            {
+                var currentJobPtr = IntPtr.Add(jobsPtr, i * sizeof(cups_job_t));
+                var job = (cups_job_t*)currentJobPtr;
+
+                jobs.Add(new PrintJob(
+                    job->id,
+                    Marshal.PtrToStringAnsi(job->title) ?? string.Empty,
+                    Marshal.PtrToStringAnsi(job->dest) ?? string.Empty,
+                    Marshal.PtrToStringAnsi(job->user) ?? string.Empty,
+                    DateTimeOffset.FromUnixTimeSeconds(job->creation_time).LocalDateTime,
+                    (PrintJobState)job->state));
+            }
+
+            return jobs;
+        }
+        finally
+        {
+            if (jobsPtr != IntPtr.Zero)
+            {
+                cupsFreeJobs(jobs.Count, jobsPtr);
+            }
+        }
     }
 }

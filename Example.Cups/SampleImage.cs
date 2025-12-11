@@ -4,13 +4,23 @@ using SkiaSharp;
 
 internal static class SampleImage
 {
-    public static MemoryStream Create()
+    public static MemoryStream Create(int? page = null, int? maxPage = null)
     {
         using var bitmap = new SKBitmap(800, 600);
         using var canvas = new SKCanvas(bitmap);
 
         // Background
         canvas.Clear(SKColors.White);
+
+        // Page
+        if ((page is not null) && (maxPage is not null))
+        {
+            using var pagePaint = new SKPaint();
+            pagePaint.Color = SKColors.Gray;
+            pagePaint.IsAntialias = true;
+            using var pageFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 14);
+            canvas.DrawText($"Page {page} / {maxPage}", 50, 30, pageFont, pagePaint);
+        }
 
         // Title
         using var titlePaint = new SKPaint();
@@ -36,7 +46,7 @@ internal static class SampleImage
         circlePaint.Color = SKColors.Red;
         circlePaint.Style = SKPaintStyle.Stroke;
         circlePaint.StrokeWidth = 8;
-        canvas.DrawCircle(550, 350, 100, circlePaint);
+        canvas.DrawCircle(550, 280, 100, circlePaint);
 
         // Gradation
         using var gradientPaint = new SKPaint();
