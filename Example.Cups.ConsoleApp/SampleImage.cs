@@ -1,4 +1,4 @@
-namespace Example.Cups;
+namespace Example.Cups.ConsoleApp;
 
 using SkiaSharp;
 

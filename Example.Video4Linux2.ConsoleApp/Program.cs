@@ -6,7 +6,7 @@ using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Diagnostics;
 
-using Example.Video4Linux2;
+using Example.Video4Linux2.ConsoleApp;
 
 using LinuxDotNet.Video4Linux2;
 

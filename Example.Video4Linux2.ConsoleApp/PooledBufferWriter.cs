@@ -1,4 +1,4 @@
-namespace Example.Video4Linux2;
+namespace Example.Video4Linux2.ConsoleApp;
 
 using System.Buffers;
 using System.Runtime.CompilerServices;

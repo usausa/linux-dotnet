@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 
-using Example.Cups;
+using Example.Cups.ConsoleApp;
 
 using LinuxDotNet.Cups;
 
