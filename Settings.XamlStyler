@@ -1,0 +1,140 @@
+{
+  "AttributesTolerance": 1,
+  "KeepFirstAttributeOnSameLine": true,
+  "MaxAttributeCharactersPerLine": 0,
+  "MaxAttributesPerLine": 4,
+  "NewlineExemptionElements": "RadialGradientBrush, GradientStop, LinearGradientBrush, ScaleTransform, SkewTransform, RotateTransform, TranslateTransform, Trigger, Condition, Setter, On",
+  "SeparateByGroups": true,
+  "AttributeIndentation": 0,
+  "AttributeIndentationStyle": 1,
+  "RemoveDesignTimeReferences": false,
+  "EnableAttributeReordering": true,
+  "AttributeOrderingRuleGroups": [
+    "xmlns",
+    "xmlns:x",
+    "xmlns:d",
+    "xmlns:mc",
+
+    "xmlns:s",
+    "xmlns:navigation",
+
+    "xmlns:app",
+    "xmlns:local",
+    "xmlns:dialog",
+    "xmlns:core",
+    "xmlns:resources",
+    "xmlns:shell",
+    "xmlns:behaviors",
+    "xmlns:controls",
+    "xmlns:converters",
+    "xmlns:effects",
+    "xmlns:helpers",
+    "xmlns:markup",
+    "xmlns:module",
+    "xmlns:views",
+
+    "xmlns:*",
+
+    "mc:Ignorable, d:IsDataSource, d:LayoutOverrides, d:IsStaticText",
+
+    "x:TypeArguments",
+    "x:Class",
+    "x:Type",
+    "x:Key, Key",
+    "x:Name, Name",
+    "x:Uid, Uid",
+
+    "s:Behavior.Key",
+    "s:ValidationProperty.*",
+
+    "TargetType, BasedOn",
+
+    "Class",
+
+    "TargetName",
+    "Property",
+
+    "Grid.Row, Grid.RowSpan, Grid.Column, Grid.ColumnSpan",
+    "Canvas.Left, Canvas.Top, Canvas.Right, Canvas.Bottom",
+    "AbsoluteLayout.LayoutBounds, AbsoluteLayout.LayoutFlags",
+
+    "x:DataType",
+    "s:DataContextResolver.*",
+    "DataContext",
+    "d:DataContext",
+
+    "Style",
+    "StyleClass",
+
+    "RowDefinitions",
+    "ColumnDefinitions",
+    "Width, Height, MinWidth, MinHeight, MaxWidth, MaxHeight, WidthRequest, HeightRequest",
+    "d:DesignWidth, d:DesignHeight",
+
+    "CanResize",
+    "WindowState",
+
+    "Title",
+    "Icon",
+
+    "behaviors:*",
+    "s:*",
+    "effects:*",
+
+    "Platform",
+
+    "Orientation",
+    "Margin, Padding",
+    "HorizontalTextAlignment, VerticalTextAlignment",
+    "HorizontalAlignment, VerticalAlignment",
+    "Panel.ZIndex",
+
+    "ItemsSource",
+    "Source",
+    "PageSource, PageIndex, Offset", 
+
+    "Command, CommandParameter",
+
+    "IsEnabled",
+    "IsVisible",
+
+    "Value",
+    "Minimum, Maximum",
+    "StartPoint, EndPoint",
+    "Progress",
+
+    "Text",
+    "Content",
+
+    "FontFamily, FontSize, FontAttributes",
+    "Color, TextColor, BackgroundColor",
+
+    "Storyboard.*, From, To, Duration",
+
+    "*",
+    "*:*",
+
+    "TrueValue",
+    "FalseValue",
+    "HandleEmptyString",
+    "NullValue",
+    "NonNullValue"
+  ],
+  "FirstLineAttributes": "",
+  "OrderAttributesByName": true,
+  "PutEndingBracketOnNewLine": false,
+  "RemoveEndingTagOfEmptyElement": true,
+  "SpaceBeforeClosingSlash": true,
+  "RootElementLineBreakRule": 0,
+  "ReorderVSM": 1,
+  "ReorderGridChildren": false,
+  "ReorderCanvasChildren": false,
+  "ReorderSetters": 0,
+  "FormatMarkupExtension": true,
+  "NoNewLineMarkupExtensions": "x:Bind, Binding",
+  "ThicknessSeparator": 2,
+  "ThicknessAttributes": "Margin, Padding, BorderThickness, ThumbnailClipMargin",
+  "FormatOnSave": true,
+  "CommentPadding": 1,
+  "IndentSize": 4
+}

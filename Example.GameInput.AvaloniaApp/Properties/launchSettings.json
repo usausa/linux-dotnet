@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "EmbeddedApp": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

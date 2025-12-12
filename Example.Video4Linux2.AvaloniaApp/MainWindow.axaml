@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:s="http://smart/avalonia"
+        xmlns:navigation="http://smart/navigation"
+        xmlns:app="using:Example.Video4Linux2.AvaloniaApp"
+        mc:Ignorable="d"
+        x:Class="Example.Video4Linux2.AvaloniaApp.MainWindow"
+        x:DataType="app:MainWindowViewModel"
+        s:DataContextResolver.Type="app:MainWindowViewModel"
+        Width="800" Height="600"
+        d:DesignWidth="800" d:DesignHeight="600"
+        CanResize="True"
+        Title="Example.Video4Linux2.AvaloniaApp"
+        Icon="/Assets/avalonia-logo.ico">
+
+    <Canvas navigation:NavigationContainer.Navigator="{Binding Navigator}" />
+
+</Window>

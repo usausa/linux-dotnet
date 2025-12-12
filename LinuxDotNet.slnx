@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/Example/">
     <Project Path="Example.Cups.ConsoleApp/Example.Cups.ConsoleApp.csproj" />
+    <Project Path="Example.GameInput.AvaloniaApp/Example.GameInput.AvaloniaApp.csproj" />
     <Project Path="Example.GameInput.ConsoleApp/Example.GameInput.ConsoleApp.csproj" />
+    <Project Path="Example.Video4Linux2.AvaloniaApp/Example.Video4Linux2.AvaloniaApp.csproj" />
     <Project Path="Example.Video4Linux2.ConsoleApp/Example.Video4Linux2.ConsoleApp.csproj" />
   </Folder>
   <Folder Name="/Library/">
