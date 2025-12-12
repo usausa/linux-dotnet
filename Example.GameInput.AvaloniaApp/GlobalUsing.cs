@@ -32,17 +32,4 @@ global using Smart.Collections.Generic;
 global using Smart.ComponentModel;
 global using Smart.Mvvm;
 global using Smart.Mvvm.Messaging;
-global using Smart.Navigation;
-global using Smart.Navigation.Attributes;
-global using Smart.Navigation.Plugins.Parameter;
-global using Smart.Navigation.Plugins.Scope;
 global using Smart.Text;
-
-//global using Example.GameInput.AvaloniaApp;
-//global using Example.GameInput.AvaloniaApp.Domain;
-//global using Example.GameInput.AvaloniaApp.Messaging;
-//global using Example.GameInput.AvaloniaApp.Models;
-//global using Example.GameInput.AvaloniaApp.Models.Api;
-//global using Example.GameInput.AvaloniaApp.Models.Entity;
-//global using Example.GameInput.AvaloniaApp.Models.Input;
-//global using Example.GameInput.AvaloniaApp.State;

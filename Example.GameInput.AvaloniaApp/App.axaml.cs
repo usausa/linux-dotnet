@@ -42,17 +42,6 @@ public partial class App : Application
             // Start
             await host.StartApplicationAsync().ConfigureAwait(false);
         }
-        else if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            // Exit hook
-            desktop.Exit += async (_, _) => await host.ExitApplicationAsync().ConfigureAwait(false);
-
-            // Debug window
-            desktop.MainWindow = host.Services.GetRequiredService<DebugWindow>();
-
-            // Start
-            await host.StartApplicationAsync().ConfigureAwait(false);
-        }
 
         base.OnFrameworkInitializationCompleted();
     }

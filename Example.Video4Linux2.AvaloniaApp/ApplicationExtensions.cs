@@ -3,7 +3,6 @@ namespace Example.Video4Linux2.AvaloniaApp;
 using System.Runtime.InteropServices;
 
 using Example.Video4Linux2.AvaloniaApp.Settings;
-using Example.Video4Linux2.AvaloniaApp.Views;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +13,7 @@ using Serilog;
 using Smart.Avalonia;
 using Smart.Resolver;
 
-public static partial class ApplicationExtensions
+public static class ApplicationExtensions
 {
     //--------------------------------------------------------------------------------
     // Logging
@@ -54,38 +53,12 @@ public static partial class ApplicationExtensions
         // Messenger
         config.BindSingleton<IReactiveMessenger>(ReactiveMessenger.Default);
 
-        // Navigation
-        config.BindSingleton<Navigator>(resolver =>
-        {
-            var navigator = new NavigatorConfig()
-                .UseAvaloniaNavigationProvider()
-                .UseServiceProvider(resolver)
-                .UseIdViewMapper(static m => m.AutoRegister(ViewSource()))
-                .ToNavigator();
-#if DEBUG
-            navigator.Navigated += (_, args) =>
-            {
-                // for debug
-                System.Diagnostics.Debug.WriteLine($"Navigated: [{args.Context.FromId}]->[{args.Context.ToId}] : stacked=[{navigator.StackedCount}]");
-            };
-#endif
-
-            return navigator;
-        });
-
         // Settings
         config.BindConfig<Setting>(configuration.GetSection("Setting"));
 
         // Window
         config.BindSingleton<MainWindow>();
     }
-
-    //--------------------------------------------------------------------------------
-    // Navigation
-    //--------------------------------------------------------------------------------
-
-    [ViewSource]
-    public static partial IEnumerable<KeyValuePair<ViewId, Type>> ViewSource();
 
     //--------------------------------------------------------------------------------
     // Startup
@@ -107,10 +80,6 @@ public static partial class ApplicationExtensions
         log.InfoStartupSettingsThreadPool(workerThreads, completionPortThreads);
         log.InfoStartupApplication(environment.ApplicationName, typeof(App).Assembly.GetName().Version);
         log.InfoStartupEnvironment(environment.EnvironmentName, environment.ContentRootPath);
-
-        // Navigate to view
-        var navigator = host.Services.GetRequiredService<Navigator>();
-        await navigator.ForwardAsync(ViewId.Menu).ConfigureAwait(false);
     }
 
     public static async ValueTask ExitApplicationAsync(this IHost host)

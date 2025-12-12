@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:s="http://smart/avalonia"
-        xmlns:navigation="http://smart/navigation"
         xmlns:app="using:Example.Video4Linux2.AvaloniaApp"
         mc:Ignorable="d"
         x:Class="Example.Video4Linux2.AvaloniaApp.MainWindow"
@@ -14,7 +13,5 @@
         CanResize="True"
         Title="Example.Video4Linux2.AvaloniaApp"
         Icon="/Assets/avalonia-logo.ico">
-
-    <Canvas navigation:NavigationContainer.Navigator="{Binding Navigator}" />
 
 </Window>

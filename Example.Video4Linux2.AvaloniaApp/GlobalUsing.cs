@@ -32,17 +32,4 @@ global using Smart.Collections.Generic;
 global using Smart.ComponentModel;
 global using Smart.Mvvm;
 global using Smart.Mvvm.Messaging;
-global using Smart.Navigation;
-global using Smart.Navigation.Attributes;
-global using Smart.Navigation.Plugins.Parameter;
-global using Smart.Navigation.Plugins.Scope;
 global using Smart.Text;
-
-//global using Example.Video4Linux2.AvaloniaApp;
-//global using Example.Video4Linux2.AvaloniaApp.Domain;
-//global using Example.Video4Linux2.AvaloniaApp.Messaging;
-//global using Example.Video4Linux2.AvaloniaApp.Models;
-//global using Example.Video4Linux2.AvaloniaApp.Models.Api;
-//global using Example.Video4Linux2.AvaloniaApp.Models.Entity;
-//global using Example.Video4Linux2.AvaloniaApp.Models.Input;
-//global using Example.Video4Linux2.AvaloniaApp.State;
