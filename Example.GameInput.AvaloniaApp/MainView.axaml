@@ -4,10 +4,36 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:s="http://smart/avalonia"
              xmlns:app="clr-namespace:Example.GameInput.AvaloniaApp"
+             xmlns:controls="clr-namespace:Example.GameInput.AvaloniaApp.Controls"
              mc:Ignorable="d"
              x:Class="Example.GameInput.AvaloniaApp.MainView"
              x:DataType="app:MainViewModel"
              s:DataContextResolver.Type="app:MainViewModel"
+             Background="#2E2F45"
              d:DesignWidth="800" d:DesignHeight="480">
+
+    <Grid>
+        <controls:SpeedGauge Margin="0,40,0,-40"
+                             Color="Turquoise"
+                             BackgroundColor="#484D5F"
+                             Speed="{Binding Speed}" />
+
+        <TextBlock HorizontalAlignment="Right"
+                   Foreground="White"
+                   FontSize="12"
+                   Text="{Binding Fps, StringFormat={}{0} fps}" />
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="#878A9F"
+                       FontSize="18"
+                       Text="km/h" />
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="White"
+                       FontSize="96"
+                       Text="{Binding Speed}"
+                       FontFamily="{StaticResource Gkktt}" />
+        </StackPanel>
+    </Grid>
 
 </UserControl>

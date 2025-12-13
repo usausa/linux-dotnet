@@ -20,7 +20,6 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
 
         host = Host.CreateApplicationBuilder()
-            .ConfigureLogging()
             .ConfigureComponents()
             .Build();
         ResolveProvider.Default.Provider = host.Services;

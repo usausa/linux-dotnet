@@ -24,15 +24,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.9" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.9" />
-    <PackageReference Include="Gamepad" Version="1.1.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="Usa.Smart.Avalonia" Version="2.11.1" />
     <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.11.1" />
     <PackageReference Include="Usa.Smart.Core" Version="2.5.0" />
@@ -59,6 +51,10 @@
       <DependentUpon>appsettings.json</DependentUpon>
       <ExcludeFromSingleFile>True</ExcludeFromSingleFile>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxDotNet.GameInput\LinuxDotNet.GameInput.csproj" />
   </ItemGroup>
 
 </Project>

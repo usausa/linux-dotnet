@@ -13,11 +13,18 @@ public static class Program
     public static int Main(string[] args)
     {
         var builder = BuildAvaloniaApp();
-#if DEBUG
-        return builder.StartWithClassicDesktopLifetime(args);
-#else
-        return builder.StartLinuxDrm(args, "/dev/dri/card1", 1D);
-#endif
+        if (args.Length > 0)
+        {
+            if (args[0].StartsWith("/dev/fb", StringComparison.Ordinal))
+            {
+                return builder.StartLinuxFbDev(args, args[0]);
+            }
+            if (args[0].StartsWith("/dev/dri/card", StringComparison.Ordinal))
+            {
+                return builder.StartLinuxDrm(args, args[0], 1);
+            }
+        }
+        return -1;
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
