@@ -1,6 +1,5 @@
 namespace Example.Video4Linux2.AvaloniaApp;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 using Smart.Avalonia;
