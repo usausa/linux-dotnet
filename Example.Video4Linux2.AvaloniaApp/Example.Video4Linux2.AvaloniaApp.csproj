@@ -6,6 +6,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
@@ -36,17 +37,21 @@
     </PackageReference>
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.9" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <PackageReference Include="Usa.Smart.Avalonia" Version="2.11.1" />
-    <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.11.1" />
+    <PackageReference Include="Usa.Smart.Avalonia" Version="2.11.2" />
+    <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.11.2" />
     <PackageReference Include="Usa.Smart.Core" Version="2.5.0" />
-    <PackageReference Include="Usa.Smart.Mvvm" Version="1.9.1" />
+    <PackageReference Include="Usa.Smart.Mvvm" Version="1.9.2" />
     <PackageReference Include="Usa.Smart.Reactive" Version="2.6.0" />
     <PackageReference Include="Usa.Smart.Resolver" Version="2.7.1" />
     <PackageReference Include="Usa.Smart.Resolver.Extensions.Configuration" Version="2.7.1" />
     <PackageReference Include="Usa.Smart.Resolver.Extensions.DependencyInjection" Version="2.7.1" />
     <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LinuxDotNet.Video4Linux2\LinuxDotNet.Video4Linux2.csproj" />
   </ItemGroup>
 
 </Project>

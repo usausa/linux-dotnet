@@ -14,4 +14,28 @@
         Title="Example.Video4Linux2.AvaloniaApp"
         Icon="/Assets/avalonia-logo.ico">
 
+    <Grid RowDefinitions="*,Auto">
+
+        <Image Grid.Row="0"
+               Stretch="Uniform"
+               Source="{Binding Bitmap}"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center" />
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Content="Start"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding StartCommand}"/>
+            <Button Grid.Column="1"
+                    Content="Stop"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding StopCommand}"/>
+        </Grid>
+
+    </Grid>
+
 </Window>
