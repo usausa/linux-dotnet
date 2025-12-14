@@ -39,10 +39,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         capture.FrameCaptured += CaptureOnFrameCaptured;
         bitmap = new WriteableBitmap(new PixelSize(Width, Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
 
-        //StartCommand = MakeDelegateCommand(StartCapture, () => !capture.IsCapturing);
-        //StopCommand = MakeDelegateCommand(StopCapture, () => capture.IsCapturing);
-        StartCommand = MakeDelegateCommand(StartCapture, () => thread is null);
-        StopCommand = MakeDelegateCommand(StopCapture, () => thread is not null);
+        StartCommand = MakeDelegateCommand(StartCapture, () => !capture.IsCapturing);
+        StopCommand = MakeDelegateCommand(StopCapture, () => capture.IsCapturing);
     }
 
     protected override void Dispose(bool disposing)
@@ -58,74 +56,26 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         base.Dispose(disposing);
     }
 
-    // TODO delete
-#pragma warning disable CA2213
-    private Thread? thread;
-    private CancellationTokenSource? cts;
-    private int counter;
-#pragma warning restore CA2213
-
     private void StartCapture()
     {
-        cts = new CancellationTokenSource();
-        thread = new Thread(x =>
-        {
-            var token = ((CancellationTokenSource)x!).Token;
-            try
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    CaptureOnFrameCaptured(default!);
-                    Thread.Sleep(16);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Ignore
-            }
-        })
-        {
-            IsBackground = true
-        };
-        thread.Start(cts);
-
-        // TODO buffer size fix
-        //capture.Open
-        //capture.StartCapture();
+        // TODO fix size
+        capture.Open();
+        capture.StartCapture();
     }
 
     private void StopCapture()
     {
-        // TODO stop camera
-        //capture.StopCapture();
-        //capture.Close();
-
-        cts?.Cancel();
-        thread?.Join();
-        thread = null;
+        capture.StopCapture();
+        capture.Close();
     }
 
     private void CaptureOnFrameCaptured(FrameBuffer frame)
     {
-        // TODO convert image
+        // TODO show fps
         var slot = bufferManager.NextSlot();
         lock (slot.Lock)
         {
-            counter++;
-            if (counter > Width * Height)
-            {
-                counter = 0;
-            }
-
-            slot.Buffer.Fill(255);
-            for (var i = 0; i < counter; i++)
-            {
-                var pixel = slot.Buffer.Slice(i * 4, 4);
-                pixel[0] = 0;
-                pixel[1] = 0;
-                pixel[2] = 0;
-            }
-
+            ImageHelper.ConvertYUYV2RGBA(frame.AsSpan(), slot.Buffer);
             slot.MarkUpdated();
         }
 
