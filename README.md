@@ -195,3 +195,7 @@ capture.FrameCaptured += frame =>
 
 capture.StartCapture();
 ```
+
+## Image
+
+![Windows](https://github.com/usausa/linux-dotnet/blob/main/Document/video.png)
