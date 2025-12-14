@@ -25,7 +25,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
     private readonly WriteableBitmap? bitmap;
 
     [ObservableProperty]
-    public partial WriteableBitmap? Bitmap { set; get; }
+    public partial WriteableBitmap? Bitmap { get; set; }
 
     public IObserveCommand StartCommand { get; }
 
