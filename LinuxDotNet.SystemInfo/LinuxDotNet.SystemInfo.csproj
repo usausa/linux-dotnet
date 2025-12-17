@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>LinuxDotNet.SystemInfo</PackageId>
+    <Title>LinuxDotNet.SystemInfo</Title>
+    <Description>LinuxDotNet.SystemInfo.</Description>
+    <PackageTags>linux system</PackageTags>
+  </PropertyGroup>
+
+</Project>

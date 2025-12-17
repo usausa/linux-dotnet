@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>LinuxDotNet.InputEvent</PackageId>
+    <Title>LinuxDotNet.InputEvent</Title>
+    <Description>LinuxDotNet.InputEvent.</Description>
+    <PackageTags>linux keyboard</PackageTags>
+  </PropertyGroup>
+
+</Project>
