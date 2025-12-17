@@ -48,7 +48,7 @@ public sealed partial class HardwareMonitor
         Sensors = sensors;
     }
 
-    internal static HardwareMonitor[] GetMonitors()
+    internal static IReadOnlyList<HardwareMonitor> GetMonitors()
     {
         var monitors = new List<HardwareMonitor>();
 
@@ -74,7 +74,7 @@ public sealed partial class HardwareMonitor
             monitors.Add(new HardwareMonitor(monitorName, monitorType, sensors));
         }
 
-        return monitors.ToArray();
+        return monitors;
     }
 
     private static string ReadFile(string path)

@@ -16,7 +16,7 @@ public static class PlatformProvider
 
     public static VirtualMemoryInfo GetVirtualMemory() => new();
 
-    public static Partition[] GetPartitions() => Partition.GetPartitions();
+    public static IReadOnlyList<Partition> GetPartitions() => Partition.GetPartitions();
 
     public static DiskStaticsInfo GetDiskStatics() => new();
 
@@ -36,5 +36,5 @@ public static class PlatformProvider
 
     public static MainsAdapterDevice GetMainsAdapter() => new();
 
-    public static HardwareMonitor[] GetHardwareMonitors() => HardwareMonitor.GetMonitors();
+    public static IReadOnlyList<HardwareMonitor> GetHardwareMonitors() => HardwareMonitor.GetMonitors();
 }

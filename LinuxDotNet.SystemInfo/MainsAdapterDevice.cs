@@ -4,7 +4,7 @@ using System;
 
 public sealed class MainsAdapterDevice
 {
-    private const string PowerSupplyPath = "/sys/class/power_supply/";
+    private const string PowerSupplyPath = "/sys/class/power_supply";
 
     private readonly string path;
 

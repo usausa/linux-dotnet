@@ -12,7 +12,7 @@ public sealed class Partition
         MountPoints = mountPoints;
     }
 
-    internal static Partition[] GetPartitions()
+    internal static IReadOnlyList<Partition> GetPartitions()
     {
         var partitions = new List<Partition>();
         var mounts = GetMounts();
@@ -43,7 +43,7 @@ public sealed class Partition
             partitions.Add(new Partition(device, mountPoints.ToArray()));
         }
 
-        return partitions.ToArray();
+        return partitions;
     }
 
     private static Dictionary<string, List<string>> GetMounts()

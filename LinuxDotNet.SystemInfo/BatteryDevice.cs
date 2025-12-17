@@ -4,7 +4,7 @@ using System;
 
 public sealed class BatteryDevice
 {
-    private const string PowerSupplyPath = "/sys/class/power_supply/";
+    private const string PowerSupplyPath = "/sys/class/power_supply";
 
     private readonly string path;
 
