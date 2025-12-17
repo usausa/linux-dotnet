@@ -199,7 +199,7 @@ public sealed class GameController : IDisposable
 #pragma warning disable CA1031
                 try
                 {
-                    return new FileStream(deviceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    return new FileStream(deviceFile, FileMode.Open, FileAccess.Read, FileShare.Read, 0, false);
                 }
                 catch
                 {
