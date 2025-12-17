@@ -115,14 +115,14 @@ while (true)
 ### Uptime
 
 ```csharp
-var uptime = LinuxPlatform.GetUptime();
+var uptime = PlatformProvider.GetUptime();
 Console.WriteLine($"Uptime: {uptime.Uptime}");
 ```
 
 ### Statics
 
 ```csharp
-var statics = LinuxPlatform.GetStatics();
+var statics = PlatformProvider.GetStatics();
 Console.WriteLine($"Interrupt:      {statics.Interrupt}");
 Console.WriteLine($"ContextSwitch:  {statics.ContextSwitch}");
 Console.WriteLine($"SoftIrq:        {statics.SoftIrq}");
@@ -144,7 +144,7 @@ Console.WriteLine($"GuestNice:      {statics.CpuTotal.GuestNice}");
 ### LoadAverage
 
 ```csharp
-var load = LinuxPlatform.GetLoadAverage();
+var load = PlatformProvider.GetLoadAverage();
 Console.WriteLine($"Average1:  {load.Average1:F2}");
 Console.WriteLine($"Average5:  {load.Average5:F2}");
 Console.WriteLine($"Average15: {load.Average15:F2}");
@@ -153,7 +153,7 @@ Console.WriteLine($"Average15: {load.Average15:F2}");
 ### Memory
 
 ```csharp
-var memory = LinuxPlatform.GetMemory();
+var memory = PlatformProvider.GetMemory();
 Console.WriteLine($"Total:   {memory.Total}");
 Console.WriteLine($"Free:    {memory.Free}");
 Console.WriteLine($"Buffers: {memory.Buffers}");
@@ -164,7 +164,7 @@ Console.WriteLine($"Usage:   {(int)Math.Ceiling(memory.Usage)}");
 ### VirtualMemory
 
 ```csharp
-var vm = LinuxPlatform.GetVirtualMemory();
+var vm = PlatformProvider.GetVirtualMemory();
 Console.WriteLine($"PageIn:            {vm.PageIn}");
 Console.WriteLine($"PageOut:           {vm.PageOut}");
 Console.WriteLine($"SwapIn:            {vm.SwapIn}");
@@ -177,7 +177,7 @@ Console.WriteLine($"OutOfMemoryKiller: {vm.OutOfMemoryKiller}");
 ### Partition
 
 ```csharp
-var partitions = LinuxPlatform.GetPartitions();
+var partitions = PlatformProvider.GetPartitions();
 foreach (var partition in partitions)
 {
     var drive = new DriveInfo(partition.MountPoints[0]);
@@ -197,7 +197,7 @@ foreach (var partition in partitions)
 ### DiskStatics
 
 ```csharp
-var disk = LinuxPlatform.GetDiskStatics();
+var disk = PlatformProvider.GetDiskStatics();
 foreach (var device in disk.Devices)
 {
     Console.WriteLine($"Name:           {device.Name}");
@@ -218,7 +218,7 @@ foreach (var device in disk.Devices)
 ### FileDescriptor
 
 ```csharp
-var fd = LinuxPlatform.GetFileDescriptor();
+var fd = PlatformProvider.GetFileDescriptor();
 Console.WriteLine($"Allocated: {fd.Allocated}");
 Console.WriteLine($"Used:      {fd.Used}");
 Console.WriteLine($"Max:       {fd.Max}");
@@ -227,7 +227,7 @@ Console.WriteLine($"Max:       {fd.Max}");
 ### NetworkStatic
 
 ```csharp
-var network = LinuxPlatform.GetNetworkStatic();
+var network = PlatformProvider.GetNetworkStatic();
 foreach (var nif in network.Interfaces)
 {
     Console.WriteLine($"Interface:    {nif.Interface}");
@@ -253,8 +253,8 @@ foreach (var nif in network.Interfaces)
 ### Tcp/Tcp6
 
 ```csharp
-var tcp = LinuxPlatform.GetTcp();
-var tcp6 = LinuxPlatform.GetTcp6();
+var tcp = PlatformProvider.GetTcp();
+var tcp6 = PlatformProvider.GetTcp6();
 Console.WriteLine($"Established: {tcp.Established}");
 Console.WriteLine($"SynSent:     {tcp.SynSent}");
 Console.WriteLine($"SynRecv:     {tcp.SynRecv}");
@@ -272,7 +272,7 @@ Console.WriteLine($"Total:       {tcp.Total}");
 ### ProcessSummary
 
 ```csharp
-var process = LinuxPlatform.GetProcessSummary();
+var process = PlatformProvider.GetProcessSummary();
 Console.WriteLine($"ProcessCount: {process.ProcessCount}");
 Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
 ```
@@ -280,7 +280,7 @@ Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
 ### Cpu
 
 ```csharp
-var cpu = LinuxPlatform.GetCpu();
+var cpu = PlatformProvider.GetCpu();
 Console.WriteLine("Frequency");
 foreach (var core in cpu.Cores)
 {
@@ -301,7 +301,7 @@ if (cpu.Powers.Count > 0)
 ### Battery
 
 ```csharp
-var battery = LinuxPlatform.GetBattery();
+var battery = PlatformProvider.GetBattery();
 if (battery.Supported)
 {
     Console.WriteLine($"Capacity:   {battery.Capacity}");
@@ -320,7 +320,7 @@ else
 ### MainsAdapter
 
 ```csharp
-var adapter = LinuxPlatform.GetMainsAdapter();
+var adapter = PlatformProvider.GetMainsAdapter();
 if (adapter.Supported)
 {
     Console.WriteLine($"Online: {adapter.Online}");
@@ -334,7 +334,7 @@ else
 ### HardwareMonitor
 
 ```csharp
-var monitors = LinuxPlatform.GetHardwareMonitors();
+var monitors = PlatformProvider.GetHardwareMonitors();
 foreach (var monitor in monitors)
 {
     Console.WriteLine($"Monitor: {monitor.Type}");
