@@ -1,13 +1,12 @@
-using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
-
-using LinuxDotNet.SystemInfo;
-
 #pragma warning disable CA1416
 // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
 // ReSharper disable IdentifierTypo
 // ReSharper disable StringLiteralTypo
 // ReSharper disable UseObjectOrCollectionInitializer
+using System.CommandLine;
+using System.CommandLine.NamingConventionBinder;
+
+using LinuxDotNet.SystemInfo;
 
 var rootCommand = new RootCommand("Platform info");
 
