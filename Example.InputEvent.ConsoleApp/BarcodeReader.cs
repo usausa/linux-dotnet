@@ -164,8 +164,9 @@ internal sealed class BarcodeReader : IDisposable
                 (result.Type == EventType.Key) &&
                 ((EventValue)result.Value == EventValue.Pressed))
             {
-                if (result.Code == 28) // Enter
+                if (result.Code == 28)
                 {
+                    // Enter
                     BarcodeScanned?.Invoke(buffer.ToString());
                     buffer.Clear();
                 }
