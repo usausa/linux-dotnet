@@ -8,7 +8,7 @@
 |LinuxDotNet.SystemInfo|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.SystemInfo.svg)](https://www.nuget.org/packages/LinuxDotNet.SystemInfo)|
 |LinuxDotNet.Video4Linux2|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.Video4Linux2.svg)](https://www.nuget.org/packages/LinuxDotNet.Video4Linux2)|
 
-# 📦LinuxDotNet.Cups
+# 🖨️LinuxDotNet.Cups
 
 CUPS API wrapper.
 
@@ -56,7 +56,7 @@ var options = new PrintOptions
 var jobId = CupsPrinter.PrintStream(image, options);
 ```
 
-# 📦LinuxDotNet.GameInput
+# 🎮LinuxDotNet.GameInput
 
 `/dev/input/js*` device reader.
 
@@ -111,7 +111,7 @@ while (true)
 }
 ```
 
-# 📦LinuxDotNet.InputEvent
+# ⌨️LinuxDotNet.InputEvent
 
 `/dev/input/event*` device reader.
 
@@ -130,7 +130,7 @@ foreach (var device in EventDeviceInfo.GetDevices())
 
 - [BarcodeReader.cs](https://github.com/usausa/linux-dotnet/blob/main/Example.InputEvent.ConsoleApp/BarcodeReader.cs)
 
-# 📦LinuxDotNet.SystemInfo
+# 🖥️LinuxDotNet.SystemInfo
 
 System information api.
 
@@ -372,7 +372,7 @@ foreach (var monitor in monitors)
 }
 ```
 
-# 📦LinuxDotNet.Video4Linux2
+# 🎞️LinuxDotNet.Video4Linux2
 
 Video for Linux API wrapper.
 
