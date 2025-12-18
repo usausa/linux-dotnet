@@ -1,4 +1,4 @@
-1# Linux library wrapper for .NET
+# Linux library wrapper for .NET
 
 |Library|NuGet|
 |:----|:----|
