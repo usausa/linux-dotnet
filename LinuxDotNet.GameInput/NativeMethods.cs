@@ -17,13 +17,21 @@ internal static class NativeMethods
     //------------------------------------------------------------------------
 
     public const short POLLIN = 0x0001;
+    public const short POLLPRI = 0x0002;
+    public const short POLLOUT = 0x0004;
+    public const short POLLERR = 0x0008;
+    public const short POLLHUP = 0x0010;
+    public const short POLLNVAL = 0x0020;
+
+    // Error
+    public const int EINTR = 4;
 
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct PollFd
+    public struct pollFd
     {
         public int fd;
         public short events;
@@ -35,5 +43,5 @@ internal static class NativeMethods
     //------------------------------------------------------------------------
 
     [DllImport("libc", SetLastError = true)]
-    public static extern int poll(ref PollFd fds, uint nfds, int timeout);
+    public static extern int poll(ref pollFd fds, uint nfds, int timeout);
 }

@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using static LinuxDotNet.GameInput.NativeMethods;
@@ -223,14 +224,46 @@ public sealed class GameController : IDisposable
 
         while (!token.IsCancellationRequested)
         {
-            var pollFd = new PollFd
+            var pollFd = new pollFd
             {
                 fd = fd,
                 events = POLLIN
             };
             var result = poll(ref pollFd, 1, DevicePollTimeout);
-            if ((result <= 0) || ((pollFd.revents & POLLIN) == 0))
+
+            if (result == 0)
             {
+                // Timeout & retry
+                continue;
+            }
+            if (result < 0)
+            {
+                var error = Marshal.GetLastWin32Error();
+                if (error == EINTR)
+                {
+                    // Interrupted & retry
+                    continue;
+                }
+
+                throw new IOException($"Pool failed. error=[{error}]");
+            }
+
+            if ((pollFd.revents & POLLERR) != 0)
+            {
+                throw new IOException("Pool device error.");
+            }
+            if ((pollFd.revents & POLLHUP) != 0)
+            {
+                throw new IOException("Pool device disconnected.");
+            }
+            if ((pollFd.revents & POLLNVAL) != 0)
+            {
+                throw new IOException("Pool invalid file descriptor.");
+            }
+
+            if ((pollFd.revents & POLLIN) == 0)
+            {
+                // No data & retry
                 continue;
             }
 
