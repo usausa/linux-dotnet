@@ -7,7 +7,9 @@ using LinuxDotNet.GameInput;
 
 var rootCommand = new RootCommand("GameInput example");
 
+//--------------------------------------------------------------------------------
 // Event
+//--------------------------------------------------------------------------------
 var eventCommand = new Command("event", "Event mode");
 eventCommand.Handler = CommandHandler.Create(static () =>
 {
@@ -34,7 +36,9 @@ eventCommand.Handler = CommandHandler.Create(static () =>
 });
 rootCommand.Add(eventCommand);
 
+//--------------------------------------------------------------------------------
 // Loop
+//--------------------------------------------------------------------------------
 var loopCommand = new Command("loop", "Loop mode");
 loopCommand.Handler = CommandHandler.Create(static () =>
 {

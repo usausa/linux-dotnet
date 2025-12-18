@@ -9,7 +9,9 @@ using LinuxDotNet.Cups;
 
 var rootCommand = new RootCommand("Cups example");
 
+//--------------------------------------------------------------------------------
 // Printer
+//--------------------------------------------------------------------------------
 var printerCommand = new Command("printer", "List printers");
 printerCommand.Handler = CommandHandler.Create(static () =>
 {
@@ -30,7 +32,9 @@ printerCommand.Handler = CommandHandler.Create(static () =>
 });
 rootCommand.Add(printerCommand);
 
+//--------------------------------------------------------------------------------
 // Detail
+//--------------------------------------------------------------------------------
 var detailCommand = new Command("detail", "Show details");
 detailCommand.AddOption(new Option<string>(["--printer", "-p"], "Printer") { IsRequired = true });
 detailCommand.Handler = CommandHandler.Create(static (string printer) =>
@@ -52,7 +56,9 @@ detailCommand.Handler = CommandHandler.Create(static (string printer) =>
 });
 rootCommand.Add(detailCommand);
 
+//--------------------------------------------------------------------------------
 // Attribute
+//--------------------------------------------------------------------------------
 var attributeCommand = new Command("attribute", "Show attributes");
 attributeCommand.AddOption(new Option<string>(["--printer", "-p"], "Printer") { IsRequired = true });
 attributeCommand.Handler = CommandHandler.Create(static (string printer) =>
@@ -68,7 +74,9 @@ attributeCommand.Handler = CommandHandler.Create(static (string printer) =>
 });
 rootCommand.Add(attributeCommand);
 
+//--------------------------------------------------------------------------------
 // Job
+//--------------------------------------------------------------------------------
 var jobCommand = new Command("job", "List jobs");
 jobCommand.AddOption(new Option<string>(["--printer", "-p"]));
 jobCommand.Handler = CommandHandler.Create(static (string? printer) =>
@@ -83,7 +91,9 @@ jobCommand.Handler = CommandHandler.Create(static (string? printer) =>
 });
 rootCommand.Add(jobCommand);
 
+//--------------------------------------------------------------------------------
 // Print file
+//--------------------------------------------------------------------------------
 var fileCommand = new Command("file", "Print file");
 fileCommand.AddOption(new Option<string>(["--file", "-f"]) { IsRequired = true });
 fileCommand.AddOption(new Option<string>(["--printer", "-p"]));
@@ -94,7 +104,9 @@ fileCommand.Handler = CommandHandler.Create(static (string file, string? printer
 });
 rootCommand.Add(fileCommand);
 
+//--------------------------------------------------------------------------------
 // Print stream
+//--------------------------------------------------------------------------------
 var streamCommand = new Command("stream", "Print stream");
 streamCommand.AddOption(new Option<string>(["--printer", "-p"]));
 streamCommand.Handler = CommandHandler.Create(static (string? printer) =>

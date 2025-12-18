@@ -12,7 +12,9 @@ using SkiaSharp;
 
 var rootCommand = new RootCommand("Camera example");
 
+//--------------------------------------------------------------------------------
 // Information
+//--------------------------------------------------------------------------------
 var infoCommand = new Command("info", "Show information");
 infoCommand.Handler = CommandHandler.Create(static () =>
 {
@@ -49,7 +51,9 @@ infoCommand.Handler = CommandHandler.Create(static () =>
 });
 rootCommand.Add(infoCommand);
 
+//--------------------------------------------------------------------------------
 // Capture
+//--------------------------------------------------------------------------------
 var captureCommand = new Command("capture", "Capture video");
 captureCommand.AddOption(new Option<string>(["--device", "-d"], () => "/dev/video0", "Device"));
 captureCommand.AddOption(new Option<int>(["--width", "-w"], () => 640, "Width"));
@@ -96,7 +100,9 @@ captureCommand.Handler = CommandHandler.Create(static (string device, int width,
 });
 rootCommand.Add(captureCommand);
 
+//--------------------------------------------------------------------------------
 // Snapshot
+//--------------------------------------------------------------------------------
 var snapshotCommand = new Command("snapshot", "Snapshot image");
 snapshotCommand.AddOption(new Option<string>(["--device", "-d"], () => "/dev/video0", "Device"));
 snapshotCommand.AddOption(new Option<string>(["--output", "-o"], () => "snapshot.jpg", "Output filename"));

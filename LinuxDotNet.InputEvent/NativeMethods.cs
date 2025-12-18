@@ -12,13 +12,16 @@ using System.Runtime.InteropServices;
 #pragma warning disable CS8981
 internal static class NativeMethods
 {
-    // TODO
-
     //------------------------------------------------------------------------
     // Const
     //------------------------------------------------------------------------
 
     public const short POLLIN = 0x0001;
+    public const short POLLPRI = 0x0002;
+    public const short POLLOUT = 0x0004;
+    public const short POLLERR = 0x0008;
+    public const short POLLHUP = 0x0010;
+    public const short POLLNVAL = 0x0020;
 
     // Event type
     public const ushort EV_SYN = 0x00;
@@ -32,12 +35,19 @@ internal static class NativeMethods
     public const int EV_PRESSED = 1;
     public const int EV_REPEAT = 2;
 
+    // Ioctl
+    public const uint EVIOCGNAME = 0x80ff4506;
+    public const uint EVIOCGRAB = 0x40044590;
+
+    // Error
+    public const int EINTR = 4;
+
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct PollFd
+    public struct pollFd
     {
         public int fd;
         public short events;
@@ -45,7 +55,7 @@ internal static class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct InputEvent
+    public struct input_event
     {
         public long tv_sec;      // seconds
         public long tv_usec;     // microseconds
@@ -65,5 +75,5 @@ internal static class NativeMethods
     public static extern int ioctl(int fd, uint request, int arg);
 
     [DllImport("libc", SetLastError = true)]
-    public static extern int poll(ref PollFd fds, uint nfds, int timeout);
+    public static extern int poll(ref pollFd fds, uint nfds, int timeout);
 }
