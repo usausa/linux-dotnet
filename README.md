@@ -4,6 +4,7 @@
 |:----|:----|
 |LinuxDotNet.Cups|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.Cups.svg)](https://www.nuget.org/packages/LinuxDotNet.Cups)|
 |LinuxDotNet.GameInput|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.GameInput.svg)](https://www.nuget.org/packages/LinuxDotNet.GameInput)|
+|LinuxDotNet.InputEvent|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.InputEvent.svg)](https://www.nuget.org/packages/LinuxDotNet.InputEvent)|
 |LinuxDotNet.SystemInfo|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.SystemInfo.svg)](https://www.nuget.org/packages/LinuxDotNet.SystemInfo)|
 |LinuxDotNet.Video4Linux2|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.Video4Linux2.svg)](https://www.nuget.org/packages/LinuxDotNet.Video4Linux2)|
 
@@ -110,7 +111,30 @@ while (true)
 }
 ```
 
+# LinuxDotNet.InputEvent
+
+`/dev/input/event*` device reader.
+
+## Usage
+
+### List devices
+
+```csharp
+foreach (var device in EventDeviceInfo.GetDevices())
+{
+    Console.WriteLine($"{device.Device,-18}  {device.VendorId}:{device.ProductId}  {device.Name}");
+}
+```
+
+### Barcode reader
+
+- [BarcodeReader.cs](https://github.com/usausa/linux-dotnet/blob/main/Example.InputEvent.ConsoleApp/BarcodeReader.cs)
+
 # LinuxDotNet.SystemInfo
+
+System information api.
+
+## Usage
 
 ### Uptime
 
