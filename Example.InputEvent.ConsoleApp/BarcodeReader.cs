@@ -132,6 +132,8 @@ internal sealed class BarcodeReader : IDisposable
             }
             catch
             {
+                device.Close();
+
                 // Disconnected
                 UpdateConnectionState(false);
 

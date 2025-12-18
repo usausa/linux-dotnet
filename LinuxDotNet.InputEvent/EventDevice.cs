@@ -99,6 +99,7 @@ public sealed unsafe class EventDevice : IDisposable
         }
 
         stream.Dispose();
+        stream = null;
     }
 
     public bool Read(out EventResult result, int timeout = -1)
