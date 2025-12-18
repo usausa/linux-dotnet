@@ -150,6 +150,8 @@ internal sealed class BarcodeReader : IDisposable
 #pragma warning restore CA1031
         }
 
+        device.Close();
+
         // Disconnected
         UpdateConnectionState(false);
     }
