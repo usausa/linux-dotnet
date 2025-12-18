@@ -93,6 +93,10 @@ barcodeCommand.Handler = CommandHandler.Create(static (string? device, string na
     Console.WriteLine($"Open device. device=[{device}]");
 
     using var barcode = new BarcodeReader(device);
+    barcode.ConnectionChanged += static connected =>
+    {
+        Console.WriteLine($"Connected: {connected}");
+    };
     barcode.BarcodeScanned += static code =>
     {
         Console.WriteLine($"Barcode: {code}");
@@ -100,14 +104,10 @@ barcodeCommand.Handler = CommandHandler.Create(static (string? device, string na
 
     barcode.Start();
 
-    while (true)
-    {
-        if (!barcode.Process())
-        {
-            barcode.Stop();
-            barcode.Start();
-        }
-    }
+    Console.ReadLine();
+
+    barcode.Stop();
 });
 rootCommand.Add(barcodeCommand);
+
 rootCommand.Invoke(args);
