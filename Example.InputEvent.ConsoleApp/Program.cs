@@ -18,6 +18,8 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 
+using Example.InputEvent.ConsoleApp;
+
 using LinuxDotNet.InputEvent;
 
 var rootCommand = new RootCommand("Input example");
@@ -72,4 +74,40 @@ rawCommand.Handler = CommandHandler.Create(static (string? device, string name, 
 });
 rootCommand.Add(rawCommand);
 
+//--------------------------------------------------------------------------------
+var barcodeCommand = new Command("barcode", "Barcode mode");
+//--------------------------------------------------------------------------------
+barcodeCommand.AddOption(new Option<string>(["--device", "-d"], "Device"));
+barcodeCommand.AddOption(new Option<string>(["--name", "-n"], () => string.Empty, "Name"));
+barcodeCommand.Handler = CommandHandler.Create(static (string? device, string name) =>
+{
+    device ??= !String.IsNullOrEmpty(name)
+        ? EventDeviceInfo.GetDevices().FirstOrDefault(x => x.Name.Contains(name, StringComparison.OrdinalIgnoreCase))?.Device
+        : null;
+    if (String.IsNullOrEmpty(device))
+    {
+        Console.WriteLine("No device.");
+        return;
+    }
+
+    Console.WriteLine($"Open device. device=[{device}]");
+
+    using var barcode = new BarcodeReader(device);
+    barcode.BarcodeScanned += static code =>
+    {
+        Console.WriteLine($"Barcode: {code}");
+    };
+
+    barcode.Start();
+
+    while (true)
+    {
+        if (!barcode.Process())
+        {
+            barcode.Stop();
+            barcode.Start();
+        }
+    }
+});
+rootCommand.Add(barcodeCommand);
 rootCommand.Invoke(args);
