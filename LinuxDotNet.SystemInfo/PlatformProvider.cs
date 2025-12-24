@@ -1,9 +1,6 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Runtime.Versioning;
-
 #pragma warning disable CA1024
-[SupportedOSPlatform("linux")]
 public static class PlatformProvider
 {
     public static UptimeInfo GetUptime() => new();

@@ -1,11 +1,9 @@
 namespace LinuxDotNet.Cups;
 
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 
 using static LinuxDotNet.Cups.NativeMethods;
 
-[SupportedOSPlatform("linux")]
 public static class CupsPrinter
 {
     //--------------------------------------------------------------------------------

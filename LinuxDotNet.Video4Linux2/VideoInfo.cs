@@ -1,6 +1,5 @@
 namespace LinuxDotNet.Video4Linux2;
 
-using System.Runtime.Versioning;
 using System.Text;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -58,7 +57,6 @@ public sealed class VideoFormat
     public override string ToString() => $"{Description} ({PixelFormat})";
 }
 
-[SupportedOSPlatform("linux")]
 public sealed class VideoInfo
 {
     public string Device { get; }
@@ -222,7 +220,6 @@ public sealed class VideoInfo
     }
 }
 
-[SupportedOSPlatform("linux")]
 public static class Extensions
 {
     extension(VideoInfo info)

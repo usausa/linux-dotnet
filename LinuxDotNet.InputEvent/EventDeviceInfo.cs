@@ -1,9 +1,7 @@
 namespace LinuxDotNet.InputEvent;
 
 using System.Globalization;
-using System.Runtime.Versioning;
 
-[SupportedOSPlatform("linux")]
 public sealed class EventDeviceInfo
 {
     private const string InputDevicePath = "/sys/class/input/";

@@ -3,7 +3,6 @@ namespace LinuxDotNet.Video4Linux2;
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
 
@@ -19,16 +18,16 @@ public readonly unsafe struct FrameBuffer
 
     public bool IsEmpty => buffer == IntPtr.Zero || length == 0;
 
+    public ReadOnlySpan<byte> Span
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => IsEmpty ? Span<byte>.Empty : new Span<byte>((void*)buffer, length);
+    }
+
     internal FrameBuffer(IntPtr buffer, int length)
     {
         this.buffer = buffer;
         this.length = length;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> AsSpan()
-    {
-        return IsEmpty ? Span<byte>.Empty : new Span<byte>((void*)buffer, length);
     }
 
     public byte[] ToArray()
@@ -39,7 +38,7 @@ public readonly unsafe struct FrameBuffer
         }
 
         var array = new byte[length];
-        AsSpan().CopyTo(array);
+        Span.CopyTo(array);
         return array;
     }
 }
@@ -47,7 +46,6 @@ public readonly unsafe struct FrameBuffer
 // ReSharper restore StructCanBeMadeReadOnly
 
 #pragma warning disable CA1806
-[SupportedOSPlatform("linux")]
 public sealed class VideoCapture : IDisposable
 {
     public event Action<FrameBuffer>? FrameCaptured;

@@ -75,7 +75,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         var slot = bufferManager.NextSlot();
         lock (slot.Lock)
         {
-            ImageHelper.ConvertYUYV2RGBA(frame.AsSpan(), slot.Buffer);
+            ImageHelper.ConvertYUYV2RGBA(frame.Span, slot.Buffer);
             slot.MarkUpdated();
         }
 

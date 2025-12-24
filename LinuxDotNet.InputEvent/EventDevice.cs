@@ -3,12 +3,10 @@ namespace LinuxDotNet.InputEvent;
 using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Text;
 
 using static LinuxDotNet.InputEvent.NativeMethods;
 
-[SupportedOSPlatform("linux")]
 public sealed unsafe class EventDevice : IDisposable
 {
     private static readonly int BufferSize = sizeof(input_event);

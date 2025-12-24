@@ -5,11 +5,9 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 
 using static LinuxDotNet.GameInput.NativeMethods;
 
-[SupportedOSPlatform("linux")]
 public sealed class GameController : IDisposable
 {
     private const int DevicePollTimeout = 100;
