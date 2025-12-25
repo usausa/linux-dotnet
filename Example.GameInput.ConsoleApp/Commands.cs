@@ -16,7 +16,7 @@ public static class CommandBuilderExtensions
 //--------------------------------------------------------------------------------
 // Event
 //--------------------------------------------------------------------------------
-[Command("event", Description = "Event mode")]
+[Command("event", "Event mode")]
 public sealed class EventCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -49,7 +49,7 @@ public sealed class EventCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Loop
 //--------------------------------------------------------------------------------
-[Command("loop", Description = "Loop mode")]
+[Command("loop", "Loop mode")]
 public sealed class LoopCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)

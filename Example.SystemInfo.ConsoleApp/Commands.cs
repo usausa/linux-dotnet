@@ -32,7 +32,7 @@ public static class CommandBuilderExtensions
 //--------------------------------------------------------------------------------
 // Uptime
 //--------------------------------------------------------------------------------
-[Command("uptime", Description = "Get uptime")]
+[Command("uptime", "Get uptime")]
 public sealed class UptimeCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -47,7 +47,7 @@ public sealed class UptimeCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Statics
 //--------------------------------------------------------------------------------
-[Command("stat", Description = "Get statics")]
+[Command("stat", "Get statics")]
 public sealed class StatCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
@@ -103,7 +103,7 @@ public sealed class StatCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // LoadAverage
 //--------------------------------------------------------------------------------
-[Command("load", Description = "Get load average")]
+[Command("load", "Get load average")]
 public sealed class LoadCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -120,7 +120,7 @@ public sealed class LoadCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Memory
 //--------------------------------------------------------------------------------
-[Command("memory", Description = "Get memory")]
+[Command("memory", "Get memory")]
 public sealed class MemoryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -139,7 +139,7 @@ public sealed class MemoryCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // VirtualMemory
 //--------------------------------------------------------------------------------
-[Command("virtual", Description = "Get virtual memory")]
+[Command("virtual", "Get virtual memory")]
 public sealed class VirtualCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -160,7 +160,7 @@ public sealed class VirtualCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Partition
 //--------------------------------------------------------------------------------
-[Command("partition", Description = "Get partition")]
+[Command("partition", "Get partition")]
 public sealed class PartitionCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -188,7 +188,7 @@ public sealed class PartitionCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // DiskStatics
 //--------------------------------------------------------------------------------
-[Command("disk", Description = "Get disk statics")]
+[Command("disk", "Get disk statics")]
 public sealed class DiskCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
@@ -245,7 +245,7 @@ public sealed class DiskCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // FileDescriptor
 //--------------------------------------------------------------------------------
-[Command("fd", Description = "Get file descriptor")]
+[Command("fd", "Get file descriptor")]
 public sealed class FdCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -262,7 +262,7 @@ public sealed class FdCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // NetworkStatic
 //--------------------------------------------------------------------------------
-[Command("network", Description = "Get network statics")]
+[Command("network", "Get network statics")]
 public sealed class NetworkCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -296,7 +296,7 @@ public sealed class NetworkCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Tcp
 //--------------------------------------------------------------------------------
-[Command("tcp", Description = "Get tcp")]
+[Command("tcp", "Get tcp")]
 public sealed class TcpCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -322,7 +322,7 @@ public sealed class TcpCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Tcp6
 //--------------------------------------------------------------------------------
-[Command("tcp6", Description = "Get tcp6")]
+[Command("tcp6", "Get tcp6")]
 public sealed class Tcp6Command : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -348,7 +348,7 @@ public sealed class Tcp6Command : ICommandHandler
 //--------------------------------------------------------------------------------
 // ProcessSummary
 //--------------------------------------------------------------------------------
-[Command("process", Description = "Get process")]
+[Command("process", "Get process")]
 public sealed class ProcessCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -364,7 +364,7 @@ public sealed class ProcessCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Cpu
 //--------------------------------------------------------------------------------
-[Command("cpu", Description = "Get cpu")]
+[Command("cpu", "Get cpu")]
 public sealed class CpuCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -392,7 +392,7 @@ public sealed class CpuCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Battery
 //--------------------------------------------------------------------------------
-[Command("battery", Description = "Get battery")]
+[Command("battery", "Get battery")]
 public sealed class BatteryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -419,7 +419,7 @@ public sealed class BatteryCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // MainsAdapter
 //--------------------------------------------------------------------------------
-[Command("ac", Description = "Get ac")]
+[Command("ac", "Get ac")]
 public sealed class AcCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -434,7 +434,7 @@ public sealed class AcCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // HardwareMonitor
 //--------------------------------------------------------------------------------
-[Command("hwmon", Description = "Get hwmon")]
+[Command("hwmon", "Get hwmon")]
 public sealed class HwmonCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)

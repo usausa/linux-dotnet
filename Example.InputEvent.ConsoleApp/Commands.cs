@@ -17,7 +17,7 @@ public static class CommandBuilderExtensions
 //--------------------------------------------------------------------------------
 // List
 //--------------------------------------------------------------------------------
-[Command("list", Description = "List devices")]
+[Command("list", "List devices")]
 public sealed class ListCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -34,7 +34,7 @@ public sealed class ListCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Raw
 //--------------------------------------------------------------------------------
-[Command("raw", Description = "Raw mode")]
+[Command("raw", "Raw mode")]
 public sealed class RawCommand : ICommandHandler
 {
     [Option<string>("--device", "-d", Description = "Device")]
@@ -82,7 +82,7 @@ public sealed class RawCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Barcode
 //--------------------------------------------------------------------------------
-[Command("barcode", Description = "Barcode mode")]
+[Command("barcode", "Barcode mode")]
 public sealed class BarcodeCommand : ICommandHandler
 {
     [Option<string>("--device", "-d", Description = "Device")]

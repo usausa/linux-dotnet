@@ -21,7 +21,7 @@ public static class CommandBuilderExtensions
 //--------------------------------------------------------------------------------
 // Information
 //--------------------------------------------------------------------------------
-[Command("info", Description = "Show information")]
+[Command("info", "Show information")]
 public sealed class InformationCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -64,7 +64,7 @@ public sealed class InformationCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Capture
 //--------------------------------------------------------------------------------
-[Command("capture", Description = "Capture video")]
+[Command("capture", "Capture video")]
 public sealed class CaptureCommand : ICommandHandler
 {
     [Option<string>("--device", "-d", Description = "Device", DefaultValue = "/dev/video0")]
@@ -123,7 +123,7 @@ public sealed class CaptureCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Snapshot
 //--------------------------------------------------------------------------------
-[Command("snapshot", Description = "Snapshot image")]
+[Command("snapshot", "Snapshot image")]
 public sealed class SnapshotCommand : ICommandHandler
 {
     [Option<string>("--device", "-d", Description = "Device", DefaultValue = "/dev/video0")]

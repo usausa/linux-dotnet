@@ -18,7 +18,7 @@ public static class CommandBuilderExtensions
 }
 
 // Printer
-[Command("printer", Description = "List printers")]
+[Command("printer", "List printers")]
 public sealed class PrinterCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -43,10 +43,10 @@ public sealed class PrinterCommand : ICommandHandler
 }
 
 // Detail
-[Command("detail", Description = "Show details")]
+[Command("detail", "Show details")]
 public sealed class DetailCommand : ICommandHandler
 {
-    [Option<string>("--printer", "-p", Description = "Printer", IsRequired = true)]
+    [Option<string>("--printer", "-p", Description = "Printer", Required = true)]
     public string Printer { get; set; } = default!;
 
     public ValueTask ExecuteAsync(CommandContext context)
@@ -71,10 +71,10 @@ public sealed class DetailCommand : ICommandHandler
 }
 
 // Attribute
-[Command("attribute", Description = "Show attributes")]
+[Command("attribute", "Show attributes")]
 public sealed class AttributeCommand : ICommandHandler
 {
-    [Option<string>("--printer", "-p", Description = "Printer", IsRequired = true)]
+    [Option<string>("--printer", "-p", Description = "Printer", Required = true)]
     public string Printer { get; set; } = default!;
 
     public ValueTask ExecuteAsync(CommandContext context)
@@ -93,7 +93,7 @@ public sealed class AttributeCommand : ICommandHandler
 }
 
 // Job
-[Command("job", Description = "List jobs")]
+[Command("job", "List jobs")]
 public sealed class JobCommand : ICommandHandler
 {
     [Option<string>("--printer", "-p", Description = "Printer")]
@@ -114,10 +114,10 @@ public sealed class JobCommand : ICommandHandler
 }
 
 // Print file
-[Command("file", Description = "Print file")]
+[Command("file", "Print file")]
 public sealed class FileCommand : ICommandHandler
 {
-    [Option<string>("--file", "-f", Description = "File", IsRequired = true)]
+    [Option<string>("--file", "-f", Description = "File", Required = true)]
     public string File { get; set; } = default!;
 
     [Option<string>("--printer", "-p", Description = "Printer")]
@@ -133,7 +133,7 @@ public sealed class FileCommand : ICommandHandler
 }
 
 // Print stream
-[Command("stream", Description = "Print stream")]
+[Command("stream", "Print stream")]
 public sealed class StreamCommand : ICommandHandler
 {
     [Option<string>("--printer", "-p", Description = "Printer")]
