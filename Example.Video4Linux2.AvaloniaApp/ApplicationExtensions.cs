@@ -1,5 +1,8 @@
 namespace Example.Video4Linux2.AvaloniaApp;
 
+using Example.Video4Linux2.AvaloniaApp.Settings;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 using Smart.Avalonia;
@@ -15,12 +18,12 @@ public static class ApplicationExtensions
     {
         builder.Services.AddAvaloniaServices();
 
-        builder.ConfigureContainer(new SmartServiceProviderFactory(), ConfigureContainer);
+        builder.ConfigureContainer(new SmartServiceProviderFactory(), x => ConfigureContainer(builder.Configuration, x));
 
         return builder;
     }
 
-    private static void ConfigureContainer(ResolverConfig config)
+    private static void ConfigureContainer(ConfigurationManager configuration, ResolverConfig config)
     {
         config
             .UseAutoBinding()
@@ -29,6 +32,9 @@ public static class ApplicationExtensions
 
         // Messenger
         config.BindSingleton<IReactiveMessenger>(ReactiveMessenger.Default);
+
+        // Setting
+        config.BindConfig<CameraSetting>(configuration.GetSection("Camera"));
 
         // Window
         config.BindSingleton<MainWindow>();

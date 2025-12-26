@@ -6,23 +6,26 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 
 using Example.Video4Linux2.AvaloniaApp.Helper;
+using Example.Video4Linux2.AvaloniaApp.Settings;
 
 using LinuxDotNet.Video4Linux2;
 
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
 public partial class MainWindowViewModel : ExtendViewModelBase
 {
-    private const int Width = 640;
-    private const int Height = 480;
-    private const int BitmapBufferSize = Width * Height * 4;
+    //private const int BitmapBufferSize = Width * Height * 4;
 
     private readonly IDispatcher dispatcher;
 
-    private readonly BufferManager bufferManager;
+    private readonly CameraSetting cameraSetting;
 
     private readonly VideoCapture capture;
 
-    private readonly WriteableBitmap? bitmap;
+    private BufferManager? bufferManager;
+
+    private WriteableBitmap? bitmap;
+
+    private int bitmapBufferSize;
 
     [ObservableProperty]
     public partial WriteableBitmap? Bitmap { get; set; }
@@ -31,13 +34,15 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     public IObserveCommand StopCommand { get; }
 
-    public MainWindowViewModel(IDispatcher dispatcher)
+    public MainWindowViewModel(
+        IDispatcher dispatcher,
+        CameraSetting cameraSetting)
     {
         this.dispatcher = dispatcher;
-        bufferManager = new BufferManager(4, BitmapBufferSize);
-        capture = new VideoCapture("/dev/video0");
+        this.cameraSetting = cameraSetting;
+
+        capture = new VideoCapture(cameraSetting.Device);
         capture.FrameCaptured += CaptureOnFrameCaptured;
-        bitmap = new WriteableBitmap(new PixelSize(Width, Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
 
         StartCommand = MakeDelegateCommand(StartCapture, () => !capture.IsCapturing);
         StopCommand = MakeDelegateCommand(StopCapture, () => capture.IsCapturing);
@@ -49,7 +54,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         {
             capture.Dispose();
             capture.FrameCaptured -= CaptureOnFrameCaptured;
-            bufferManager.Dispose();
+
+            bufferManager?.Dispose();
             bitmap?.Dispose();
         }
 
@@ -58,9 +64,15 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private void StartCapture()
     {
-        // TODO fix size
-        capture.Open();
+        if (!capture.Open(cameraSetting.Width, cameraSetting.Height))
+        {
+            return;
+        }
         capture.StartCapture();
+
+        bitmapBufferSize = capture.Width * capture.Height * 4;
+        bufferManager ??= new BufferManager(4, bitmapBufferSize);
+        bitmap ??= new WriteableBitmap(new PixelSize(capture.Width, capture.Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
     }
 
     private void StopCapture()
@@ -71,6 +83,11 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private void CaptureOnFrameCaptured(FrameBuffer frame)
     {
+        if (bufferManager is null)
+        {
+            return;
+        }
+
         // TODO show fps
         var slot = bufferManager.NextSlot();
         lock (slot.Lock)
@@ -89,7 +106,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
             return;
         }
 
-        var slot = bufferManager.LastUpdateSlot();
+        var slot = bufferManager?.LastUpdateSlot();
         if (slot is null)
         {
             return;
@@ -99,7 +116,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         lock (slot.Lock)
         {
             using var lockedBitmap = bitmap!.Lock();
-            var buffer = new Span<byte>(lockedBitmap.Address.ToPointer(), BitmapBufferSize);
+            var buffer = new Span<byte>(lockedBitmap.Address.ToPointer(), bitmapBufferSize);
             slot.Buffer.CopyTo(buffer);
         }
 
