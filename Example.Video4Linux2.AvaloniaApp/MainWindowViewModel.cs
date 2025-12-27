@@ -13,11 +13,13 @@ using LinuxDotNet.Video4Linux2;
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
 public partial class MainWindowViewModel : ExtendViewModelBase
 {
-    //private const int BitmapBufferSize = Width * Height * 4;
+    private const float Alpha = 0.5f;
 
     private readonly IDispatcher dispatcher;
 
     private readonly CameraSetting cameraSetting;
+
+    private readonly DispatcherTimer statusTimer;
 
     private readonly VideoCapture capture;
 
@@ -27,8 +29,32 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private int bitmapBufferSize;
 
+    private DateTime lastStatusAt;
+
+    private int frameCount;
+    private int lastGc0Count;
+    private int lastGc1Count;
+    private int lastGc2Count;
+
+    private float previousFps;
+    private float previousGc0PerSec;
+    private float previousGc1PerSec;
+    private float previousGc2PerSec;
+
     [ObservableProperty]
     public partial WriteableBitmap? Bitmap { get; set; }
+
+    [ObservableProperty]
+    public partial float Fps { get; set; }
+
+    [ObservableProperty]
+    public partial float Gc0PerSec { get; set; }
+
+    [ObservableProperty]
+    public partial float Gc1PerSec { get; set; }
+
+    [ObservableProperty]
+    public partial float Gc2PerSec { get; set; }
 
     public IObserveCommand StartCommand { get; }
 
@@ -41,6 +67,12 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         this.dispatcher = dispatcher;
         this.cameraSetting = cameraSetting;
 
+        statusTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        statusTimer.Tick += StatusTimerOnTick;
+
         capture = new VideoCapture(cameraSetting.Device);
         capture.FrameCaptured += CaptureOnFrameCaptured;
 
@@ -52,6 +84,9 @@ public partial class MainWindowViewModel : ExtendViewModelBase
     {
         if (disposing)
         {
+            statusTimer.Stop();
+            statusTimer.Tick -= StatusTimerOnTick;
+
             capture.Dispose();
             capture.FrameCaptured -= CaptureOnFrameCaptured;
 
@@ -73,10 +108,20 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         bitmapBufferSize = capture.Width * capture.Height * 4;
         bufferManager ??= new BufferManager(4, bitmapBufferSize);
         bitmap ??= new WriteableBitmap(new PixelSize(capture.Width, capture.Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
+
+        frameCount = 0;
+        lastGc0Count = GC.CollectionCount(0);
+        lastGc1Count = GC.CollectionCount(1);
+        lastGc2Count = GC.CollectionCount(2);
+        lastStatusAt = DateTime.Now;
+
+        statusTimer.Start();
     }
 
     private void StopCapture()
     {
+        statusTimer.Stop();
+
         capture.StopCapture();
         capture.Close();
     }
@@ -88,7 +133,6 @@ public partial class MainWindowViewModel : ExtendViewModelBase
             return;
         }
 
-        // TODO show fps
         var slot = bufferManager.NextSlot();
         lock (slot.Lock)
         {
@@ -123,5 +167,46 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         // Disable cache & update
         Bitmap = null;
         Bitmap = bitmap;
+
+        frameCount++;
+    }
+
+    private void StatusTimerOnTick(object? sender, EventArgs e)
+    {
+        var now = DateTime.Now;
+        var elapsed = (float)(now - lastStatusAt).TotalMilliseconds;
+        lastStatusAt = now;
+
+        // FPS
+        var fps = (frameCount * 1000) / elapsed;
+        frameCount = 0;
+        previousFps = CalcSmoothValue(fps, previousFps);
+        Fps = previousFps;
+
+        // GC
+        var gc0Count = GC.CollectionCount(0);
+        var gc1Count = GC.CollectionCount(1);
+        var gc2Count = GC.CollectionCount(2);
+
+        var gc0PerSec = (gc0Count - lastGc0Count) * 1000 / elapsed;
+        previousGc0PerSec = CalcSmoothValue(gc0PerSec, previousGc0PerSec);
+        Gc0PerSec = previousGc0PerSec;
+
+        var gc1PerSec = (gc1Count - lastGc1Count) * 1000 / elapsed;
+        previousGc1PerSec = CalcSmoothValue(gc1PerSec, previousGc1PerSec);
+        Gc1PerSec = previousGc1PerSec;
+
+        var gc2PerSec = (gc2Count - lastGc2Count) * 1000 / elapsed;
+        previousGc2PerSec = CalcSmoothValue(gc2PerSec, previousGc2PerSec);
+        Gc2PerSec = previousGc2PerSec;
+
+        lastGc0Count = gc0Count;
+        lastGc1Count = gc1Count;
+        lastGc2Count = gc2Count;
+
+        static float CalcSmoothValue(float current, float previous)
+        {
+            return (current * Alpha) + (previous * (1.0f - Alpha));
+        }
     }
 }
