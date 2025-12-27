@@ -40,6 +40,8 @@ internal static class NativeMethods
     public static readonly uint VIDIOC_STREAMOFF;
     public static readonly uint VIDIOC_ENUM_FMT;
     public static readonly uint VIDIOC_ENUM_FRAMESIZES;
+    public static readonly uint VIDIOC_G_PARM;
+    public static readonly uint VIDIOC_S_PARM;
 
     // open
     public const int O_RDWR = 2;
@@ -268,6 +270,52 @@ internal static class NativeMethods
         public short revents;
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_fract
+    {
+        public uint numerator;
+        public uint denominator;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public unsafe struct v4l2_captureparm
+    {
+        public uint capability;
+        public uint capturemode;
+        public v4l2_fract timeperframe;
+        public uint extendedmode;
+        public uint readbuffers;
+        public fixed uint reserved[4];
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public unsafe struct v4l2_outputparm
+    {
+        public uint capability;
+        public uint outputmode;
+        public v4l2_fract timeperframe;
+        public uint writebuffers;
+        public fixed uint reserved[4];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Pack = 8)]
+    public struct v4l2_streamparm_parm
+    {
+        [FieldOffset(0)]
+        public v4l2_captureparm capture;
+        [FieldOffset(0)]
+        public v4l2_outputparm output;
+        [FieldOffset(0)]
+        public unsafe fixed byte raw_data[200];
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_streamparm
+    {
+        public uint type;
+        public v4l2_streamparm_parm parm;
+    }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
@@ -315,6 +363,8 @@ internal static class NativeMethods
         VIDIOC_DQBUF = IOWR('V', 17, sizeof(v4l2_buffer));
         VIDIOC_STREAMON = IOW('V', 18, sizeof(int));
         VIDIOC_STREAMOFF = IOW('V', 19, sizeof(int));
+        VIDIOC_G_PARM = IOWR('V', 21, sizeof(v4l2_streamparm));
+        VIDIOC_S_PARM = IOWR('V', 22, sizeof(v4l2_streamparm));
         VIDIOC_ENUM_FMT = IOWR('V', 2, sizeof(v4l2_fmtdesc));
         VIDIOC_ENUM_FRAMESIZES = IOWR('V', 74, sizeof(v4l2_frmsizeenum));
     }

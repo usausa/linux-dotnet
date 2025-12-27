@@ -160,6 +160,32 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
+    public unsafe bool SetFrameRate(int fps)
+    {
+        if (!IsOpen || (fps <= 0))
+        {
+            return false;
+        }
+
+        // Get parameters
+        v4l2_streamparm parm = default;
+        parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (ioctl(fd, VIDIOC_G_PARM, (IntPtr)(&parm)) < 0)
+        {
+            return false;
+        }
+
+        // Set parameters
+        parm.parm.capture.timeperframe.numerator = 1;
+        parm.parm.capture.timeperframe.denominator = (uint)fps;
+        if (ioctl(fd, VIDIOC_S_PARM, (IntPtr)(&parm)) < 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public void Close()
     {
         if (!IsOpen)
