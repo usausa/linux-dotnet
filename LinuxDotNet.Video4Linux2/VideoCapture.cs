@@ -280,7 +280,7 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public unsafe bool StartCapture()
+    public unsafe bool StartCapture(int fps = 0)
     {
         if (!IsOpen || IsCapturing)
         {
@@ -296,7 +296,7 @@ public sealed class VideoCapture : IDisposable
 
         // Start capture loop
         captureCts = new CancellationTokenSource();
-        captureThread = new Thread(() => CaptureLoop(captureCts.Token))
+        captureThread = new Thread(() => CaptureLoop(fps, captureCts.Token))
         {
             IsBackground = true,
             Name = "V4L2 Capture"
@@ -325,10 +325,14 @@ public sealed class VideoCapture : IDisposable
         ioctl(fd, VIDIOC_STREAMOFF, (IntPtr)(&type));
     }
 
-    private unsafe void CaptureLoop(CancellationToken cancellationToken)
+    private unsafe void CaptureLoop(int fps, CancellationToken cancellationToken)
     {
+        var frameInterval = fps > 0 ? TimeSpan.FromMilliseconds(1000.0 / fps) : TimeSpan.Zero;
+
         while (!cancellationToken.IsCancellationRequested)
         {
+            var currentTime = DateTime.Now;
+
             var fds = new pollfd
             {
                 fd = fd,
@@ -360,6 +364,16 @@ public sealed class VideoCapture : IDisposable
             requeueBuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             requeueBuffer.memory = V4L2_MEMORY_MMAP;
             ioctl(fd, VIDIOC_QBUF, (IntPtr)(&requeueBuffer));
+
+            if (fps > 0)
+            {
+                var nextFrameTime = currentTime + frameInterval;
+                var sleepTime = nextFrameTime - DateTime.Now;
+                if (sleepTime > TimeSpan.Zero)
+                {
+                    Thread.Sleep(sleepTime);
+                }
+            }
         }
     }
 }
