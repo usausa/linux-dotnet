@@ -19,6 +19,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private readonly CameraSetting cameraSetting;
 
+    private readonly DetectSetting detectSetting;
+
     private readonly DispatcherTimer statusTimer;
 
     private readonly VideoCapture capture;
@@ -69,6 +71,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
     {
         this.dispatcher = dispatcher;
         this.cameraSetting = cameraSetting;
+        this.detectSetting = detectSetting;
 
         statusTimer = new DispatcherTimer
         {
@@ -109,6 +112,12 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         {
             return;
         }
+
+        if (cameraSetting.Fps > 0)
+        {
+            capture.SetFrameRate(cameraSetting.Fps);
+        }
+
         capture.StartCapture();
 
         bufferManager ??= new BufferManager(4, capture.Width, capture.Height, 4);
@@ -143,9 +152,12 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         {
             ImageHelper.ConvertYUYV2RGBA(frame.Span, slot.Buffer);
 
-            faceDetector.Detect(slot.Buffer, bufferManager.Width, bufferManager.Height);
-            slot.FaceBoxes.Clear();
-            slot.FaceBoxes.AddRange(faceDetector.DetectedFaceBoxes);
+            if (detectSetting.Enable)
+            {
+                faceDetector.Detect(slot.Buffer, bufferManager.Width, bufferManager.Height);
+                slot.FaceBoxes.Clear();
+                slot.FaceBoxes.AddRange(faceDetector.DetectedFaceBoxes);
+            }
 
             slot.MarkUpdated();
         }

@@ -7,4 +7,6 @@ public sealed class CameraSetting
     public int Width { get; set; }
 
     public int Height { get; set; }
+
+    public int Fps { get; set; }
 }
