@@ -35,6 +35,7 @@ public static class ApplicationExtensions
 
         // Setting
         config.BindConfig<CameraSetting>(configuration.GetSection("Camera"));
+        config.BindConfig<DetectSetting>(configuration.GetSection("Detect"));
 
         // Window
         config.BindSingleton<MainWindow>();

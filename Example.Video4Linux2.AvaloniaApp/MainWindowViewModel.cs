@@ -5,7 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 
-using Example.Video4Linux2.AvaloniaApp.Helper;
+using Example.Video4Linux2.AvaloniaApp.Components;
 using Example.Video4Linux2.AvaloniaApp.Settings;
 
 using LinuxDotNet.Video4Linux2;
@@ -23,11 +23,11 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private readonly VideoCapture capture;
 
+    private readonly FaceDetector faceDetector;
+
     private BufferManager? bufferManager;
 
     private WriteableBitmap? bitmap;
-
-    private int bitmapBufferSize;
 
     private DateTime lastStatusAt;
 
@@ -43,6 +43,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     [ObservableProperty]
     public partial WriteableBitmap? Bitmap { get; set; }
+
+    public ObservableCollection<FaceBox> FaceBoxes { get; } = new();
 
     [ObservableProperty]
     public partial float Fps { get; set; }
@@ -62,7 +64,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     public MainWindowViewModel(
         IDispatcher dispatcher,
-        CameraSetting cameraSetting)
+        CameraSetting cameraSetting,
+        DetectSetting detectSetting)
     {
         this.dispatcher = dispatcher;
         this.cameraSetting = cameraSetting;
@@ -75,6 +78,8 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
         capture = new VideoCapture(cameraSetting.Device);
         capture.FrameCaptured += CaptureOnFrameCaptured;
+
+        faceDetector = new FaceDetector(detectSetting.Model);
 
         StartCommand = MakeDelegateCommand(StartCapture, () => !capture.IsCapturing);
         StopCommand = MakeDelegateCommand(StopCapture, () => capture.IsCapturing);
@@ -90,6 +95,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
             capture.Dispose();
             capture.FrameCaptured -= CaptureOnFrameCaptured;
 
+            faceDetector.Dispose();
             bufferManager?.Dispose();
             bitmap?.Dispose();
         }
@@ -105,8 +111,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         }
         capture.StartCapture();
 
-        bitmapBufferSize = capture.Width * capture.Height * 4;
-        bufferManager ??= new BufferManager(4, bitmapBufferSize);
+        bufferManager ??= new BufferManager(4, capture.Width, capture.Height, 4);
         bitmap ??= new WriteableBitmap(new PixelSize(capture.Width, capture.Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
 
         frameCount = 0;
@@ -137,6 +142,11 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         lock (slot.Lock)
         {
             ImageHelper.ConvertYUYV2RGBA(frame.Span, slot.Buffer);
+
+            faceDetector.Detect(slot.Buffer, bufferManager.Width, bufferManager.Height);
+            slot.FaceBoxes.Clear();
+            slot.FaceBoxes.AddRange(faceDetector.DetectedFaceBoxes);
+
             slot.MarkUpdated();
         }
 
@@ -145,12 +155,12 @@ public partial class MainWindowViewModel : ExtendViewModelBase
 
     private unsafe void UpdateBitmap()
     {
-        if (IsDisposed)
+        if (IsDisposed || (bufferManager is null))
         {
             return;
         }
 
-        var slot = bufferManager?.LastUpdateSlot();
+        var slot = bufferManager.LastUpdateSlot();
         if (slot is null)
         {
             return;
@@ -160,8 +170,14 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         lock (slot.Lock)
         {
             using var lockedBitmap = bitmap!.Lock();
-            var buffer = new Span<byte>(lockedBitmap.Address.ToPointer(), bitmapBufferSize);
+            var buffer = new Span<byte>(lockedBitmap.Address.ToPointer(), bufferManager.BufferSize);
             slot.Buffer.CopyTo(buffer);
+
+            FaceBoxes.Clear();
+            foreach (var box in slot.FaceBoxes)
+            {
+                FaceBoxes.Add(box);
+            }
         }
 
         // Disable cache & update

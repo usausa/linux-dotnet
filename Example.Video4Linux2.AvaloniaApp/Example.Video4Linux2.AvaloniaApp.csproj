@@ -38,6 +38,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="Usa.Smart.Avalonia" Version="2.11.2" />
     <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.11.2" />
@@ -52,6 +53,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LinuxDotNet.Video4Linux2\LinuxDotNet.Video4Linux2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="version-RFB-320.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

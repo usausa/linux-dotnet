@@ -1,4 +1,4 @@
-namespace Example.Video4Linux2.AvaloniaApp.Helper;
+namespace Example.Video4Linux2.AvaloniaApp.Components;
 
 public sealed class BufferManager : IDisposable
 {
@@ -13,6 +13,10 @@ public sealed class BufferManager : IDisposable
         private readonly int bufferSize;
 
         public Span<byte> Buffer => buffer.AsSpan(0, bufferSize);
+
+#pragma warning disable CA1002
+        public List<FaceBox> FaceBoxes { get; } = new();
+#pragma warning restore CA1002
 
         public Lock Lock { get; }
 
@@ -58,16 +62,29 @@ public sealed class BufferManager : IDisposable
 
     public int SlotCount => slots.Length;
 
-    public BufferManager(int slotCount, int bufferSize)
+    public int Width { get; }
+
+    public int Height { get; }
+
+    public int Depth { get; }
+
+    public int BufferSize { get; }
+
+    public BufferManager(int slotCount, int width, int height, int depth)
     {
         slots = new BufferSlot[slotCount];
         buffers = new byte[slotCount][];
 
+        Width = width;
+        Height = height;
+        Depth = depth;
+        BufferSize = width * height * depth;
+
         for (var i = 0; i < slotCount; i++)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+            var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
             buffers[i] = buffer;
-            slots[i] = new BufferSlot(this, i, buffer, bufferSize);
+            slots[i] = new BufferSlot(this, i, buffer, BufferSize);
         }
     }
 

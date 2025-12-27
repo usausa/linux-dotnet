@@ -1,4 +1,4 @@
-namespace Example.Video4Linux2.AvaloniaApp.Helper;
+namespace Example.Video4Linux2.AvaloniaApp.Components;
 
 using System.Runtime.CompilerServices;
 
