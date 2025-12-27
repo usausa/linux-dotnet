@@ -69,19 +69,16 @@ public sealed class FaceDetector : IDisposable
         session.Dispose();
     }
 
-    public void Detect(ReadOnlySpan<byte> image, int width, int height, float confidenceThreshold = 0.5f, float iouThreshold = 0.3f)
+    public void Detect(ReadOnlySpan<byte> image, int width, int height, float confidenceThreshold = 0.7f, float iouThreshold = 0.3f)
     {
-        var mean = new[] { 127f, 127f, 127f };
-        var scale = 128f;
-
         // Resize and normalize
         if ((width == ModelWidth) && (height == ModelHeight))
         {
-            CopyDirectToTensor(image, inputTensor, width, height, mean, scale);
+            CopyDirectToTensor(image, inputTensor, width, height);
         }
         else
         {
-            ResizeBilinearDirectToTensor(image, inputTensor, width, height, ModelWidth, ModelHeight, mean, scale);
+            ResizeBilinearDirectToTensor(image, inputTensor, width, height, ModelWidth, ModelHeight);
         }
 
         var inputs = new List<NamedOnnxValue>
@@ -94,9 +91,7 @@ public sealed class FaceDetector : IDisposable
 
         var scoresTensor = outputList[0].AsTensor<float>();
         var boxesTensor = outputList[1].AsTensor<float>();
-
-        var scoresDims = scoresTensor.Dimensions.ToArray();
-        var numBoxes = scoresDims[1];
+        var numBoxes = scoresTensor.Dimensions[1];
 
         DetectedFaceBoxes.Clear();
         if (numBoxes == 0)
@@ -212,7 +207,7 @@ public sealed class FaceDetector : IDisposable
     // Copy & Resize
     //--------------------------------------------------------------------------------
 
-    private static void CopyDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int width, int height, float[] mean, float scale)
+    private static void CopyDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int width, int height)
     {
         for (var y = 0; y < height; y++)
         {
@@ -220,14 +215,14 @@ public sealed class FaceDetector : IDisposable
             {
                 var idx = ((y * width) + x) * 4;
 
-                tensor[0, 0, y, x] = (source[idx] - mean[0]) / scale;
-                tensor[0, 1, y, x] = (source[idx + 1] - mean[1]) / scale;
-                tensor[0, 2, y, x] = (source[idx + 2] - mean[2]) / scale;
+                tensor[0, 0, y, x] = (source[idx] - 127f) / 128f;
+                tensor[0, 1, y, x] = (source[idx + 1] - 127f) / 128f;
+                tensor[0, 2, y, x] = (source[idx + 2] - 127f) / 128f;
             }
         }
     }
 
-    private static void ResizeBilinearDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int srcWidth, int srcHeight, int dstWidth, int dstHeight, float[] mean, float scale)
+    private static void ResizeBilinearDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
     {
         var xRatio = (float)(srcWidth - 1) / dstWidth;
         var yRatio = (float)(srcHeight - 1) / dstHeight;
@@ -266,13 +261,13 @@ public sealed class FaceDetector : IDisposable
 
                 // R channel
                 var r = (source[idx00] * w00) + (source[idx10] * w10) + (source[idx01] * w01) + (source[idx11] * w11);
-                tensor[0, 0, y, x] = (r - mean[0]) / scale;
+                tensor[0, 0, y, x] = (r - 127f) / 128f;
                 // G channel
                 var g = (source[idx00 + 1] * w00) + (source[idx10 + 1] * w10) + (source[idx01 + 1] * w01) + (source[idx11 + 1] * w11);
-                tensor[0, 1, y, x] = (g - mean[1]) / scale;
+                tensor[0, 1, y, x] = (g - 127f) / 128f;
                 // B channel
                 var b = (source[idx00 + 2] * w00) + (source[idx10 + 2] * w10) + (source[idx01 + 2] * w01) + (source[idx11 + 2] * w11);
-                tensor[0, 2, y, x] = (b - mean[2]) / scale;
+                tensor[0, 2, y, x] = (b - 127f) / 128f;
             }
         }
     }

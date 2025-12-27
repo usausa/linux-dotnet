@@ -118,7 +118,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
             capture.SetFrameRate(cameraSetting.Fps);
         }
 
-        capture.StartCapture();
+        capture.StartCapture(cameraSetting.Fps);
 
         bufferManager ??= new BufferManager(4, capture.Width, capture.Height, 4);
         bitmap ??= new WriteableBitmap(new PixelSize(capture.Width, capture.Height), new Vector(96, 96), Avalonia.Platform.PixelFormat.Rgba8888, AlphaFormat.Premul);
