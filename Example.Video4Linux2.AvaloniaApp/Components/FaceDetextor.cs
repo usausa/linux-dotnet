@@ -24,7 +24,11 @@ public sealed class FaceDetector : IDisposable
 
     private readonly InferenceSession session;
 
-    private readonly DenseTensor<float> inputTensor;
+    private readonly int[] dimensions;
+
+    private readonly int bufferSize;
+
+    private float[] inputBuffer;
 
 #pragma warning disable CA1002
     public List<FaceBox> DetectedFaceBoxes { get; } = new();
@@ -34,7 +38,7 @@ public sealed class FaceDetector : IDisposable
 
     public int ModelHeight { get; }
 
-    public FaceDetector(string modelPath)
+    public FaceDetector(string modelPath, bool parallel = false, int intraOpNumThreads = 0, int interOpNumThreads = 0)
     {
 #pragma warning disable CA2000
         session = new InferenceSession(modelPath, new SessionOptions
@@ -42,31 +46,41 @@ public sealed class FaceDetector : IDisposable
             LogSeverityLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_ERROR,
             EnableCpuMemArena = true,
             EnableMemoryPattern = true,
-            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL
+            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+            ExecutionMode = parallel ? ExecutionMode.ORT_PARALLEL : ExecutionMode.ORT_SEQUENTIAL,
+            IntraOpNumThreads = intraOpNumThreads,
+            InterOpNumThreads = interOpNumThreads
         });
 #pragma warning restore CA2000
 
         // Get input tensor shape
         var inputMetadata = session.InputMetadata.First().Value;
-        var dimensions = inputMetadata.Dimensions;
 
         // [batch, channels, height, width]
-        if (dimensions.Length >= 4)
+        if (inputMetadata.Dimensions.Length >= 4)
         {
-            ModelHeight = dimensions[2];
-            ModelWidth = dimensions[3];
+            ModelHeight = inputMetadata.Dimensions[2];
+            ModelWidth = inputMetadata.Dimensions[3];
         }
         else
         {
             throw new ArgumentException("Invalid model type");
         }
 
-        inputTensor = new DenseTensor<float>(new[] { 1, 3, ModelHeight, ModelWidth });
+        dimensions = [1, 3, ModelHeight, ModelWidth];
+        bufferSize = 3 * ModelHeight * ModelWidth;
+        inputBuffer = ArrayPool<float>.Shared.Rent(bufferSize);
     }
 
     public void Dispose()
     {
         session.Dispose();
+
+        if (inputBuffer.Length > 0)
+        {
+            ArrayPool<float>.Shared.Return(inputBuffer);
+            inputBuffer = [];
+        }
     }
 
     public void Detect(ReadOnlySpan<byte> image, int width, int height, float confidenceThreshold = 0.7f, float iouThreshold = 0.3f)
@@ -74,13 +88,14 @@ public sealed class FaceDetector : IDisposable
         // Resize and normalize
         if ((width == ModelWidth) && (height == ModelHeight))
         {
-            CopyDirectToTensor(image, inputTensor, width, height);
+            CopyDirectToTensor(image, inputBuffer, width, height);
         }
         else
         {
-            ResizeBilinearDirectToTensor(image, inputTensor, width, height, ModelWidth, ModelHeight);
+            ResizeBilinearDirectToTensor(image, inputBuffer, width, height, ModelWidth, ModelHeight);
         }
 
+        var inputTensor = new DenseTensor<float>(inputBuffer.AsMemory(0, bufferSize), dimensions);
         var inputs = new List<NamedOnnxValue>
         {
             NamedOnnxValue.CreateFromTensor(session.InputMetadata.First().Key, inputTensor)
@@ -207,25 +222,33 @@ public sealed class FaceDetector : IDisposable
     // Copy & Resize
     //--------------------------------------------------------------------------------
 
-    private static void CopyDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int width, int height)
+    private static void CopyDirectToTensor(ReadOnlySpan<byte> source, Span<float> destination, int width, int height)
     {
+        var channelSize = width * height;
+        var gOffset = channelSize;
+        var bOffset = channelSize * 2;
+
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                var idx = ((y * width) + x) * 4;
+                var srcIndex = ((y * width) + x) * 4;
+                var dstIndex = (y * width) + x;
 
-                tensor[0, 0, y, x] = (source[idx] - 127f) / 128f;
-                tensor[0, 1, y, x] = (source[idx + 1] - 127f) / 128f;
-                tensor[0, 2, y, x] = (source[idx + 2] - 127f) / 128f;
+                destination[dstIndex] = (source[srcIndex] - 127f) / 128f;               // R channel
+                destination[gOffset + dstIndex] = (source[srcIndex + 1] - 127f) / 128f; // G channel
+                destination[bOffset + dstIndex] = (source[srcIndex + 2] - 127f) / 128f; // B channel
             }
         }
     }
 
-    private static void ResizeBilinearDirectToTensor(ReadOnlySpan<byte> source, DenseTensor<float> tensor, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
+    private static void ResizeBilinearDirectToTensor(ReadOnlySpan<byte> source, Span<float> destination, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
     {
         var xRatio = (float)(srcWidth - 1) / dstWidth;
         var yRatio = (float)(srcHeight - 1) / dstHeight;
+        var channelSize = dstWidth * dstHeight;
+        var gOffset = channelSize;
+        var bOffset = channelSize * 2;
 
         for (var y = 0; y < dstHeight; y++)
         {
@@ -259,15 +282,17 @@ public sealed class FaceDetector : IDisposable
                 var w01 = xDiffInv * yDiff;
                 var w11 = xDiff * yDiff;
 
+                var dstIndex = (y * dstWidth) + x;
+
                 // R channel
                 var r = (source[idx00] * w00) + (source[idx10] * w10) + (source[idx01] * w01) + (source[idx11] * w11);
-                tensor[0, 0, y, x] = (r - 127f) / 128f;
+                destination[dstIndex] = (r - 127f) / 128f;
                 // G channel
                 var g = (source[idx00 + 1] * w00) + (source[idx10 + 1] * w10) + (source[idx01 + 1] * w01) + (source[idx11 + 1] * w11);
-                tensor[0, 1, y, x] = (g - 127f) / 128f;
+                destination[gOffset + dstIndex] = (g - 127f) / 128f;
                 // B channel
                 var b = (source[idx00 + 2] * w00) + (source[idx10 + 2] * w10) + (source[idx01 + 2] * w01) + (source[idx11 + 2] * w11);
-                tensor[0, 2, y, x] = (b - 127f) / 128f;
+                destination[bOffset + dstIndex] = (b - 127f) / 128f;
             }
         }
     }

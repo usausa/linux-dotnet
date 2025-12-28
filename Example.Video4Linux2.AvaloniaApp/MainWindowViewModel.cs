@@ -82,7 +82,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         capture = new VideoCapture(cameraSetting.Device);
         capture.FrameCaptured += CaptureOnFrameCaptured;
 
-        faceDetector = new FaceDetector(detectSetting.Model);
+        faceDetector = new FaceDetector(detectSetting.Model, detectSetting.Parallel, detectSetting.IntraOpNumThreads, detectSetting.InterOpNumThreads);
 
         StartCommand = MakeDelegateCommand(StartCapture, () => !capture.IsCapturing);
         StopCommand = MakeDelegateCommand(StopCapture, () => capture.IsCapturing);
