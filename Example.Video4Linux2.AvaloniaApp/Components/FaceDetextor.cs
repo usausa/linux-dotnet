@@ -102,10 +102,9 @@ public sealed class FaceDetector : IDisposable
         };
 
         using var results = session.Run(inputs);
-        var outputList = results.ToList();
 
-        var scoresTensor = outputList[0].AsTensor<float>();
-        var boxesTensor = outputList[1].AsTensor<float>();
+        var scoresTensor = results[0].AsTensor<float>();
+        var boxesTensor = results[1].AsTensor<float>();
         var numBoxes = scoresTensor.Dimensions[1];
 
         DetectedFaceBoxes.Clear();
