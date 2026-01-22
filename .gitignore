@@ -420,3 +420,4 @@ FodyWeavers.xsd
 # Customize
 desktop.ini
 __*
+/Example.SystemInfo.ConsoleApp/Properties/launchSettings.json

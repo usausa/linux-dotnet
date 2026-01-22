@@ -38,6 +38,7 @@ public sealed class UptimeCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var uptime = PlatformProvider.GetUptime();
+
         Console.WriteLine($"Uptime: {uptime.Uptime}");
 
         return ValueTask.CompletedTask;
@@ -53,11 +54,13 @@ public sealed class StatCommand : ICommandHandler
     public async ValueTask ExecuteAsync(CommandContext context)
     {
         var statics = PlatformProvider.GetStatics();
+
         Console.WriteLine($"Interrupt:      {statics.Interrupt}");
         Console.WriteLine($"ContextSwitch:  {statics.ContextSwitch}");
         Console.WriteLine($"SoftIrq:        {statics.SoftIrq}");
-        Console.WriteLine($"ProcessRunning: {statics.ProcessRunning}");
-        Console.WriteLine($"ProcessBlocked: {statics.ProcessBlocked}");
+        Console.WriteLine($"Forks:          {statics.Forks}");
+        Console.WriteLine($"RunnableTasks:  {statics.RunnableTasks}");
+        Console.WriteLine($"BlockedTasks:   {statics.BlockedTasks}");
 
         Console.WriteLine($"User:           {statics.CpuTotal.User}");
         Console.WriteLine($"Nice:           {statics.CpuTotal.Nice}");
@@ -75,10 +78,15 @@ public sealed class StatCommand : ICommandHandler
         for (var i = 0; i < 10; i++)
         {
             var previousValues = statics.CpuCores
-                .Select(x => new
+                .Select(x =>
                 {
-                    x.Active,
-                    x.Total
+                    var nonIdle = CalcCpuNonIdle(x);
+                    var total = nonIdle + CalcCpuIdle(x);
+                    return new
+                    {
+                        NonIdle = nonIdle,
+                        Total = total
+                    };
                 })
                 .ToList();
 
@@ -89,13 +97,26 @@ public sealed class StatCommand : ICommandHandler
             for (var j = 0; j < statics.CpuCores.Count; j++)
             {
                 var core = statics.CpuCores[j];
-                var activeDiff = core.Active - previousValues[j].Active;
-                var totalDiff = core.Total - previousValues[j].Total;
-                var usage = (int)Math.Ceiling((double)activeDiff / totalDiff * 100.0);
+                var nonIdle = CalcCpuNonIdle(core);
+                var total = nonIdle + CalcCpuIdle(core);
+
+                var nonIdleDiff = nonIdle - previousValues[j].NonIdle;
+                var totalDiff = total - previousValues[j].Total;
+                var usage = totalDiff > 0 ? (int)Math.Ceiling((double)nonIdleDiff / totalDiff * 100.0) : 0;
 
                 Console.WriteLine($"Name:  {core.Name}");
                 Console.WriteLine($"Usage: {usage}");
             }
+        }
+
+        static long CalcCpuIdle(CpuStatics cpu)
+        {
+            return cpu.Idle + cpu.IoWait;
+        }
+
+        static long CalcCpuNonIdle(CpuStatics cpu)
+        {
+            return cpu.User + cpu.Nice + cpu.System + cpu.Irq + cpu.SoftIrq + cpu.Steal;
         }
     }
 }
@@ -109,6 +130,7 @@ public sealed class LoadCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var load = PlatformProvider.GetLoadAverage();
+
         Console.WriteLine($"Average1:  {load.Average1:F2}");
         Console.WriteLine($"Average5:  {load.Average5:F2}");
         Console.WriteLine($"Average15: {load.Average15:F2}");
@@ -126,11 +148,13 @@ public sealed class MemoryCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var memory = PlatformProvider.GetMemory();
-        Console.WriteLine($"Total:   {memory.Total}");
-        Console.WriteLine($"Free:    {memory.Free}");
-        Console.WriteLine($"Buffers: {memory.Buffers}");
-        Console.WriteLine($"Cached:  {memory.Cached}");
-        Console.WriteLine($"Usage:   {(int)Math.Ceiling(memory.Usage)}");
+        var usage = (int)Math.Ceiling((double)(memory.MemTotal - memory.MemAvailable) / memory.MemTotal * 100);
+
+        Console.WriteLine($"MemTotal:     {memory.MemTotal}");
+        Console.WriteLine($"MemAvailable: {memory.MemAvailable}");
+        Console.WriteLine($"Buffers:      {memory.Buffers}");
+        Console.WriteLine($"Cached:       {memory.Cached}");
+        Console.WriteLine($"Usage:        {usage}");
 
         return ValueTask.CompletedTask;
     }
@@ -145,6 +169,7 @@ public sealed class VirtualCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var vm = PlatformProvider.GetVirtualMemory();
+
         Console.WriteLine($"PageIn:            {vm.PageIn}");
         Console.WriteLine($"PageOut:           {vm.PageOut}");
         Console.WriteLine($"SwapIn:            {vm.SwapIn}");
@@ -251,6 +276,7 @@ public sealed class FdCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var fd = PlatformProvider.GetFileDescriptor();
+
         Console.WriteLine($"Allocated: {fd.Allocated}");
         Console.WriteLine($"Used:      {fd.Used}");
         Console.WriteLine($"Max:       {fd.Max}");
@@ -302,6 +328,7 @@ public sealed class TcpCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var tcp = PlatformProvider.GetTcp();
+
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
         Console.WriteLine($"SynRecv:     {tcp.SynRecv}");
@@ -328,6 +355,7 @@ public sealed class Tcp6Command : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var tcp = PlatformProvider.GetTcp6();
+
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
         Console.WriteLine($"SynRecv:     {tcp.SynRecv}");
@@ -354,6 +382,7 @@ public sealed class ProcessCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var process = PlatformProvider.GetProcessSummary();
+
         Console.WriteLine($"ProcessCount: {process.ProcessCount}");
         Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
 
@@ -370,6 +399,7 @@ public sealed class CpuCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var cpu = PlatformProvider.GetCpu();
+
         Console.WriteLine("Frequency");
         foreach (var core in cpu.Cores)
         {
@@ -398,6 +428,7 @@ public sealed class BatteryCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var battery = PlatformProvider.GetBattery();
+
         if (battery.Supported)
         {
             Console.WriteLine($"Capacity:   {battery.Capacity}");
@@ -425,6 +456,7 @@ public sealed class AcCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var adapter = PlatformProvider.GetMainsAdapter();
+
         Console.WriteLine(adapter.Supported ? $"Online: {adapter.Online}" : "No adapter found");
 
         return ValueTask.CompletedTask;

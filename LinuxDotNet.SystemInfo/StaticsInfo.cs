@@ -26,10 +26,6 @@ public sealed class CpuStatics
 
     public long GuestNice { get; internal set; }
 
-    public long Active => User + Nice + System + IoWait + Irq + SoftIrq;
-
-    public long Total => Active + Idle;
-
     internal CpuStatics(string name)
     {
         Name = name;
@@ -53,11 +49,14 @@ public sealed class StaticsInfo
     public long ContextSwitch { get; private set; }
 
     // Total
+    public long Forks { get; private set; }
+
+    public int RunnableTasks { get; private set; }
+
+    public int BlockedTasks { get; private set; }
+
+    // Total
     public long SoftIrq { get; private set; }
-
-    public int ProcessRunning { get; private set; }
-
-    public int ProcessBlocked { get; private set; }
 
     internal StaticsInfo()
     {
@@ -84,13 +83,17 @@ public sealed class StaticsInfo
             {
                 ContextSwitch = ExtractInt64(span);
             }
+            else if (span.StartsWith("processes"))
+            {
+                Forks = ExtractInt32(span);
+            }
             else if (span.StartsWith("procs_running"))
             {
-                ProcessRunning = ExtractInt32(span);
+                RunnableTasks = ExtractInt32(span);
             }
             else if (span.StartsWith("procs_blocked"))
             {
-                ProcessBlocked = ExtractInt32(span);
+                BlockedTasks = ExtractInt32(span);
             }
             else if (span.StartsWith("softirq"))
             {
