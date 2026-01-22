@@ -6,11 +6,11 @@ public sealed class MemoryInfo
 {
     public DateTime UpdateAt { get; private set; }
 
-    public long MemTotal { get; private set; }
+    public long MemoryTotal { get; private set; }
 
-    public long MemAvailable { get; private set; }
+    public long MemoryAvailable { get; private set; }
 
-    public long MemFree { get; private set; }
+    public long MemoryFree { get; private set; }
 
     public long Buffers { get; private set; }
 
@@ -76,15 +76,15 @@ public sealed class MemoryInfo
             // ReSharper disable StringLiteralTypo
             if (span.StartsWith("MemTotal"))
             {
-                MemTotal = ExtractInt64(span);
+                MemoryTotal = ExtractInt64(span);
             }
             else if (span.StartsWith("MemAvailable"))
             {
-                MemAvailable = ExtractInt64(span);
+                MemoryAvailable = ExtractInt64(span);
             }
             else if (span.StartsWith("MemFree"))
             {
-                MemFree = ExtractInt64(span);
+                MemoryFree = ExtractInt64(span);
             }
             else if (span.StartsWith("Buffers"))
             {

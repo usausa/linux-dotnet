@@ -148,13 +148,13 @@ public sealed class MemoryCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var memory = PlatformProvider.GetMemory();
-        var usage = (int)Math.Ceiling((double)(memory.MemTotal - memory.MemAvailable) / memory.MemTotal * 100);
+        var usage = (int)Math.Ceiling((double)(memory.MemoryTotal - memory.MemoryAvailable) / memory.MemoryTotal * 100);
 
-        Console.WriteLine($"MemTotal:     {memory.MemTotal}");
-        Console.WriteLine($"MemAvailable: {memory.MemAvailable}");
-        Console.WriteLine($"Buffers:      {memory.Buffers}");
-        Console.WriteLine($"Cached:       {memory.Cached}");
-        Console.WriteLine($"Usage:        {usage}");
+        Console.WriteLine($"MemoryTotal:     {memory.MemoryTotal}");
+        Console.WriteLine($"MemoryAvailable: {memory.MemoryAvailable}");
+        Console.WriteLine($"Buffers:         {memory.Buffers}");
+        Console.WriteLine($"Cached:          {memory.Cached}");
+        Console.WriteLine($"Usage:           {usage}");
 
         return ValueTask.CompletedTask;
     }
