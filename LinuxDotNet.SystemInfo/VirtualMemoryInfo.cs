@@ -6,25 +6,38 @@ public class VirtualMemoryInfo
 {
     public DateTime UpdateAt { get; private set; }
 
-    // Total
+    // Page
+
     public long PageIn { get; internal set; }
 
-    // Total
     public long PageOut { get; internal set; }
 
-    // Total
+    // Swap
+
     public long SwapIn { get; internal set; }
 
-    // Total
     public long SwapOut { get; internal set; }
 
-    // Total
+    // Fault
+
     public long PageFault { get; internal set; }
 
-    // Total
     public long MajorPageFault { get; internal set; }
 
-    // Total
+    // Steal
+
+    public long StealKernel { get; internal set; }
+
+    public long StealDirect { get; internal set; }
+
+    // Scan
+
+    public long ScanKernel { get; internal set; }
+
+    public long ScanDirect { get; internal set; }
+
+    // OOM
+
     public long OutOfMemoryKiller { get; internal set; }
 
     internal VirtualMemoryInfo()
@@ -62,6 +75,22 @@ public class VirtualMemoryInfo
             else if (span.StartsWith("pgmajfault"))
             {
                 MajorPageFault = ExtractInt64(span);
+            }
+            else if (span.StartsWith("pgsteal_kswapd"))
+            {
+                StealKernel = ExtractInt64(span);
+            }
+            else if (span.StartsWith("pgsteal_direct"))
+            {
+                StealDirect = ExtractInt64(span);
+            }
+            else if (span.StartsWith("pgscan_kswapd"))
+            {
+                ScanKernel = ExtractInt64(span);
+            }
+            else if (span.StartsWith("pgscan_direct"))
+            {
+                ScanDirect = ExtractInt64(span);
             }
             else if (span.StartsWith("oom_kill"))
             {
