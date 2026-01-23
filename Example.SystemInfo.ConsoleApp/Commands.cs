@@ -194,15 +194,12 @@ public sealed class PartitionCommand : ICommandHandler
         foreach (var partition in partitions)
         {
             var drive = new DriveInfo(partition.MountPoints[0]);
-            var used = drive.TotalSize - drive.TotalFreeSpace;
-            var available = drive.AvailableFreeSpace;
-            var usage = (int)Math.Ceiling((double)used / (available + used) * 100);
+            var usage = (int)Math.Ceiling((double)(drive.TotalSize - drive.TotalFreeSpace) / drive.TotalSize * 100);
 
             Console.WriteLine($"Name:          {partition.Name}");
             Console.WriteLine($"MountPoint:    {String.Join(' ', partition.MountPoints)}");
             Console.WriteLine($"TotalSize:     {drive.TotalSize / 1024}");
-            Console.WriteLine($"UsedSize:      {used / 1024}");
-            Console.WriteLine($"AvailableSize: {available / 1024}");
+            Console.WriteLine($"FreeSize:      {drive.TotalFreeSpace / 1024}");
             Console.WriteLine($"Usage:         {usage}");
         }
 
