@@ -174,8 +174,8 @@ public sealed class VirtualCommand : ICommandHandler
         Console.WriteLine($"PageOut:           {vm.PageOut}");
         Console.WriteLine($"SwapIn:            {vm.SwapIn}");
         Console.WriteLine($"SwapOut:           {vm.SwapOut}");
-        Console.WriteLine($"PageFault:         {vm.PageFault}");
-        Console.WriteLine($"MajorPageFault:    {vm.MajorPageFault}");
+        Console.WriteLine($"PageFaults:        {vm.PageFaults}");
+        Console.WriteLine($"MajorPageFaults:   {vm.MajorPageFaults}");
         Console.WriteLine($"OutOfMemoryKiller: {vm.OutOfMemoryKiller}");
 
         return ValueTask.CompletedTask;

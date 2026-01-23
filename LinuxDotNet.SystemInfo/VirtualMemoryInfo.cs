@@ -20,9 +20,9 @@ public class VirtualMemoryInfo
 
     // Fault
 
-    public long PageFault { get; internal set; }
+    public long PageFaults { get; internal set; }
 
-    public long MajorPageFault { get; internal set; }
+    public long MajorPageFaults { get; internal set; }
 
     // Steal
 
@@ -70,11 +70,11 @@ public class VirtualMemoryInfo
             }
             else if (span.StartsWith("pgfault"))
             {
-                PageFault = ExtractInt64(span);
+                PageFaults = ExtractInt64(span);
             }
             else if (span.StartsWith("pgmajfault"))
             {
-                MajorPageFault = ExtractInt64(span);
+                MajorPageFaults = ExtractInt64(span);
             }
             else if (span.StartsWith("pgsteal_kswapd"))
             {
