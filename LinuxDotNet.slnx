@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Example/">
     <Project Path="Example.Cups.ConsoleApp/Example.Cups.ConsoleApp.csproj" />
+    <Project Path="Example.Disk.ConsoleApp/Example.Disk.ConsoleApp.csproj" Id="231b1a34-f65d-411b-812b-9960a32a294c" />
     <Project Path="Example.GameInput.AvaloniaApp/Example.GameInput.AvaloniaApp.csproj" />
     <Project Path="Example.GameInput.ConsoleApp/Example.GameInput.ConsoleApp.csproj" />
     <Project Path="Example.InputEvent.ConsoleApp/Example.InputEvent.ConsoleApp.csproj" />
@@ -10,6 +11,7 @@
   </Folder>
   <Folder Name="/Library/">
     <Project Path="LinuxDotNet.Cups/LinuxDotNet.Cups.csproj" />
+    <Project Path="LinuxDotNet.Disk/LinuxDotNet.Disk.csproj" Id="c52f0820-c6bb-47e8-a353-6f06b36515f5" />
     <Project Path="LinuxDotNet.GameInput/LinuxDotNet.GameInput.csproj" />
     <Project Path="LinuxDotNet.InputEvent/LinuxDotNet.InputEvent.csproj" />
     <Project Path="LinuxDotNet.SystemInfo/LinuxDotNet.SystemInfo.csproj" />
