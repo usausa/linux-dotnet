@@ -23,6 +23,8 @@ public sealed class SmartCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         // TODO
+        DiskTest.Main();
+
         SmartTest.Main(["/dev/sda"]);
 
         return ValueTask.CompletedTask;

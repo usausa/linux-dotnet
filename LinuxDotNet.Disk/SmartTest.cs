@@ -171,7 +171,7 @@ public sealed class SmartTest
     {
         if (args.Length != 1)
         {
-            Console.Error.WriteLine($"usage: SmartReader /dev/sdX");
+            Console.Error.WriteLine("usage: SmartReader /dev/sdX");
             return 2;
         }
 
