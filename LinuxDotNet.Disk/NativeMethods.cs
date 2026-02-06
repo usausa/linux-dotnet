@@ -2,8 +2,6 @@ namespace LinuxDotNet.Disk;
 
 using System.Runtime.InteropServices;
 
-// ReSharper disable CollectionNeverQueried.Global
-// ReSharper disable CommentTypo
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
@@ -13,25 +11,33 @@ using System.Runtime.InteropServices;
 internal static class NativeMethods
 {
     //------------------------------------------------------------------------
-    // const
+    // Const
     //------------------------------------------------------------------------
 
-    // Constants
     public const int O_RDONLY = 0;
-    public const int O_NONBLOCK = 0x800;
-    public const int SG_DXFER_FROM_DEV = -3;
-    public const int SG_INFO_OK_MASK = 0x1;
-    public const int SG_INFO_OK = 0x0;
-    public const int EIO = 5;
 
-    // SG_IO constant (0x2285 on most Linux systems)
     public const ulong SG_IO = 0x2285;
+    public const ulong NVME_IOCTL_ADMIN_CMD = 0xC0484E41;
+
+    public const int SG_DXFER_FROM_DEV = -3;
+
+    public const uint SG_INFO_OK_MASK = 0x1;
+
+    public const uint SG_INFO_OK = 0x0;
+
+    // Linux major numbers
+
+    public const int NVME_MAJOR = 259;
+    public const int SCSI_DISK0_MAJOR = 8;
+    public const int IDE0_MAJOR = 3;
+    public const int IDE1_MAJOR = 22;
+    public const int MMC_BLOCK_MAJOR = 179;
+    public const int VIRTBLK_MAJOR = 252;
 
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
 
-    // sg_io_hdr_t structure
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct sg_io_hdr_t
     {
@@ -59,6 +65,58 @@ internal static class NativeMethods
         public uint info;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct nvme_admin_cmd
+    {
+        public byte opcode;
+        public byte flags;
+        public ushort rsvd1;
+        public uint nsid;
+        public uint cdw2;
+        public uint cdw3;
+        public ulong metadata;
+        public ulong addr;
+        public uint metadata_len;
+        public uint data_len;
+        public uint cdw10;
+        public uint cdw11;
+        public uint cdw12;
+        public uint cdw13;
+        public uint cdw14;
+        public uint cdw15;
+        public uint timeout_ms;
+        public uint result;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct nvme_smart_log
+    {
+        public byte critical_warning;
+        public fixed byte temperature[2];
+        public byte avail_spare;
+        public byte spare_thresh;
+        public byte percent_used;
+        public fixed byte rsvd6[26];
+        public fixed byte data_units_read[16];
+        public fixed byte data_units_written[16];
+        public fixed byte host_reads[16];
+        public fixed byte host_writes[16];
+        public fixed byte ctrl_busy_time[16];
+        public fixed byte power_cycles[16];
+        public fixed byte power_on_hours[16];
+        public fixed byte unsafe_shutdowns[16];
+        public fixed byte media_errors[16];
+        public fixed byte num_err_log_entries[16];
+        public uint warning_temp_time;
+        public uint critical_comp_time;
+        public fixed ushort temp_sensor[8];
+        public uint thm_temp1_trans_count;
+        public uint thm_temp2_trans_count;
+        public uint thm_temp1_total_time;
+        public uint thm_temp2_total_time;
+        public fixed byte rsvd232[280];
+    }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
@@ -71,4 +129,21 @@ internal static class NativeMethods
 
     [DllImport("libc", SetLastError = true)]
     public static extern unsafe int ioctl(int fd, ulong request, void* argp);
+
+    [DllImport("libc", SetLastError = true)]
+    public static extern int ioctl(int fd, ulong request, ref nvme_admin_cmd data);
+
+    //------------------------------------------------------------------------
+    // Helper
+    //------------------------------------------------------------------------
+
+    public static uint GetMajor(ulong dev) => (uint)((dev >> 8) & 0xfff);
+
+    public static bool IsBlockDevice(uint mode) => (mode & 0xF000) == 0x6000;
 }
+#pragma warning restore CS8981
+#pragma warning restore CA5392
+#pragma warning restore CA2101
+#pragma warning restore IDE1006
+// ReSharper restore InconsistentNaming
+// ReSharper restore IdentifierTypo
