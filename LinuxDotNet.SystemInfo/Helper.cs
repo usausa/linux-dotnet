@@ -6,7 +6,8 @@ internal static class Helper
         major switch
         {
             3 => true, // HDD
-            8 => true, // SATA
+            8 => true, // IDE
+            22 => true,
             179 => true, // MMC
             239 => true, // NVMe
             _ => false
