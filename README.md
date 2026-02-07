@@ -3,6 +3,7 @@
 |Library|NuGet|
 |:----|:----|
 |LinuxDotNet.Cups|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.Cups.svg)](https://www.nuget.org/packages/LinuxDotNet.Cups)|
+|LinuxDotNet.Disk|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.Disk.svg)](https://www.nuget.org/packages/LinuxDotNet.Disk)|
 |LinuxDotNet.GameInput|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.GameInput.svg)](https://www.nuget.org/packages/LinuxDotNet.GameInput)|
 |LinuxDotNet.InputEvent|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.InputEvent.svg)](https://www.nuget.org/packages/LinuxDotNet.InputEvent)|
 |LinuxDotNet.SystemInfo|[![NuGet](https://img.shields.io/nuget/v/LinuxDotNet.SystemInfo.svg)](https://www.nuget.org/packages/LinuxDotNet.SystemInfo)|
@@ -54,6 +55,80 @@ var options = new PrintOptions
 };
 
 var jobId = CupsPrinter.PrintStream(image, options);
+```
+
+# ⚡LinuxDotNet.Disk
+
+SMART infotmation.
+
+## Usage
+
+### List printers
+
+```csharp
+var disks = DiskInfo.GetInformation();
+foreach (var disk in disks)
+{
+    Console.WriteLine($"Disk #{disk.Index}: {disk.DeviceName}");
+    Console.WriteLine($"  Model:          {disk.Model}");
+    Console.WriteLine($"  Serial:         {disk.SerialNumber}");
+    Console.WriteLine($"  Firmware:       {disk.FirmwareRevision}");
+    Console.WriteLine($"  DiskType:       {disk.DiskType}");
+    Console.WriteLine($"  SmartType:      {disk.SmartType}");
+    Console.WriteLine($"  Size:           {FormatSize(disk.Size)}");
+    Console.WriteLine($"  Removable:      {disk.Removable}");
+
+    var partitions = disk.GetPartitions().ToList();
+    if (partitions.Count > 0)
+    {
+        Console.WriteLine("  Partitions:");
+        foreach (var partition in partitions)
+        {
+            var mountInfo = !String.IsNullOrEmpty(partition.MountPoint) ? $" -> {partition.MountPoint} ({partition.FileSystem})" : string.Empty;
+            Console.WriteLine($"    {partition.Name}: {FormatSize(partition.Size)}{mountInfo}");
+        }
+    }
+
+    if (disk.SmartType == SmartType.Nvme)
+    {
+        PrintNvmeSmart((ISmartNvme)disk.Smart);
+    }
+    else if (disk.SmartType == SmartType.Generic)
+    {
+        PrintGenericSmart((ISmartGeneric)disk.Smart);
+    }
+}
+
+static void PrintNvmeSmart(ISmartNvme smart)
+{
+    Console.WriteLine($"  SMART (NVMe): Update=[{smart.LastUpdate}]");
+    Console.WriteLine($"    CriticalWarning:          {smart.CriticalWarning}");
+    Console.WriteLine($"    Temperature:              {smart.Temperature}C");
+    Console.WriteLine($"    AvailableSpare:           {smart.AvailableSpare}%");
+    Console.WriteLine($"    PercentageUsed:           {smart.PercentageUsed}%");
+    Console.WriteLine($"    DataUnitRead:             {smart.DataUnitRead} ({FormatDataUnits(smart.DataUnitRead)})");
+    Console.WriteLine($"    DataUnitWritten:          {smart.DataUnitWritten} ({FormatDataUnits(smart.DataUnitWritten)})");
+    Console.WriteLine($"    PowerCycles:              {smart.PowerCycles}");
+    Console.WriteLine($"    PowerOnHours:             {smart.PowerOnHours}");
+    Console.WriteLine($"    UnsafeShutdowns:          {smart.UnsafeShutdowns}");
+    Console.WriteLine($"    MediaErrors:              {smart.MediaErrors}");
+}
+
+static void PrintGenericSmart(ISmartGeneric smart)
+{
+    Console.WriteLine($"  SMART (Generic): Update=[{smart.LastUpdate}]");
+    Console.WriteLine("    ID   FLAG   CUR  WOR  RAW");
+    Console.WriteLine("    ---  ----   ---  ---  --------");
+
+    foreach (var id in smart.GetSupportedIds())
+    {
+        var attr = smart.GetAttribute(id);
+        if (attr.HasValue)
+        {
+            Console.WriteLine($"    {(byte)id,3}  0x{attr.Value.Flags:X4} {attr.Value.CurrentValue,3}  {attr.Value.WorstValue,3}  {attr.Value.RawValue}");
+        }
+    }
+}
 ```
 
 # 🎮LinuxDotNet.GameInput
