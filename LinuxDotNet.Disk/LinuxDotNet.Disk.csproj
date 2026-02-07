@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>0.1.0</Version>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <PackageId>LinuxDotNet.Disk</PackageId>
     <Title>LinuxDotNet.Disk</Title>
     <Description>LinuxDotNet.Disk.</Description>
