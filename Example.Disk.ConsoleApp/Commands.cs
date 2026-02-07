@@ -66,7 +66,7 @@ public sealed class SmartCommand : ICommandHandler
 
     private static void PrintNvmeSmart(ISmartNvme smart)
     {
-        Console.WriteLine("  SMART (NVMe):");
+        Console.WriteLine($"  SMART (NVMe): Update=[{smart.LastUpdate}]");
         Console.WriteLine($"    CriticalWarning:          {smart.CriticalWarning}");
         Console.WriteLine($"    Temperature:              {smart.Temperature}C");
         Console.WriteLine($"    AvailableSpare:           {smart.AvailableSpare}%");
@@ -96,7 +96,7 @@ public sealed class SmartCommand : ICommandHandler
 
     private static void PrintGenericSmart(ISmartGeneric smart)
     {
-        Console.WriteLine("  SMART (Generic):");
+        Console.WriteLine($"  SMART (Generic): Update=[{smart.LastUpdate}]");
         Console.WriteLine("    ID   FLAG   CUR  WOR  RAW");
         Console.WriteLine("    ---  ----   ---  ---  --------");
 
