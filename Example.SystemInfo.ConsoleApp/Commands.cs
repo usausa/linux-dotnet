@@ -10,6 +10,7 @@ public static class CommandBuilderExtensions
 {
     public static void AddCommands(this ICommandBuilder commands)
     {
+        commands.AddCommand<KernelCommand>();
         commands.AddCommand<UptimeCommand>();
         commands.AddCommand<StatCommand>();
         commands.AddCommand<LoadCommand>();
@@ -26,6 +27,32 @@ public static class CommandBuilderExtensions
         commands.AddCommand<BatteryCommand>();
         commands.AddCommand<AcCommand>();
         commands.AddCommand<HwmonCommand>();
+    }
+}
+
+//--------------------------------------------------------------------------------
+// Kernel
+//--------------------------------------------------------------------------------
+[Command("kernel", "Get kernel information")]
+public sealed class KernelCommand : ICommandHandler
+{
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var kernel = PlatformProvider.GetKernel();
+
+        Console.WriteLine($"OsType:                 {kernel.OsType}");
+        Console.WriteLine($"OsRelease:              {kernel.OsRelease}");
+        Console.WriteLine($"KernelVersion:          {kernel.KernelVersion}");
+        Console.WriteLine($"OsProductVersion:       {kernel.OsProductVersion}");
+        Console.WriteLine($"OsName:                 {kernel.OsName}");
+        Console.WriteLine($"OsPrettyName:           {kernel.OsPrettyName}");
+        Console.WriteLine($"OsId:                   {kernel.OsId}");
+        Console.WriteLine($"BootTime:               {kernel.BootTime}");
+        Console.WriteLine($"MaxProcessCount:        {kernel.MaxProcessCount}");
+        Console.WriteLine($"MaxFileCount:           {kernel.MaxFileCount}");
+        Console.WriteLine($"MaxFileCountPerProcess: {kernel.MaxFileCountPerProcess}");
+
+        return ValueTask.CompletedTask;
     }
 }
 
