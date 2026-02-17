@@ -3,20 +3,42 @@ namespace LinuxDotNet.SystemInfo;
 #pragma warning disable CA1024
 public static class PlatformProvider
 {
+    //--------------------------------------------------------------------------------
+    // System
+    //--------------------------------------------------------------------------------
+
     // TODO
     //public static HardwareInfo GetHardware() => new();
 
     public static KernelInfo GetKernel() => new();
 
-    public static UptimeInfo GetUptime() => new();
+    public static Uptime GetUptime() => new();
+
+    //--------------------------------------------------------------------------------
+    // Load
+    //--------------------------------------------------------------------------------
 
     public static StaticsInfo GetStatics() => new();
 
-    public static LoadAverageInfo GetLoadAverage() => new();
+    public static LoadAverage GetLoadAverage() => new();
+
+    //--------------------------------------------------------------------------------
+    // CPU
+    //--------------------------------------------------------------------------------
+
+    public static CpuDevice GetCpu() => new();
+
+    //--------------------------------------------------------------------------------
+    // Memory
+    //--------------------------------------------------------------------------------
 
     public static MemoryInfo GetMemory() => new();
 
     public static VirtualMemoryInfo GetVirtualMemory() => new();
+
+    //--------------------------------------------------------------------------------
+    // Storage
+    //--------------------------------------------------------------------------------
 
     public static IReadOnlyList<Partition> GetPartitions() => Partition.GetPartitions();
 
@@ -26,6 +48,10 @@ public static class PlatformProvider
     //public static IReadOnlyList<FileSystemEntry> GetFileSystems(bool includeVirtual = false) => FileSystemInfo.GetFileSystems(includeVirtual);
 
     public static FileDescriptorInfo GetFileDescriptor() => new();
+
+    //--------------------------------------------------------------------------------
+    // Network
+    //--------------------------------------------------------------------------------
 
     public static NetworkStaticInfo GetNetworkStatic() => new();
 
@@ -39,6 +65,10 @@ public static class PlatformProvider
 
     public static TcpInfo GetTcp6() => new(6);
 
+    //--------------------------------------------------------------------------------
+    // Process
+    //--------------------------------------------------------------------------------
+
     public static ProcessSummaryInfo GetProcessSummary() => new();
 
     // TODO
@@ -47,11 +77,15 @@ public static class PlatformProvider
     // TODO
     //public static IReadOnlyList<ProcessEntry> GetProcesses() => ProcessInfo.GetProcesses();
 
-    public static CpuDevice GetCpu() => new();
+    //--------------------------------------------------------------------------------
+    // Power supply
+    //--------------------------------------------------------------------------------
+
+    public static MainsAdapterDevice GetMainsAdapter() => new();
 
     public static BatteryDevice GetBattery() => new();
 
-    public static MainsAdapterDevice GetMainsAdapter() => new();
+    // Hardware monitor
 
     public static IReadOnlyList<HardwareMonitor> GetHardwareMonitors() => HardwareMonitor.GetMonitors();
 }

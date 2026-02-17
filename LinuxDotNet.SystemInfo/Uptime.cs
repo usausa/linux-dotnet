@@ -3,13 +3,13 @@ namespace LinuxDotNet.SystemInfo;
 using System;
 using System.Globalization;
 
-public sealed class UptimeInfo
+public sealed class Uptime
 {
     public DateTime UpdateAt { get; private set; }
 
-    public TimeSpan Uptime { get; private set; }
+    public TimeSpan Elapsed { get; private set; }
 
-    internal UptimeInfo()
+    internal Uptime()
     {
         Update();
     }
@@ -20,7 +20,7 @@ public sealed class UptimeInfo
         var range = (Span<Range>)stackalloc Range[2];
         span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
         var second = Double.Parse(span[range[0]], CultureInfo.InvariantCulture);
-        Uptime = TimeSpan.FromSeconds(second);
+        Elapsed = TimeSpan.FromSeconds(second);
 
         UpdateAt = DateTime.Now;
 

@@ -66,7 +66,7 @@ public sealed class UptimeCommand : ICommandHandler
     {
         var uptime = PlatformProvider.GetUptime();
 
-        Console.WriteLine($"Uptime: {uptime.Uptime}");
+        Console.WriteLine($"Elapsed: {uptime.Elapsed}");
 
         return ValueTask.CompletedTask;
     }
