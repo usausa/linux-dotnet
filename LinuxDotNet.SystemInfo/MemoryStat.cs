@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class MemoryInfo
+public sealed class MemoryStat
 {
     public DateTime UpdateAt { get; private set; }
 
@@ -62,7 +62,7 @@ public sealed class MemoryInfo
 
     public long HardwareCorrupted { get; private set; }
 
-    internal MemoryInfo()
+    internal MemoryStat()
     {
         Update();
     }

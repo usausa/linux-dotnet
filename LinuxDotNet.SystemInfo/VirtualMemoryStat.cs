@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public class VirtualMemoryInfo
+public class VirtualMemoryStat
 {
     public DateTime UpdateAt { get; private set; }
 
@@ -40,7 +40,7 @@ public class VirtualMemoryInfo
 
     public long OutOfMemoryKiller { get; internal set; }
 
-    internal VirtualMemoryInfo()
+    internal VirtualMemoryStat()
     {
         Update();
     }

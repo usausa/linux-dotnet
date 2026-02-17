@@ -32,9 +32,9 @@ public static class PlatformProvider
     // Memory
     //--------------------------------------------------------------------------------
 
-    public static MemoryInfo GetMemory() => new();
+    public static MemoryStat GetMemory() => new();
 
-    public static VirtualMemoryInfo GetVirtualMemory() => new();
+    public static VirtualMemoryStat GetVirtualMemory() => new();
 
     //--------------------------------------------------------------------------------
     // Storage
