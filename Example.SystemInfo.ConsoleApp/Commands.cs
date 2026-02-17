@@ -299,7 +299,7 @@ public sealed class FdCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var fd = PlatformProvider.GetFileDescriptor();
+        var fd = PlatformProvider.GetFileHandleStat();
 
         Console.WriteLine($"Allocated: {fd.Allocated}");
         Console.WriteLine($"Used:      {fd.Used}");

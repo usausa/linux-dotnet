@@ -15,18 +15,18 @@ public static class PlatformProvider
     public static Uptime GetUptime() => new();
 
     //--------------------------------------------------------------------------------
+    // CPU
+    //--------------------------------------------------------------------------------
+
+    public static CpuDevice GetCpuDevice() => new();
+
+    //--------------------------------------------------------------------------------
     // Load
     //--------------------------------------------------------------------------------
 
     public static SystemStat GetSystemStat() => new();
 
     public static LoadAverage GetLoadAverage() => new();
-
-    //--------------------------------------------------------------------------------
-    // CPU
-    //--------------------------------------------------------------------------------
-
-    public static CpuDevice GetCpuDevice() => new();
 
     //--------------------------------------------------------------------------------
     // Memory
@@ -47,7 +47,7 @@ public static class PlatformProvider
     // TODO order ?
     //public static IReadOnlyList<FileSystemEntry> GetFileSystems(bool includeVirtual = false) => FileSystemInfo.GetFileSystems(includeVirtual);
 
-    public static FileDescriptorInfo GetFileDescriptor() => new();
+    public static FileHandleStat GetFileHandleStat() => new();
 
     //--------------------------------------------------------------------------------
     // Network
@@ -78,14 +78,16 @@ public static class PlatformProvider
     //public static IReadOnlyList<ProcessEntry> GetProcesses() => ProcessInfo.GetProcesses();
 
     //--------------------------------------------------------------------------------
-    // Power supply
+    // Power
     //--------------------------------------------------------------------------------
 
     public static MainsDevice GetMainsDevice() => new();
 
     public static BatteryDevice GetBatteryDevice() => new();
 
-    // Hardware monitor
+    //--------------------------------------------------------------------------------
+    // Sensor
+    //--------------------------------------------------------------------------------
 
     public static IReadOnlyList<HardwareMonitor> GetHardwareMonitors() => HardwareMonitor.GetMonitors();
 }
