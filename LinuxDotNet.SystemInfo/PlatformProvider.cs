@@ -18,7 +18,7 @@ public static class PlatformProvider
     // Load
     //--------------------------------------------------------------------------------
 
-    public static StaticsInfo GetStatics() => new();
+    public static SystemStat GetSystemStat() => new();
 
     public static LoadAverage GetLoadAverage() => new();
 

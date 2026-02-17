@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class CpuStatics
+public sealed class CpuStat
 {
     public string Name { get; }
 
@@ -26,21 +26,21 @@ public sealed class CpuStatics
 
     public long GuestNice { get; internal set; }
 
-    internal CpuStatics(string name)
+    internal CpuStat(string name)
     {
         Name = name;
     }
 }
 
-public sealed class StaticsInfo
+public sealed class SystemStat
 {
-    private readonly List<CpuStatics> cpuCores = new();
+    private readonly List<CpuStat> cpuCores = new();
 
     public DateTime UpdateAt { get; private set; }
 
-    public CpuStatics CpuTotal { get; } = new("total");
+    public CpuStat CpuTotal { get; } = new("total");
 
-    public IReadOnlyList<CpuStatics> CpuCores => cpuCores;
+    public IReadOnlyList<CpuStat> CpuCores => cpuCores;
 
     // Total
     public long Interrupt { get; private set; }
@@ -58,7 +58,7 @@ public sealed class StaticsInfo
     // Total
     public long SoftIrq { get; private set; }
 
-    internal StaticsInfo()
+    internal SystemStat()
     {
         Update();
     }
@@ -126,7 +126,7 @@ public sealed class StaticsInfo
         stat.GuestNice = Int64.TryParse(span[range[10]], out value) ? value : 0;
     }
 
-    private CpuStatics FindCpu(ReadOnlySpan<char> name)
+    private CpuStat FindCpu(ReadOnlySpan<char> name)
     {
         foreach (var core in cpuCores)
         {
@@ -136,7 +136,7 @@ public sealed class StaticsInfo
             }
         }
 
-        var cpu = new CpuStatics(name.ToString());
+        var cpu = new CpuStat(name.ToString());
         cpuCores.Add(cpu);
         return cpu;
     }

@@ -80,31 +80,31 @@ public sealed class StatCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
     {
-        var statics = PlatformProvider.GetStatics();
+        var stat = PlatformProvider.GetSystemStat();
 
-        Console.WriteLine($"Interrupt:      {statics.Interrupt}");
-        Console.WriteLine($"ContextSwitch:  {statics.ContextSwitch}");
-        Console.WriteLine($"SoftIrq:        {statics.SoftIrq}");
-        Console.WriteLine($"Forks:          {statics.Forks}");
-        Console.WriteLine($"RunnableTasks:  {statics.RunnableTasks}");
-        Console.WriteLine($"BlockedTasks:   {statics.BlockedTasks}");
+        Console.WriteLine($"Interrupt:      {stat.Interrupt}");
+        Console.WriteLine($"ContextSwitch:  {stat.ContextSwitch}");
+        Console.WriteLine($"SoftIrq:        {stat.SoftIrq}");
+        Console.WriteLine($"Forks:          {stat.Forks}");
+        Console.WriteLine($"RunnableTasks:  {stat.RunnableTasks}");
+        Console.WriteLine($"BlockedTasks:   {stat.BlockedTasks}");
 
-        Console.WriteLine($"User:           {statics.CpuTotal.User}");
-        Console.WriteLine($"Nice:           {statics.CpuTotal.Nice}");
-        Console.WriteLine($"System:         {statics.CpuTotal.System}");
-        Console.WriteLine($"Idle:           {statics.CpuTotal.Idle}");
-        Console.WriteLine($"IoWait:         {statics.CpuTotal.IoWait}");
-        Console.WriteLine($"Irq:            {statics.CpuTotal.Irq}");
-        Console.WriteLine($"SoftIrq:        {statics.CpuTotal.SoftIrq}");
-        Console.WriteLine($"Steal:          {statics.CpuTotal.Steal}");
-        Console.WriteLine($"Guest:          {statics.CpuTotal.Guest}");
-        Console.WriteLine($"GuestNice:      {statics.CpuTotal.GuestNice}");
+        Console.WriteLine($"User:           {stat.CpuTotal.User}");
+        Console.WriteLine($"Nice:           {stat.CpuTotal.Nice}");
+        Console.WriteLine($"System:         {stat.CpuTotal.System}");
+        Console.WriteLine($"Idle:           {stat.CpuTotal.Idle}");
+        Console.WriteLine($"IoWait:         {stat.CpuTotal.IoWait}");
+        Console.WriteLine($"Irq:            {stat.CpuTotal.Irq}");
+        Console.WriteLine($"SoftIrq:        {stat.CpuTotal.SoftIrq}");
+        Console.WriteLine($"Steal:          {stat.CpuTotal.Steal}");
+        Console.WriteLine($"Guest:          {stat.CpuTotal.Guest}");
+        Console.WriteLine($"GuestNice:      {stat.CpuTotal.GuestNice}");
 
         Console.WriteLine();
 
         for (var i = 0; i < 10; i++)
         {
-            var previousValues = statics.CpuCores
+            var previousValues = stat.CpuCores
                 .Select(x =>
                 {
                     var nonIdle = CalcCpuNonIdle(x);
@@ -119,11 +119,11 @@ public sealed class StatCommand : ICommandHandler
 
             await Task.Delay(1000);
 
-            statics.Update();
+            stat.Update();
 
-            for (var j = 0; j < statics.CpuCores.Count; j++)
+            for (var j = 0; j < stat.CpuCores.Count; j++)
             {
-                var core = statics.CpuCores[j];
+                var core = stat.CpuCores[j];
                 var nonIdle = CalcCpuNonIdle(core);
                 var total = nonIdle + CalcCpuIdle(core);
 
@@ -136,12 +136,12 @@ public sealed class StatCommand : ICommandHandler
             }
         }
 
-        static long CalcCpuIdle(CpuStatics cpu)
+        static long CalcCpuIdle(CpuStat cpu)
         {
             return cpu.Idle + cpu.IoWait;
         }
 
-        static long CalcCpuNonIdle(CpuStatics cpu)
+        static long CalcCpuNonIdle(CpuStat cpu)
         {
             return cpu.User + cpu.Nice + cpu.System + cpu.Irq + cpu.SoftIrq + cpu.Steal;
         }
