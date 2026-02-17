@@ -26,15 +26,15 @@ public static class PlatformProvider
     // CPU
     //--------------------------------------------------------------------------------
 
-    public static CpuDevice GetCpu() => new();
+    public static CpuDevice GetCpuDevice() => new();
 
     //--------------------------------------------------------------------------------
     // Memory
     //--------------------------------------------------------------------------------
 
-    public static MemoryStat GetMemory() => new();
+    public static MemoryStat GetMemoryStat() => new();
 
-    public static VirtualMemoryStat GetVirtualMemory() => new();
+    public static VirtualMemoryStat GetVirtualMemoryStat() => new();
 
     //--------------------------------------------------------------------------------
     // Storage
@@ -61,9 +61,9 @@ public static class PlatformProvider
     // TODO
     //public static NetworkInterface? GetNetworkInterface(string name) => NetworkInfo.GetInterface(name);
 
-    public static TcpInfo GetTcp() => new();
+    public static TcpStat GetTcpStat() => new();
 
-    public static TcpInfo GetTcp6() => new(6);
+    public static TcpStat GetTcp6Stat() => new(6);
 
     //--------------------------------------------------------------------------------
     // Process
@@ -81,9 +81,9 @@ public static class PlatformProvider
     // Power supply
     //--------------------------------------------------------------------------------
 
-    public static MainsAdapterDevice GetMainsAdapter() => new();
+    public static MainsDevice GetMainsDevice() => new();
 
-    public static BatteryDevice GetBattery() => new();
+    public static BatteryDevice GetBatteryDevice() => new();
 
     // Hardware monitor
 

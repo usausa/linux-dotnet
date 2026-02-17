@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class MainsAdapterDevice
+public sealed class MainsDevice
 {
     private const string PowerSupplyPath = "/sys/class/power_supply";
 
@@ -14,7 +14,7 @@ public sealed class MainsAdapterDevice
 
     public bool Online { get; private set; }
 
-    internal MainsAdapterDevice()
+    internal MainsDevice()
     {
         path = FindAdapter();
         Update();

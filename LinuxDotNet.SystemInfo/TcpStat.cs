@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class TcpInfo
+public sealed class TcpStat
 {
     private readonly string path;
 
@@ -34,7 +34,7 @@ public sealed class TcpInfo
     public int Total { get; private set; }
     // ReSharper restore IdentifierTypo
 
-    internal TcpInfo(int? version = null)
+    internal TcpStat(int? version = null)
     {
         path = $"/proc/net/tcp{version}";
         Update();

@@ -73,9 +73,9 @@ public sealed class UptimeCommand : ICommandHandler
 }
 
 //--------------------------------------------------------------------------------
-// Statics
+// Stat
 //--------------------------------------------------------------------------------
-[Command("stat", "Get statics")]
+[Command("stat", "Get system stat")]
 public sealed class StatCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
@@ -169,12 +169,12 @@ public sealed class LoadCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Memory
 //--------------------------------------------------------------------------------
-[Command("memory", "Get memory")]
+[Command("memory", "Get memory stat")]
 public sealed class MemoryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var memory = PlatformProvider.GetMemory();
+        var memory = PlatformProvider.GetMemoryStat();
         var usage = (int)Math.Ceiling((double)(memory.MemoryTotal - memory.MemoryAvailable) / memory.MemoryTotal * 100);
 
         Console.WriteLine($"MemoryTotal:     {memory.MemoryTotal}");
@@ -190,12 +190,12 @@ public sealed class MemoryCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // VirtualMemory
 //--------------------------------------------------------------------------------
-[Command("virtual", "Get virtual memory")]
+[Command("virtual", "Get virtual memory stat")]
 public sealed class VirtualCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var vm = PlatformProvider.GetVirtualMemory();
+        var vm = PlatformProvider.GetVirtualMemoryStat();
 
         Console.WriteLine($"PageIn:            {vm.PageIn}");
         Console.WriteLine($"PageOut:           {vm.PageOut}");
@@ -235,9 +235,9 @@ public sealed class PartitionCommand : ICommandHandler
 }
 
 //--------------------------------------------------------------------------------
-// DiskStatics
+// DiskStat
 //--------------------------------------------------------------------------------
-[Command("disk", "Get disk statics")]
+[Command("disk", "Get disk stat")]
 public sealed class DiskCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
@@ -310,9 +310,9 @@ public sealed class FdCommand : ICommandHandler
 }
 
 //--------------------------------------------------------------------------------
-// NetworkStatic
+// NetworkStat
 //--------------------------------------------------------------------------------
-[Command("network", "Get network statics")]
+[Command("network", "Get network stat")]
 public sealed class NetworkCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
@@ -346,12 +346,12 @@ public sealed class NetworkCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Tcp
 //--------------------------------------------------------------------------------
-[Command("tcp", "Get tcp")]
+[Command("tcp", "Get tcp stat")]
 public sealed class TcpCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var tcp = PlatformProvider.GetTcp();
+        var tcp = PlatformProvider.GetTcpStat();
 
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
@@ -373,12 +373,12 @@ public sealed class TcpCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Tcp6
 //--------------------------------------------------------------------------------
-[Command("tcp6", "Get tcp6")]
+[Command("tcp6", "Get tcp6 stat")]
 public sealed class Tcp6Command : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var tcp = PlatformProvider.GetTcp6();
+        var tcp = PlatformProvider.GetTcp6Stat();
 
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
@@ -417,12 +417,12 @@ public sealed class ProcessCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Cpu
 //--------------------------------------------------------------------------------
-[Command("cpu", "Get cpu")]
+[Command("cpu", "Get cpu device")]
 public sealed class CpuCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var cpu = PlatformProvider.GetCpu();
+        var cpu = PlatformProvider.GetCpuDevice();
 
         Console.WriteLine("Frequency");
         foreach (var core in cpu.Cores)
@@ -446,12 +446,12 @@ public sealed class CpuCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // Battery
 //--------------------------------------------------------------------------------
-[Command("battery", "Get battery")]
+[Command("battery", "Get battery device")]
 public sealed class BatteryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var battery = PlatformProvider.GetBattery();
+        var battery = PlatformProvider.GetBatteryDevice();
 
         if (battery.Supported)
         {
@@ -474,12 +474,12 @@ public sealed class BatteryCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // MainsAdapter
 //--------------------------------------------------------------------------------
-[Command("ac", "Get ac")]
+[Command("ac", "Get A/C device")]
 public sealed class AcCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var adapter = PlatformProvider.GetMainsAdapter();
+        var adapter = PlatformProvider.GetMainsDevice();
 
         Console.WriteLine(adapter.Supported ? $"Online: {adapter.Online}" : "No adapter found");
 
@@ -490,7 +490,7 @@ public sealed class AcCommand : ICommandHandler
 //--------------------------------------------------------------------------------
 // HardwareMonitor
 //--------------------------------------------------------------------------------
-[Command("hwmon", "Get hwmon")]
+[Command("hwmon", "Get hardware monitors")]
 public sealed class HwmonCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
