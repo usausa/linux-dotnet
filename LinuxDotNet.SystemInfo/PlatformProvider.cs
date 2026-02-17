@@ -42,7 +42,7 @@ public static class PlatformProvider
 
     public static IReadOnlyList<Partition> GetPartitions() => Partition.GetPartitions();
 
-    public static DiskStaticsInfo GetDiskStatics() => new();
+    public static DiskStat GetDiskStat() => new();
 
     // TODO order ?
     //public static IReadOnlyList<FileSystemEntry> GetFileSystems(bool includeVirtual = false) => FileSystemInfo.GetFileSystems(includeVirtual);

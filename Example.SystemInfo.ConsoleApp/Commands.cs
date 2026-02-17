@@ -242,7 +242,7 @@ public sealed class DiskCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
     {
-        var disk = PlatformProvider.GetDiskStatics();
+        var disk = PlatformProvider.GetDiskStat();
         foreach (var device in disk.Devices)
         {
             Console.WriteLine($"Name:           {device.Name}");
