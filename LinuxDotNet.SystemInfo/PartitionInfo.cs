@@ -10,7 +10,9 @@ public sealed class PartitionInfo
 
     public ulong Blocks { get; init; }
 
-    public MountInfo[] GetMounts() => MountInfo.GetMountsForDeviceName(Name);
+    //--------------------------------------------------------------------------------
+    // Factory
+    //--------------------------------------------------------------------------------
 
     internal static IReadOnlyList<PartitionInfo> GetPartitions(bool includeAll = false)
     {
@@ -44,4 +46,10 @@ public sealed class PartitionInfo
 
         return partitions;
     }
+
+    //--------------------------------------------------------------------------------
+    // Mount
+    //--------------------------------------------------------------------------------
+
+    public IReadOnlyList<MountInfo> GetMounts() => MountInfo.GetMountsForDevice(Name);
 }

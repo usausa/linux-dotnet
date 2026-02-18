@@ -1,6 +1,6 @@
 namespace LinuxDotNet.SystemInfo;
 
-public sealed class FileSystemStat
+public sealed class FileSystemUsage
 {
     public ulong TotalSize { get; }
 
@@ -14,7 +14,7 @@ public sealed class FileSystemStat
 
     public ulong FreeFiles { get; }
 
-    internal FileSystemStat(ulong totalSize, ulong freeSize, ulong availableSize, ulong blockSize, ulong totalFiles, ulong freeFiles)
+    internal FileSystemUsage(ulong totalSize, ulong freeSize, ulong availableSize, ulong blockSize, ulong totalFiles, ulong freeFiles)
     {
         TotalSize = totalSize;
         FreeSize = freeSize;

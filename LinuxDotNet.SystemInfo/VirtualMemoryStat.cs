@@ -40,10 +40,18 @@ public class VirtualMemoryStat
 
     public long OutOfMemoryKiller { get; internal set; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal VirtualMemoryStat()
     {
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     // ReSharper disable StringLiteralTypo
     public bool Update()
@@ -103,6 +111,10 @@ public class VirtualMemoryStat
         return true;
     }
     // ReSharper restore StringLiteralTypo
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
 
     private static long ExtractInt64(ReadOnlySpan<char> span)
     {

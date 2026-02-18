@@ -15,6 +15,10 @@ public sealed class HardwareSensor
 
     public long Value { get; private set; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal HardwareSensor(string valuePath, string type, string label)
     {
         this.valuePath = valuePath;
@@ -22,6 +26,10 @@ public sealed class HardwareSensor
         Label = label;
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     public bool Update()
     {
@@ -41,12 +49,20 @@ public sealed partial class HardwareMonitor
 
     public IReadOnlyList<HardwareSensor> Sensors { get; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal HardwareMonitor(string name, string type, IReadOnlyList<HardwareSensor> sensors)
     {
         Name = name;
         Type = type;
         Sensors = sensors;
     }
+
+    //--------------------------------------------------------------------------------
+    // Factory
+    //--------------------------------------------------------------------------------
 
     internal static IReadOnlyList<HardwareMonitor> GetMonitors()
     {
@@ -76,6 +92,10 @@ public sealed partial class HardwareMonitor
 
         return monitors;
     }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
 
     private static string ReadFile(string path)
     {

@@ -12,12 +12,20 @@ public sealed class CpuCore
 
     public long Frequency { get; private set; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal CpuCore(string name, string frequencyPath)
     {
         Name = name;
         this.frequencyPath = frequencyPath;
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     public bool Update()
     {
@@ -39,12 +47,20 @@ public sealed class CpuPower
 
     public long Energy { get; private set; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal CpuPower(string name, string energyPath)
     {
         Name = name;
         this.energyPath = energyPath;
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     public bool Update()
     {
@@ -62,11 +78,19 @@ public sealed class CpuDevice
 
     public IReadOnlyList<CpuPower> Powers { get; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal CpuDevice()
     {
         Cores = GetCores();
         Powers = GetPowers();
     }
+
+    //--------------------------------------------------------------------------------
+    // Factory
+    //--------------------------------------------------------------------------------
 
     // ReSharper disable StringLiteralTypo
     private static CpuCore[] GetCores()
@@ -120,6 +144,10 @@ public sealed class CpuDevice
         return powers.ToArray();
     }
 
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
     private static void AddCpuPower(List<CpuPower> powers, string path)
     {
         var name = ReadFile(Path.Combine(path, "name"));
@@ -147,6 +175,10 @@ public sealed class CpuDevice
 
         return string.Empty;
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     public void Update()
     {

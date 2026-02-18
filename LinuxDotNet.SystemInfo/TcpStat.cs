@@ -34,11 +34,19 @@ public sealed class TcpStat
     public int Total { get; private set; }
     // ReSharper restore IdentifierTypo
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal TcpStat(int? version = null)
     {
         path = $"/proc/net/tcp{version}";
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     public bool Update()
     {

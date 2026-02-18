@@ -58,10 +58,18 @@ public sealed class SystemStat
     // Total
     public long SoftIrq { get; private set; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     internal SystemStat()
     {
         Update();
     }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
 
     // ReSharper disable StringLiteralTypo
     public bool Update()
@@ -140,6 +148,10 @@ public sealed class SystemStat
         cpuCores.Add(cpu);
         return cpu;
     }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
 
     private static long ExtractInt64(ReadOnlySpan<char> span)
     {

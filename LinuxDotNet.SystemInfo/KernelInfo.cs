@@ -24,6 +24,10 @@ public sealed class KernelInfo
 
     public long MaxFileCountPerProcess { get; }
 
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
     // ReSharper disable StringLiteralTypo
     internal KernelInfo()
     {
@@ -40,6 +44,10 @@ public sealed class KernelInfo
         ParseBootTime();
     }
     // ReSharper restore StringLiteralTypo
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
 
     private void ParseOsRelease()
     {
