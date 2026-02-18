@@ -20,9 +20,9 @@ public enum ProcessState
 
 public sealed record ProcessInfo
 {
-    private static readonly long ClockTick = GetClockTick();
+    private static readonly ulong ClockTick = (ulong)GetClockTick();
     private static readonly long BootTime = GetBootTime();
-    private static readonly long PageSize = Environment.SystemPageSize;
+    private static readonly ulong PageSize = (ulong)Environment.SystemPageSize;
 
     // Basic
 
@@ -193,54 +193,22 @@ public sealed record ProcessInfo
             _ => ProcessState.Unknown
         };
 
-        if (Int32.TryParse(rest[statRange[1]], out var parentProcessId))
-        {
-            result.ParentProcessId = parentProcessId;
-        }
-        if (Int64.TryParse(rest[statRange[7]], out var minorFault))
-        {
-            result.MinorFaults = minorFault;
-        }
-        if (Int64.TryParse(rest[statRange[9]], out var majorFault))
-        {
-            result.MajorFaults = majorFault;
-        }
-        if (UInt64.TryParse(rest[statRange[11]], out var userTime))
-        {
-            result.UserTime = userTime;
-        }
-        if (UInt64.TryParse(rest[statRange[12]], out var systemTime))
-        {
-            result.SystemTime = systemTime;
-        }
-        if (Int32.TryParse(rest[statRange[15]], out var priority))
-        {
-            result.Priority = priority;
-        }
-        if (Int32.TryParse(rest[statRange[16]], out var nice))
-        {
-            result.Nice = nice;
-        }
-        if (Int32.TryParse(rest[statRange[17]], out var threadCount))
-        {
-            result.ThreadCount = threadCount;
-        }
-        if (UInt64.TryParse(rest[statRange[19]], out var startTimeTicks))
-        {
-            var startTimeSec = BootTime + (long)(startTimeTicks / (ulong)ClockTick);
-            result.StartTime = DateTimeOffset.FromUnixTimeSeconds(startTimeSec);
-        }
-        if (UInt64.TryParse(rest[statRange[20]], out var virtualSize))
-        {
-            result.VirtualSize = virtualSize;
-        }
-        if (Int64.TryParse(rest[statRange[21]], out var rss))
-        {
-            result.ResidentSize = (ulong)rss * (ulong)PageSize;
-        }
+        result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
+        result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
+        result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
+        result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? userTime : 0;
+        result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? systemTime : 0;
+        result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
+        result.Nice = Int32.TryParse(rest[statRange[16]], out var nice) ? nice : 0;
+        result.ThreadCount = Int32.TryParse(rest[statRange[17]], out var threadCount) ? threadCount : 0;
+        result.StartTime = UInt64.TryParse(rest[statRange[19]], out var startTimeTicks)
+            ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
+            : DateTimeOffset.MinValue;
+        result.VirtualSize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
+        result.ResidentSize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
 
         // Status
-        var statusPath = System.IO.Path.Combine(procPath, "status");
+        var statusPath = Path.Combine(procPath, "status");
         if (File.Exists(statusPath))
         {
             using var reader = new StreamReader(statusPath);
@@ -263,7 +231,7 @@ public sealed record ProcessInfo
     }
 
     //--------------------------------------------------------------------------------
-    // Extract Helper
+    // Helper
     //--------------------------------------------------------------------------------
 
     private static uint ExtractStatUInt32(ReadOnlySpan<char> span)
