@@ -298,7 +298,7 @@ public sealed class PartitionCommand : ICommandHandler
 [Command("mount", "Get mount points")]
 public sealed class MountCommand : ICommandHandler
 {
-    [Option("v", "virtual", Description = "Include virtual file systems")]
+    [Option("--virtual", "-v", Description = "Include virtual file systems")]
     public bool IncludeVirtual { get; set; }
 
     public ValueTask ExecuteAsync(CommandContext context)
