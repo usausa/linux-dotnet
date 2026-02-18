@@ -49,12 +49,6 @@ public static class PlatformProvider
 
     public static NetworkStat GetNetworkStat() => new();
 
-    // TODO statはstat側？
-    //public static IReadOnlyList<NetworkInterface> GetNetworkInterfaces() => NetworkInfo.GetInterfaces();
-
-    // TODO
-    //public static NetworkInterface? GetNetworkInterface(string name) => NetworkInfo.GetInterface(name);
-
     public static TcpStat GetTcpStat() => new();
 
     public static TcpStat GetTcp6Stat() => new(6);
