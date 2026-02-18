@@ -1,11 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Text.RegularExpressions;
-
 public sealed class ProcessSummary
 {
-    private readonly Regex regex = new(@"^\d+$", RegexOptions.Compiled);
-
     public DateTime UpdateAt { get; private set; }
 
     public int ProcessCount { get; private set; }
@@ -31,7 +27,7 @@ public sealed class ProcessSummary
         var thread = 0;
         foreach (var dir in Directory.EnumerateDirectories("/proc"))
         {
-            if (!regex.IsMatch(Path.GetFileName(dir)))
+            if (!Int32.TryParse(Path.GetFileName(dir), out _))
             {
                 continue;
             }

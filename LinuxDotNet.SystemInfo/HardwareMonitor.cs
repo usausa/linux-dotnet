@@ -114,6 +114,6 @@ public sealed partial class HardwareMonitor
         return match.Success ? match.Value.TrimEnd('_') : filename;
     }
 
-    [GeneratedRegex(@"^\d+")]
+    [GeneratedRegex(@"^[a-zA-Z]+")]
     private static partial Regex SensorTypePattern();
 }

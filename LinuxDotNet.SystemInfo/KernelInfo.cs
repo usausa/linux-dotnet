@@ -68,8 +68,7 @@ public sealed class KernelInfo
                 continue;
             }
 
-            var key = line[..index];
-            switch (key)
+            switch (span[..index])
             {
                 case "VERSION_ID":
                     OsProductVersion = ExtractValue(line, index);

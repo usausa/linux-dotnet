@@ -82,115 +82,115 @@ public sealed class MemoryStat
         {
             var span = line.AsSpan();
             // ReSharper disable StringLiteralTypo
-            if (span.StartsWith("MemTotal"))
+            if (span.StartsWith("MemTotal:"))
             {
                 MemoryTotal = ExtractInt64(span);
             }
-            else if (span.StartsWith("MemAvailable"))
+            else if (span.StartsWith("MemAvailable:"))
             {
                 MemoryAvailable = ExtractInt64(span);
             }
-            else if (span.StartsWith("MemFree"))
+            else if (span.StartsWith("MemFree:"))
             {
                 MemoryFree = ExtractInt64(span);
             }
-            else if (span.StartsWith("Buffers"))
+            else if (span.StartsWith("Buffers:"))
             {
                 Buffers = ExtractInt64(span);
             }
-            else if (span.StartsWith("Cached"))
+            else if (span.StartsWith("Cached:"))
             {
                 Cached = ExtractInt64(span);
             }
-            else if (span.StartsWith("SwapCached"))
+            else if (span.StartsWith("SwapCached:"))
             {
                 SwapCached = ExtractInt64(span);
             }
-            else if (span.StartsWith("Active(anon)"))
+            else if (span.StartsWith("Active(anon):"))
             {
                 ActiveAnonymous = ExtractInt64(span);
             }
-            else if (span.StartsWith("Inactive(anon)"))
+            else if (span.StartsWith("Inactive(anon):"))
             {
                 InactiveAnonymous = ExtractInt64(span);
             }
-            else if (span.StartsWith("Active(file)"))
+            else if (span.StartsWith("Active(file):"))
             {
                 ActiveFile = ExtractInt64(span);
             }
-            else if (span.StartsWith("Inactive(file)"))
+            else if (span.StartsWith("Inactive(file):"))
             {
                 InactiveFile = ExtractInt64(span);
             }
-            else if (span.StartsWith("Unevictable"))
+            else if (span.StartsWith("Unevictable:"))
             {
                 Unevictable = ExtractInt64(span);
             }
-            else if (span.StartsWith("Mlocked"))
+            else if (span.StartsWith("Mlocked:"))
             {
                 MemoryLocked = ExtractInt64(span);
             }
-            else if (span.StartsWith("SwapTotal"))
+            else if (span.StartsWith("SwapTotal:"))
             {
                 SwapTotal = ExtractInt64(span);
             }
-            else if (span.StartsWith("SwapFree"))
+            else if (span.StartsWith("SwapFree:"))
             {
                 SwapFree = ExtractInt64(span);
             }
-            else if (span.StartsWith("Dirty"))
+            else if (span.StartsWith("Dirty:"))
             {
                 Dirty = ExtractInt64(span);
             }
-            else if (span.StartsWith("Writeback"))
+            else if (span.StartsWith("Writeback:"))
             {
                 Writeback = ExtractInt64(span);
             }
-            else if (span.StartsWith("AnonPages"))
+            else if (span.StartsWith("AnonPages:"))
             {
                 AnonymousPages = ExtractInt64(span);
             }
-            else if (span.StartsWith("Mapped"))
+            else if (span.StartsWith("Mapped:"))
             {
                 Mapped = ExtractInt64(span);
             }
-            else if (span.StartsWith("Shmem"))
+            else if (span.StartsWith("Shmem:"))
             {
                 SharedMemory = ExtractInt64(span);
             }
-            else if (span.StartsWith("KReclaimable"))
+            else if (span.StartsWith("KReclaimable:"))
             {
                 KernelReclaimable = ExtractInt64(span);
             }
-            else if (span.StartsWith("Slab"))
+            else if (span.StartsWith("Slab:"))
             {
                 SlabTotal = ExtractInt64(span);
             }
-            else if (span.StartsWith("SReclaimable"))
+            else if (span.StartsWith("SReclaimable:"))
             {
                 SlabReclaimable = ExtractInt64(span);
             }
-            else if (span.StartsWith("SUnreclaim"))
+            else if (span.StartsWith("SUnreclaim:"))
             {
                 SlabUnreclaimable = ExtractInt64(span);
             }
-            else if (span.StartsWith("KernelStack"))
+            else if (span.StartsWith("KernelStack:"))
             {
                 KernelStack = ExtractInt64(span);
             }
-            else if (span.StartsWith("PageTables"))
+            else if (span.StartsWith("PageTables:"))
             {
                 PageTables = ExtractInt64(span);
             }
-            else if (span.StartsWith("CommitLimit"))
+            else if (span.StartsWith("CommitLimit:"))
             {
                 CommitLimit = ExtractInt64(span);
             }
-            else if (span.StartsWith("Committed_AS"))
+            else if (span.StartsWith("Committed_AS:"))
             {
                 CommittedAddressSpace = ExtractInt64(span);
             }
-            else if (span.StartsWith("HardwareCorrupted"))
+            else if (span.StartsWith("HardwareCorrupted:"))
             {
                 HardwareCorrupted = ExtractInt64(span);
             }

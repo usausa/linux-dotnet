@@ -238,7 +238,7 @@ public sealed class HardwareInfo
         while (reader.ReadLine() is { } line)
         {
             var span = line.AsSpan();
-            if (span.StartsWith("MemTotal"))
+            if (span.StartsWith("MemTotal:"))
             {
                 return ExtractInt64(span) * 1024;
             }
