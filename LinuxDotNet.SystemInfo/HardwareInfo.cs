@@ -4,8 +4,6 @@ public sealed class HardwareInfo
 {
     // DMI
 
-    public string Model { get; }
-
     public string Vendor { get; }
 
     public string ProductName { get; }
@@ -30,9 +28,9 @@ public sealed class HardwareInfo
 
     // CPU
 
-    public string CpuBrandString { get; private set; } = default!;
+    public string CpuBrandString { get; private set; } = string.Empty;
 
-    public string CpuVendor { get; private set; } = default!;
+    public string CpuVendor { get; private set; } = string.Empty;
 
     public int CpuFamily { get; private set; }
 
@@ -70,7 +68,6 @@ public sealed class HardwareInfo
 
     internal HardwareInfo()
     {
-        Model = ReadDmiFile("product_name");
         Vendor = ReadDmiFile("sys_vendor");
         ProductName = ReadDmiFile("product_name");
         ProductVersion = ReadDmiFile("product_version");

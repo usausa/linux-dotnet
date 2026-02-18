@@ -43,9 +43,9 @@ public sealed class HardwareSensor
 
 public sealed partial class HardwareMonitor
 {
-    public string Name { get; set; }
+    public string Name { get; }
 
-    public string Type { get; set; }
+    public string Type { get; }
 
     public IReadOnlyList<HardwareSensor> Sensors { get; }
 

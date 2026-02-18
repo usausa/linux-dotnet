@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public class VirtualMemoryStat
+public sealed class VirtualMemoryStat
 {
     public DateTime UpdateAt { get; private set; }
 

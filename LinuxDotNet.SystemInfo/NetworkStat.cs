@@ -44,7 +44,7 @@ public sealed class NetworkStatEntry
     }
 }
 
-public class NetworkStat
+public sealed class NetworkStat
 {
     private readonly List<NetworkStatEntry> interfaces = new();
 
