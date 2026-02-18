@@ -223,27 +223,29 @@ public sealed class PartitionCommand : ICommandHandler
         var partitions = PlatformProvider.GetPartitions();
         foreach (var partition in partitions)
         {
+            Console.WriteLine($"Name:          {partition.Name}");
+            Console.WriteLine($"DeviceType:    {partition.DeviceType} ({(int)partition.DeviceType})");
+            Console.WriteLine($"No:            {partition.No}");
+            Console.WriteLine($"Blocks:        {partition.Blocks}");
+
             // TODO
             var mounts = partition.GetMounts();
-            if (mounts.Length == 0)
+            if (mounts.Length > 0)
             {
-                continue;
+                Console.WriteLine($"MountPoint:    {String.Join(' ', mounts.Select(m => m.MountPoint))}");
+
+                var mount = mounts[0];
+                var stat = mount.GetFileSystemStat();
+                if (stat is not null)
+                {
+                    var usage = (int)Math.Ceiling((double)(stat.TotalSize - stat.AvailableSize) / stat.TotalSize * 100);
+                    Console.WriteLine($"TotalSize:     {stat.TotalSize / 1024}");
+                    Console.WriteLine($"FreeSize:      {stat.FreeSize / 1024}");
+                    Console.WriteLine($"Usage:         {usage}");
+                }
             }
 
-            var mount = mounts[0];
-            var stat = mount.GetFileSystemStat();
-            if (stat is null)
-            {
-                continue;
-            }
-
-            var usage = (int)Math.Ceiling((double)(stat.TotalSize - stat.AvailableSize) / stat.TotalSize * 100);
-
-            Console.WriteLine($"Name:          {partition.Name}");
-            Console.WriteLine($"MountPoint:    {String.Join(' ', mounts.Select(m => m.MountPoint))}");
-            Console.WriteLine($"TotalSize:     {stat.TotalSize / 1024}");
-            Console.WriteLine($"FreeSize:      {stat.FreeSize / 1024}");
-            Console.WriteLine($"Usage:         {usage}");
+            Console.WriteLine();
         }
 
         return ValueTask.CompletedTask;

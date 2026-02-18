@@ -65,8 +65,8 @@ public sealed class DiskStat
                 continue;
             }
 
-            var major = Int32.TryParse(span[range[0]], out var m) ? m : 0;
-            if (!Helper.IsTargetDriveType(major))
+            var deviceType = Int32.TryParse(span[range[0]], out var m) ? (DeviceType)m : DeviceType.Unknown;
+            if (!deviceType.IsPhysicalStorageDevice())
             {
                 continue;
             }

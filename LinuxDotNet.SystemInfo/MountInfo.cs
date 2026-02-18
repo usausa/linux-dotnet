@@ -150,5 +150,9 @@ public sealed class MountInfo
 
         return [.. result];
     }
-}
 
+    internal static MountInfo[] GetMountsForDeviceName(string deviceName)
+    {
+        return GetMountsForDevice($"/dev/{deviceName}");
+    }
+}

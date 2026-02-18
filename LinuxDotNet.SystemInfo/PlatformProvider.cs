@@ -36,7 +36,7 @@ public static class PlatformProvider
 
     public static DiskStat GetDiskStat() => new();
 
-    public static IReadOnlyList<PartitionInfo> GetPartitions() => PartitionInfo.GetPartitions();
+    public static IReadOnlyList<PartitionInfo> GetPartitions(bool includeAll = false) => PartitionInfo.GetPartitions(includeAll);
 
     public static IReadOnlyList<MountInfo> GetMounts(bool includeVirtual = false) => MountInfo.GetMounts(includeVirtual);
 
