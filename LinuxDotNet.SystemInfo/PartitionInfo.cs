@@ -4,18 +4,20 @@ public sealed class PartitionInfo
 {
     public string Name { get; }
 
-    public IReadOnlyList<string> MountPoints { get; }
+    private readonly string path;
 
-    internal PartitionInfo(string name, string[] mountPoints)
+    private PartitionInfo(string name, string path)
     {
         Name = name;
-        MountPoints = mountPoints;
+        this.path = path;
     }
+
+    public MountInfo[] GetMounts() => MountInfo.GetMountsForDevice(path);
 
     internal static IReadOnlyList<PartitionInfo> GetPartitions()
     {
         var partitions = new List<PartitionInfo>();
-        var mounts = GetMounts();
+        var devicePaths = GetDevicePaths();
 
         var range = (Span<Range>)stackalloc Range[5];
         using var reader = new StreamReader("/proc/partitions");
@@ -35,21 +37,21 @@ public sealed class PartitionInfo
             }
 
             var device = span[range[3]].ToString();
-            if (!mounts.TryGetValue($"/dev/{device}", out var mountPoints))
+            var devicePath = $"/dev/{device}";
+            if (!devicePaths.Contains(devicePath))
             {
                 continue;
             }
 
-            partitions.Add(new PartitionInfo(device, mountPoints.ToArray()));
+            partitions.Add(new PartitionInfo(device, devicePath));
         }
 
         return partitions;
     }
 
-    // TODO Mountsを返す？
-    private static Dictionary<string, List<string>> GetMounts()
+    private static HashSet<string> GetDevicePaths()
     {
-        var mounts = new Dictionary<string, List<string>>();
+        var devicePaths = new HashSet<string>();
 
         var range = (Span<Range>)stackalloc Range[3];
         using var reader = new StreamReader("/proc/mounts");
@@ -63,16 +65,9 @@ public sealed class PartitionInfo
             }
 
             var device = span[range[0]].ToString();
-            var mountPoint = span[range[1]].ToString();
-
-            if (!mounts.TryGetValue(device, out var list))
-            {
-                list = new List<string>();
-                mounts[device] = list;
-            }
-            list.Add(mountPoint);
+            devicePaths.Add(device);
         }
 
-        return mounts;
+        return devicePaths;
     }
 }

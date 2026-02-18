@@ -34,14 +34,11 @@ public static class PlatformProvider
     // Storage
     //--------------------------------------------------------------------------------
 
-    public static IReadOnlyList<PartitionInfo> GetPartitions() => PartitionInfo.GetPartitions();
-
     public static DiskStat GetDiskStat() => new();
 
-    // TODO order ?
-    //public static IReadOnlyList<MountEntry> GetMounts(bool includeVirtual = false) => MountInfo.GetMounts(includeVirtual);
+    public static IReadOnlyList<PartitionInfo> GetPartitions() => PartitionInfo.GetPartitions();
 
-    public static FileHandleStat GetFileHandleStat() => new();
+    public static IReadOnlyList<MountInfo> GetMounts(bool includeVirtual = false) => MountInfo.GetMounts(includeVirtual);
 
     //--------------------------------------------------------------------------------
     // Network
@@ -62,6 +59,12 @@ public static class PlatformProvider
     public static IReadOnlyList<ProcessInfo> GetProcesses() => ProcessInfo.GetProcesses();
 
     public static ProcessInfo? GetProcess(int pid) => ProcessInfo.GetProcess(pid);
+
+    //--------------------------------------------------------------------------------
+    // File
+    //--------------------------------------------------------------------------------
+
+    public static FileHandleStat GetFileHandleStat() => new();
 
     //--------------------------------------------------------------------------------
     // CPU

@@ -10,24 +10,22 @@ public static class CommandBuilderExtensions
 {
     public static void AddCommands(this ICommandBuilder commands)
     {
-        // TODO
+        // TODO HW
         commands.AddCommand<KernelCommand>();
         commands.AddCommand<UptimeCommand>();
-
         commands.AddCommand<StatCommand>();
         commands.AddCommand<LoadCommand>();
         commands.AddCommand<MemoryCommand>();
         commands.AddCommand<VirtualCommand>();
-        // TODO
         commands.AddCommand<PartitionCommand>();
+        // TODO Mount
         commands.AddCommand<DiskCommand>();
-        commands.AddCommand<FdCommand>();
         commands.AddCommand<NetworkCommand>();
-        // TODO
         commands.AddCommand<TcpCommand>();
         commands.AddCommand<Tcp6Command>();
         commands.AddCommand<ProcessCommand>();
         commands.AddCommand<ProcessesCommand>();
+        commands.AddCommand<FdCommand>();
         commands.AddCommand<CpuCommand>();
         commands.AddCommand<AcCommand>();
         commands.AddCommand<BatteryCommand>();
@@ -225,13 +223,26 @@ public sealed class PartitionCommand : ICommandHandler
         var partitions = PlatformProvider.GetPartitions();
         foreach (var partition in partitions)
         {
-            var drive = new DriveInfo(partition.MountPoints[0]);
-            var usage = (int)Math.Ceiling((double)(drive.TotalSize - drive.TotalFreeSpace) / drive.TotalSize * 100);
+            // TODO
+            var mounts = partition.GetMounts();
+            if (mounts.Length == 0)
+            {
+                continue;
+            }
+
+            var mount = mounts[0];
+            var stat = mount.GetFileSystemStat();
+            if (stat is null)
+            {
+                continue;
+            }
+
+            var usage = (int)Math.Ceiling((double)(stat.TotalSize - stat.AvailableSize) / stat.TotalSize * 100);
 
             Console.WriteLine($"Name:          {partition.Name}");
-            Console.WriteLine($"MountPoint:    {String.Join(' ', partition.MountPoints)}");
-            Console.WriteLine($"TotalSize:     {drive.TotalSize / 1024}");
-            Console.WriteLine($"FreeSize:      {drive.TotalFreeSpace / 1024}");
+            Console.WriteLine($"MountPoint:    {String.Join(' ', mounts.Select(m => m.MountPoint))}");
+            Console.WriteLine($"TotalSize:     {stat.TotalSize / 1024}");
+            Console.WriteLine($"FreeSize:      {stat.FreeSize / 1024}");
             Console.WriteLine($"Usage:         {usage}");
         }
 
@@ -293,24 +304,6 @@ public sealed class DiskCommand : ICommandHandler
                 Console.WriteLine($"WritePerSec: {writePerSec}");
             }
         }
-    }
-}
-
-//--------------------------------------------------------------------------------
-// FileDescriptor
-//--------------------------------------------------------------------------------
-[Command("fd", "Get file descriptor")]
-public sealed class FdCommand : ICommandHandler
-{
-    public ValueTask ExecuteAsync(CommandContext context)
-    {
-        var fd = PlatformProvider.GetFileHandleStat();
-
-        Console.WriteLine($"Allocated: {fd.Allocated}");
-        Console.WriteLine($"Used:      {fd.Used}");
-        Console.WriteLine($"Max:       {fd.Max}");
-
-        return ValueTask.CompletedTask;
     }
 }
 
@@ -467,6 +460,24 @@ public sealed class ProcessesCommand : ICommandHandler
     private static string TruncateName(string name, int maxLength)
     {
         return name.Length <= maxLength ? name : name[..(maxLength - 3)] + "...";
+    }
+}
+
+//--------------------------------------------------------------------------------
+// FileDescriptor
+//--------------------------------------------------------------------------------
+[Command("fd", "Get file descriptor")]
+public sealed class FdCommand : ICommandHandler
+{
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var fd = PlatformProvider.GetFileHandleStat();
+
+        Console.WriteLine($"Allocated: {fd.Allocated}");
+        Console.WriteLine($"Used:      {fd.Used}");
+        Console.WriteLine($"Max:       {fd.Max}");
+
+        return ValueTask.CompletedTask;
     }
 }
 
