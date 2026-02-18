@@ -224,7 +224,7 @@ public sealed class PartitionCommand : ICommandHandler
         foreach (var partition in partitions)
         {
             Console.WriteLine($"Name:          {partition.Name}");
-            Console.WriteLine($"DeviceType:    {partition.DeviceType} ({(int)partition.DeviceType})");
+            Console.WriteLine($"DeviceClass:   {partition.DeviceClass} ({(int)partition.DeviceClass})");
             Console.WriteLine($"No:            {partition.No}");
             Console.WriteLine($"Blocks:        {partition.Blocks}");
 

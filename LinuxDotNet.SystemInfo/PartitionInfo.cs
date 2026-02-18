@@ -4,7 +4,7 @@ public sealed class PartitionInfo
 {
     public string Name { get; init; } = default!;
 
-    public DeviceType DeviceType { get; init; }
+    public DeviceClass DeviceClass { get; init; }
 
     public int No { get; init; }
 
@@ -27,8 +27,8 @@ public sealed class PartitionInfo
                 continue;
             }
 
-            var deviceType = Int32.TryParse(span[range[0]], out var major) ? (DeviceType)major : DeviceType.Unknown;
-            if (!includeAll && !deviceType.IsPhysicalStorageDevice())
+            var deviceClass = Int32.TryParse(span[range[0]], out var major) ? (DeviceClass)major : DeviceClass.Unknown;
+            if (!includeAll && !deviceClass.IsPhysicalStorage())
             {
                 continue;
             }
@@ -36,7 +36,7 @@ public sealed class PartitionInfo
             partitions.Add(new PartitionInfo
             {
                 Name = span[range[3]].ToString(),
-                DeviceType = deviceType,
+                DeviceClass = deviceClass,
                 No = Int32.TryParse(span[range[1]], out var minor) ? minor : 0,
                 Blocks = UInt64.TryParse(span[range[2]], out var blocks) ? blocks : 0
             });
