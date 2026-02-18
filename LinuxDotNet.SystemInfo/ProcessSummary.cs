@@ -44,17 +44,26 @@ public sealed class ProcessSummary
                 continue;
             }
 
-            using var reader = new StreamReader(statusFilePath);
-            while (reader.ReadLine() is { } line)
+#pragma warning disable CA1031
+            try
             {
-                var span = line.AsSpan();
-
-                if (span.StartsWith("Threads:"))
+                using var reader = new StreamReader(statusFilePath);
+                while (reader.ReadLine() is { } line)
                 {
-                    thread += ExtractInt32(span);
+                    var span = line.AsSpan();
+
+                    if (span.StartsWith("Threads:"))
+                    {
+                        thread += ExtractInt32(span);
+                    }
                 }
             }
+            catch
+            {
+                // Ignore
+            }
         }
+#pragma warning restore CA1031
 
         ProcessCount = process;
         ThreadCount = thread;

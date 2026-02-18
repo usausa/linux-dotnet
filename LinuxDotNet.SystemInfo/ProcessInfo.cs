@@ -146,88 +146,97 @@ public sealed record ProcessInfo
             return null;
         }
 
-        var statPath = Path.Combine(procPath, "stat");
-        if (!File.Exists(statPath))
+#pragma warning disable CA1031
+        try
         {
-            return null;
-        }
-
-        var statContent = File.ReadAllText(statPath).AsSpan();
-        var commStart = statContent.IndexOf('(');
-        var commEnd = statContent.LastIndexOf(')');
-        if ((commStart < 0) || (commEnd < 0) || (commEnd <= commStart))
-        {
-            return null;
-        }
-
-        var name = statContent.Slice(commStart + 1, commEnd - commStart - 1);
-        var rest = statContent[(commEnd + 2)..];
-
-        var statRange = (Span<Range>)stackalloc Range[23];
-        var statCount = rest.Split(statRange, ' ', StringSplitOptions.RemoveEmptyEntries);
-        if (statCount < 22)
-        {
-            return null;
-        }
-
-        var result = new ProcessInfo
-        {
-            ProcessId = processId,
-            Name = name.ToString()
-        };
-
-        var stateChar = rest[statRange[0]].Length > 0 ? rest[statRange[0]][0] : '?';
-        result.State = stateChar switch
-        {
-            'R' => ProcessState.Running,
-            'S' => ProcessState.Sleeping,
-            'D' => ProcessState.DiskSleep,
-            'Z' => ProcessState.Zombie,
-            'T' => ProcessState.Stopped,
-            't' => ProcessState.TracingStop,
-            'X' or 'x' => ProcessState.Dead,
-            'K' => ProcessState.WakeKill,
-            'W' => ProcessState.Waking,
-            'P' => ProcessState.Parked,
-            'I' => ProcessState.Idle,
-            _ => ProcessState.Unknown
-        };
-
-        result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
-        result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
-        result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
-        result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? userTime : 0;
-        result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? systemTime : 0;
-        result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
-        result.Nice = Int32.TryParse(rest[statRange[16]], out var nice) ? nice : 0;
-        result.ThreadCount = Int32.TryParse(rest[statRange[17]], out var threadCount) ? threadCount : 0;
-        result.StartTime = UInt64.TryParse(rest[statRange[19]], out var startTimeTicks)
-            ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
-            : DateTimeOffset.MinValue;
-        result.VirtualSize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
-        result.ResidentSize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
-
-        // Status
-        var statusPath = Path.Combine(procPath, "status");
-        if (File.Exists(statusPath))
-        {
-            using var reader = new StreamReader(statusPath);
-            while (reader.ReadLine() is { } line)
+            var statPath = Path.Combine(procPath, "stat");
+            if (!File.Exists(statPath))
             {
-                var span = line.AsSpan();
+                return null;
+            }
 
-                if (span.StartsWith("Uid:"))
+            var statContent = File.ReadAllText(statPath).AsSpan();
+            var commStart = statContent.IndexOf('(');
+            var commEnd = statContent.LastIndexOf(')');
+            if ((commStart < 0) || (commEnd < 0) || (commEnd <= commStart))
+            {
+                return null;
+            }
+
+            var name = statContent.Slice(commStart + 1, commEnd - commStart - 1);
+            var rest = statContent[(commEnd + 2)..];
+
+            var statRange = (Span<Range>)stackalloc Range[23];
+            var statCount = rest.Split(statRange, ' ', StringSplitOptions.RemoveEmptyEntries);
+            if (statCount < 22)
+            {
+                return null;
+            }
+
+            var result = new ProcessInfo
+            {
+                ProcessId = processId,
+                Name = name.ToString()
+            };
+
+            var stateChar = rest[statRange[0]].Length > 0 ? rest[statRange[0]][0] : '?';
+            result.State = stateChar switch
+            {
+                'R' => ProcessState.Running,
+                'S' => ProcessState.Sleeping,
+                'D' => ProcessState.DiskSleep,
+                'Z' => ProcessState.Zombie,
+                'T' => ProcessState.Stopped,
+                't' => ProcessState.TracingStop,
+                'X' or 'x' => ProcessState.Dead,
+                'K' => ProcessState.WakeKill,
+                'W' => ProcessState.Waking,
+                'P' => ProcessState.Parked,
+                'I' => ProcessState.Idle,
+                _ => ProcessState.Unknown
+            };
+
+            result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
+            result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
+            result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
+            result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? userTime : 0;
+            result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? systemTime : 0;
+            result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
+            result.Nice = Int32.TryParse(rest[statRange[16]], out var nice) ? nice : 0;
+            result.ThreadCount = Int32.TryParse(rest[statRange[17]], out var threadCount) ? threadCount : 0;
+            result.StartTime = UInt64.TryParse(rest[statRange[19]], out var startTimeTicks)
+                ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
+                : DateTimeOffset.MinValue;
+            result.VirtualSize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
+            result.ResidentSize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
+
+            // Status
+            var statusPath = Path.Combine(procPath, "status");
+            if (File.Exists(statusPath))
+            {
+                using var reader = new StreamReader(statusPath);
+                while (reader.ReadLine() is { } line)
                 {
-                    result.UserId = ExtractStatUInt32(span);
-                }
-                else if (span.StartsWith("Gid:"))
-                {
-                    result.GroupId = ExtractStatUInt32(span);
+                    var span = line.AsSpan();
+
+                    if (span.StartsWith("Uid:"))
+                    {
+                        result.UserId = ExtractStatUInt32(span);
+                    }
+                    else if (span.StartsWith("Gid:"))
+                    {
+                        result.GroupId = ExtractStatUInt32(span);
+                    }
                 }
             }
-        }
 
-        return result;
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+#pragma warning restore CA1031
     }
 
     //--------------------------------------------------------------------------------

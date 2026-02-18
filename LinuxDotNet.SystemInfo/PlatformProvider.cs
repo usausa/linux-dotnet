@@ -7,8 +7,7 @@ public static class PlatformProvider
     // System
     //--------------------------------------------------------------------------------
 
-    // TODO
-    //public static HardwareInfo GetHardware() => new();
+    public static HardwareInfo GetHardware() => new();
 
     public static KernelInfo GetKernel() => new();
 

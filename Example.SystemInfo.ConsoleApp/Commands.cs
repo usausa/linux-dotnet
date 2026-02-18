@@ -10,7 +10,7 @@ public static class CommandBuilderExtensions
 {
     public static void AddCommands(this ICommandBuilder commands)
     {
-        // TODO HW
+        commands.AddCommand<HardwareCommand>();
         commands.AddCommand<KernelCommand>();
         commands.AddCommand<UptimeCommand>();
         commands.AddCommand<StatCommand>();
@@ -33,6 +33,56 @@ public static class CommandBuilderExtensions
     }
 }
 
+//--------------------------------------------------------------------------------
+// Hardware
+//--------------------------------------------------------------------------------
+[Command("hardware", "Get hardware information")]
+public sealed class HardwareCommand : ICommandHandler
+{
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var hw = PlatformProvider.GetHardware();
+
+        Console.WriteLine("[DMI]");
+        Console.WriteLine($"Vendor:         {hw.Vendor}");
+        Console.WriteLine($"ProductName:    {hw.ProductName}");
+        Console.WriteLine($"ProductVersion: {hw.ProductVersion}");
+        Console.WriteLine($"SerialNumber:   {hw.SerialNumber}");
+
+        Console.WriteLine("[BIOS]");
+        Console.WriteLine($"Vendor:         {hw.BiosVendor}");
+        Console.WriteLine($"Version:        {hw.BiosVersion}");
+        Console.WriteLine($"Date:           {hw.BiosDate}");
+        Console.WriteLine($"Release:        {hw.BiosRelease}");
+
+        Console.WriteLine("[Board]");
+        Console.WriteLine($"Vendor:         {hw.BoardVendor}");
+        Console.WriteLine($"Name:           {hw.BoardName}");
+        Console.WriteLine($"Version:        {hw.BoardVersion}");
+        Console.WriteLine("[CPU]");
+        Console.WriteLine($"Brand:          {hw.CpuBrandString}");
+        Console.WriteLine($"Vendor:         {hw.CpuVendor}");
+        Console.WriteLine($"Family:         {hw.CpuFamily}");
+        Console.WriteLine($"Model:          {hw.CpuModel}");
+        Console.WriteLine($"Stepping:       {hw.CpuStepping}");
+        Console.WriteLine($"Logical:        {hw.LogicalCpu}");
+        Console.WriteLine($"Physical:       {hw.PhysicalCpu}");
+        Console.WriteLine($"CoresPerSocket: {hw.CoresPerSocket}");
+        Console.WriteLine($"FrequencyMax:   {hw.CpuFrequencyMax / 1_000_000.0:F0} MHz");
+
+        Console.WriteLine("[Cache]");
+        Console.WriteLine($"L1D:            {hw.L1DCacheSize / 1024} KB");
+        Console.WriteLine($"L1I:            {hw.L1ICacheSize / 1024} KB");
+        Console.WriteLine($"L2:             {hw.L2CacheSize / 1024} KB");
+        Console.WriteLine($"L3:             {hw.L3CacheSize / 1024} KB");
+
+        Console.WriteLine("[Memory]");
+        Console.WriteLine($"MemoryTotal:    {hw.MemoryTotal / 1024 / 1024} MB");
+        Console.WriteLine($"PageSize:       {hw.PageSize} bytes");
+
+        return ValueTask.CompletedTask;
+    }
+}
 //--------------------------------------------------------------------------------
 // Kernel
 //--------------------------------------------------------------------------------
