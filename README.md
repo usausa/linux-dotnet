@@ -211,6 +211,53 @@ System information api.
 
 ## Usage
 
+### Hardware
+
+```csharp
+var hw = PlatformProvider.GetHardware();
+
+Console.WriteLine("[DMI]");
+Console.WriteLine($"Vendor:         {hw.Vendor}");
+Console.WriteLine($"ProductName:    {hw.ProductName}");
+
+Console.WriteLine("[CPU]");
+Console.WriteLine($"Brand:          {hw.CpuBrandString}");
+Console.WriteLine($"Vendor:         {hw.CpuVendor}");
+Console.WriteLine($"Family:         {hw.CpuFamily}");
+Console.WriteLine($"Model:          {hw.CpuModel}");
+Console.WriteLine($"Stepping:       {hw.CpuStepping}");
+Console.WriteLine($"Logical:        {hw.LogicalCpu}");
+Console.WriteLine($"Physical:       {hw.PhysicalCpu}");
+Console.WriteLine($"CoresPerSocket: {hw.CoresPerSocket}");
+Console.WriteLine($"FrequencyMax:   {hw.CpuFrequencyMax / 1_000_000.0:F0} MHz");
+
+Console.WriteLine("[Cache]");
+Console.WriteLine($"L1D:            {hw.L1DCacheSize / 1024} KB");
+Console.WriteLine($"L1I:            {hw.L1ICacheSize / 1024} KB");
+Console.WriteLine($"L2:             {hw.L2CacheSize / 1024} KB");
+Console.WriteLine($"L3:             {hw.L3CacheSize / 1024} KB");
+
+Console.WriteLine("[Memory]");
+Console.WriteLine($"MemoryTotal:    {hw.MemoryTotal / 1024 / 1024} MB");
+```
+
+### Kernel
+
+```csharp
+var kernel = PlatformProvider.GetKernel();
+Console.WriteLine($"OsType:                 {kernel.OsType}");
+Console.WriteLine($"OsRelease:              {kernel.OsRelease}");
+Console.WriteLine($"KernelVersion:          {kernel.KernelVersion}");
+Console.WriteLine($"OsProductVersion:       {kernel.OsProductVersion}");
+Console.WriteLine($"OsName:                 {kernel.OsName}");
+Console.WriteLine($"OsPrettyName:           {kernel.OsPrettyName}");
+Console.WriteLine($"OsId:                   {kernel.OsId}");
+Console.WriteLine($"BootTime:               {kernel.BootTime}");
+Console.WriteLine($"MaxProcessCount:        {kernel.MaxProcessCount}");
+Console.WriteLine($"MaxFileCount:           {kernel.MaxFileCount}");
+Console.WriteLine($"MaxFileCountPerProcess: {kernel.MaxFileCountPerProcess}");
+```
+
 ### Uptime
 
 ```csharp
@@ -218,26 +265,26 @@ var uptime = PlatformProvider.GetUptime();
 Console.WriteLine($"Uptime: {uptime.Uptime}");
 ```
 
-### Statics
+### Stat
 
 ```csharp
-var statics = PlatformProvider.GetStatics();
-Console.WriteLine($"Interrupt:      {statics.Interrupt}");
-Console.WriteLine($"ContextSwitch:  {statics.ContextSwitch}");
-Console.WriteLine($"SoftIrq:        {statics.SoftIrq}");
-Console.WriteLine($"ProcessRunning: {statics.ProcessRunning}");
-Console.WriteLine($"ProcessBlocked: {statics.ProcessBlocked}");
+var stat = PlatformProvider.GetSystemStat();
+Console.WriteLine($"Interrupt:      {stat.Interrupt}");
+Console.WriteLine($"ContextSwitch:  {stat.ContextSwitch}");
+Console.WriteLine($"SoftIrq:        {stat.SoftIrq}");
+Console.WriteLine($"ProcessRunning: {stat.ProcessRunning}");
+Console.WriteLine($"ProcessBlocked: {stat.ProcessBlocked}");
 
-Console.WriteLine($"User:           {statics.CpuTotal.User}");
-Console.WriteLine($"Nice:           {statics.CpuTotal.Nice}");
-Console.WriteLine($"System:         {statics.CpuTotal.System}");
-Console.WriteLine($"Idle:           {statics.CpuTotal.Idle}");
-Console.WriteLine($"IoWait:         {statics.CpuTotal.IoWait}");
-Console.WriteLine($"Irq:            {statics.CpuTotal.Irq}");
-Console.WriteLine($"SoftIrq:        {statics.CpuTotal.SoftIrq}");
-Console.WriteLine($"Steal:          {statics.CpuTotal.Steal}");
-Console.WriteLine($"Guest:          {statics.CpuTotal.Guest}");
-Console.WriteLine($"GuestNice:      {statics.CpuTotal.GuestNice}");
+Console.WriteLine($"User:           {stat.CpuTotal.User}");
+Console.WriteLine($"Nice:           {stat.CpuTotal.Nice}");
+Console.WriteLine($"System:         {stat.CpuTotal.System}");
+Console.WriteLine($"Idle:           {stat.CpuTotal.Idle}");
+Console.WriteLine($"IoWait:         {stat.CpuTotal.IoWait}");
+Console.WriteLine($"Irq:            {stat.CpuTotal.Irq}");
+Console.WriteLine($"SoftIrq:        {stat.CpuTotal.SoftIrq}");
+Console.WriteLine($"Steal:          {stat.CpuTotal.Steal}");
+Console.WriteLine($"Guest:          {stat.CpuTotal.Guest}");
+Console.WriteLine($"GuestNice:      {stat.CpuTotal.GuestNice}");
 ```
 
 ### LoadAverage
@@ -252,18 +299,17 @@ Console.WriteLine($"Average15: {load.Average15:F2}");
 ### Memory
 
 ```csharp
-var memory = PlatformProvider.GetMemory();
-Console.WriteLine($"Total:   {memory.Total}");
-Console.WriteLine($"Free:    {memory.Free}");
-Console.WriteLine($"Buffers: {memory.Buffers}");
-Console.WriteLine($"Cached:  {memory.Cached}");
-Console.WriteLine($"Usage:   {(int)Math.Ceiling(memory.Usage)}");
+var memory = PlatformProvider.GetMemoryStat();
+Console.WriteLine($"MemoryTotal:     {memory.MemoryTotal}");
+Console.WriteLine($"MemoryAvailable: {memory.MemoryAvailable}");
+Console.WriteLine($"Buffers:         {memory.Buffers}");
+Console.WriteLine($"Cached:          {memory.Cached}");
 ```
 
 ### VirtualMemory
 
 ```csharp
-var vm = PlatformProvider.GetVirtualMemory();
+var vm = PlatformProvider.GetVirtualMemoryStat();
 Console.WriteLine($"PageIn:            {vm.PageIn}");
 Console.WriteLine($"PageOut:           {vm.PageOut}");
 Console.WriteLine($"SwapIn:            {vm.SwapIn}");
@@ -279,24 +325,47 @@ Console.WriteLine($"OutOfMemoryKiller: {vm.OutOfMemoryKiller}");
 var partitions = PlatformProvider.GetPartitions();
 foreach (var partition in partitions)
 {
-    var drive = new DriveInfo(partition.MountPoints[0]);
-    var used = drive.TotalSize - drive.TotalFreeSpace;
-    var available = drive.AvailableFreeSpace;
-    var usage = (int)Math.Ceiling((double)used / (available + used) * 100);
-
     Console.WriteLine($"Name:          {partition.Name}");
-    Console.WriteLine($"MountPoint:    {String.Join(' ', partition.MountPoints)}");
-    Console.WriteLine($"TotalSize:     {drive.TotalSize / 1024}");
-    Console.WriteLine($"UsedSize:      {used / 1024}");
-    Console.WriteLine($"AvailableSize: {available / 1024}");
-    Console.WriteLine($"Usage:         {usage}");
+    Console.WriteLine($"DeviceClass:   {partition.DeviceClass} ({(int)partition.DeviceClass})");
+    Console.WriteLine($"No:            {partition.No}");
+    Console.WriteLine($"Blocks:        {partition.Blocks}");
+
+    var mounts = partition.GetMounts();
+    if (mounts.Count > 0)
+    {
+        Console.WriteLine($"MountPoint:    {String.Join(' ', mounts.Select(m => m.MountPoint))}");
+    }
 }
 ```
 
-### DiskStatics
+### Mount
 
 ```csharp
-var disk = PlatformProvider.GetDiskStatics();
+var mounts = PlatformProvider.GetMounts(IncludeVirtual);
+foreach (var mount in mounts)
+{
+    Console.WriteLine($"Device:        {mount.DeviceName}");
+    Console.WriteLine($"MountPoint:    {mount.MountPoint}");
+    Console.WriteLine($"FileSystem:    {mount.FileSystem}");
+    Console.WriteLine($"Options:       {mount.Option}");
+    Console.WriteLine($"IsLocal:       {mount.IsLocal}");
+
+    var usage = mount.GetUsage();
+    if (usage is not null)
+    {
+        Console.WriteLine($"TotalSize:     {usage.TotalSize}");
+        Console.WriteLine($"FreeSize:      {usage.FreeSize}");
+        Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
+        Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
+        Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
+    }
+}
+```
+
+### DiskStat
+
+```csharp
+var disk = PlatformProvider.GetDiskStat();
 foreach (var device in disk.Devices)
 {
     Console.WriteLine($"Name:           {device.Name}");
@@ -314,19 +383,10 @@ foreach (var device in disk.Devices)
 }
 ```
 
-### FileDescriptor
+### NetworkStat
 
 ```csharp
-var fd = PlatformProvider.GetFileDescriptor();
-Console.WriteLine($"Allocated: {fd.Allocated}");
-Console.WriteLine($"Used:      {fd.Used}");
-Console.WriteLine($"Max:       {fd.Max}");
-```
-
-### NetworkStatic
-
-```csharp
-var network = PlatformProvider.GetNetworkStatic();
+var network = PlatformProvider.GetNetworkStat();
 foreach (var nif in network.Interfaces)
 {
     Console.WriteLine($"Interface:    {nif.Interface}");
@@ -352,8 +412,8 @@ foreach (var nif in network.Interfaces)
 ### Tcp/Tcp6
 
 ```csharp
-var tcp = PlatformProvider.GetTcp();
-var tcp6 = PlatformProvider.GetTcp6();
+var tcp = PlatformProvider.GetTcpStat();
+var tcp6 = PlatformProvider.GetTcp6Stat();
 Console.WriteLine($"Established: {tcp.Established}");
 Console.WriteLine($"SynSent:     {tcp.SynSent}");
 Console.WriteLine($"SynRecv:     {tcp.SynRecv}");
@@ -376,10 +436,40 @@ Console.WriteLine($"ProcessCount: {process.ProcessCount}");
 Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
 ```
 
+### Processes
+
+```csharp
+var processes = PlatformProvider.GetProcesses();
+
+Console.WriteLine($"{"PID",-6} {"Name",-20} {"State",-12} {"User",-5} {"Threads",7} {"RSS (MB)",10} {"CPU Time",10}");
+Console.WriteLine(new string('-', 76));
+
+foreach (var p in processes)
+{
+    var rss = (double)p.ResidentSize / 1024 / 1024;
+    var cpuTime = (p.UserTime + p.SystemTime) / 100.0;
+
+    Console.WriteLine($"{p.ProcessId,-6} {TruncateName(p.Name, 20),-20} {p.State,-12} {p.UserId,-5} {p.ThreadCount,7} {rss,10:F2} {cpuTime,10:F2}");
+}
+
+static string TruncateName(string name, int maxLength) => name.Length <= maxLength ? name : name[..(maxLength - 3)] + "...";
+```
+
+### FileDescriptor
+
+```csharp
+var fd = PlatformProvider.GetFileHandleStat();
+
+Console.WriteLine($"Allocated: {fd.Allocated}");
+Console.WriteLine($"Used:      {fd.Used}");
+Console.WriteLine($"Max:       {fd.Max}");
+```
+
 ### Cpu
 
 ```csharp
-var cpu = PlatformProvider.GetCpu();
+var cpu = PlatformProvider.GetCpuDevice();
+
 Console.WriteLine("Frequency");
 foreach (var core in cpu.Cores)
 {
@@ -396,11 +486,24 @@ if (cpu.Powers.Count > 0)
 }
 ```
 
+### Mains
+
+```csharp
+var adapter = PlatformProvider.GetMainsDevice();
+if (adapter.Supported)
+{
+    Console.WriteLine($"Online: {adapter.Online}");
+}
+else
+{
+    Console.WriteLine("No adapter found");
+}
+```
 
 ### Battery
 
 ```csharp
-var battery = PlatformProvider.GetBattery();
+var battery = PlatformProvider.GetBatteryDevice();
 if (battery.Supported)
 {
     Console.WriteLine($"Capacity:   {battery.Capacity}");
@@ -413,20 +516,6 @@ if (battery.Supported)
 else
 {
     Console.WriteLine("No battery found");
-}
-```
-
-### MainsAdapter
-
-```csharp
-var adapter = PlatformProvider.GetMainsAdapter();
-if (adapter.Supported)
-{
-    Console.WriteLine($"Online: {adapter.Online}");
-}
-else
-{
-    Console.WriteLine("No adapter found");
 }
 ```
 
