@@ -315,8 +315,9 @@ public sealed class MountCommand : ICommandHandler
             var usage = mount.GetUsage();
             if (usage is not null)
             {
-                var usagePercent = usage.TotalSize > 0
-                    ? (int)Math.Ceiling((double)(usage.TotalSize - usage.AvailableSize) / usage.TotalSize * 100)
+                var used = usage.TotalSize - usage.FreeSize;
+                var usagePercent = (used + usage.AvailableSize) > 0
+                    ? (int)Math.Ceiling((double)used / (used + usage.AvailableSize) * 100)
                     : 0;
                 Console.WriteLine($"TotalSize:     {usage.TotalSize}");
                 Console.WriteLine($"FreeSize:      {usage.FreeSize}");
