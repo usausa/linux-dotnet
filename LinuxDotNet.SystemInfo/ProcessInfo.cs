@@ -121,7 +121,7 @@ public sealed record ProcessInfo
 
         foreach (var dir in Directory.EnumerateDirectories("/proc"))
         {
-            var name = System.IO.Path.GetFileName(dir).AsSpan();
+            var name = Path.GetFileName(dir).AsSpan();
             if (!Int32.TryParse(name, out var pid))
             {
                 continue;
@@ -146,7 +146,7 @@ public sealed record ProcessInfo
             return null;
         }
 
-        var statPath = System.IO.Path.Combine(procPath, "stat");
+        var statPath = Path.Combine(procPath, "stat");
         if (!File.Exists(statPath))
         {
             return null;
