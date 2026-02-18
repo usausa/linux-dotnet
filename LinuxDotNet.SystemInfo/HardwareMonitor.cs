@@ -81,9 +81,10 @@ public sealed partial class HardwareMonitor
                 {
                     var filename = Path.GetFileName(file);
                     var sensorType = ExtractSensorType(filename);
-                    var sensorLabel = ReadFile(Path.Combine(dir, file.Replace("_input", "_label", StringComparison.Ordinal)));
+                    var labelPath = Path.Combine(dir, filename.Replace("_input", "_label", StringComparison.Ordinal));
+                    var sensorLabel = ReadFile(labelPath);
 
-                    sensors.Add(new HardwareSensor(Path.Combine(dir, file), sensorType, sensorLabel));
+                    sensors.Add(new HardwareSensor(file, sensorType, sensorLabel));
                 }
             }
 

@@ -164,11 +164,13 @@ public sealed class MountInfo
             return null;
         }
 
+        var blockSize = buf.f_frsize != 0 ? buf.f_frsize : buf.f_bsize;
+
         return new FileSystemUsage(
-            buf.f_blocks * buf.f_bsize,
-            buf.f_bfree * buf.f_bsize,
-            buf.f_bavail * buf.f_bsize,
-            buf.f_bsize,
+            buf.f_blocks * blockSize,
+            buf.f_bfree * blockSize,
+            buf.f_bavail * blockSize,
+            blockSize,
             buf.f_files,
             buf.f_ffree);
     }

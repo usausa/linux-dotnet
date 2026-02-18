@@ -83,6 +83,7 @@ public sealed class HardwareCommand : ICommandHandler
         return ValueTask.CompletedTask;
     }
 }
+
 //--------------------------------------------------------------------------------
 // Kernel
 //--------------------------------------------------------------------------------
