@@ -1,20 +1,20 @@
 namespace LinuxDotNet.SystemInfo;
 
-public sealed class Partition
+public sealed class PartitionInfo
 {
     public string Name { get; }
 
     public IReadOnlyList<string> MountPoints { get; }
 
-    internal Partition(string name, string[] mountPoints)
+    internal PartitionInfo(string name, string[] mountPoints)
     {
         Name = name;
         MountPoints = mountPoints;
     }
 
-    internal static IReadOnlyList<Partition> GetPartitions()
+    internal static IReadOnlyList<PartitionInfo> GetPartitions()
     {
-        var partitions = new List<Partition>();
+        var partitions = new List<PartitionInfo>();
         var mounts = GetMounts();
 
         var range = (Span<Range>)stackalloc Range[5];
@@ -40,12 +40,13 @@ public sealed class Partition
                 continue;
             }
 
-            partitions.Add(new Partition(device, mountPoints.ToArray()));
+            partitions.Add(new PartitionInfo(device, mountPoints.ToArray()));
         }
 
         return partitions;
     }
 
+    // TODO Mountsを返す？
     private static Dictionary<string, List<string>> GetMounts()
     {
         var mounts = new Dictionary<string, List<string>>();

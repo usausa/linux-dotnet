@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System.Runtime.InteropServices;
 
-public sealed record FileSystemEntry
+public sealed record MountEntry
 {
     public required string MountPoint { get; init; }
 
@@ -31,7 +31,7 @@ public sealed record FileSystemEntry
     public bool IsLocal { get; init; }
 }
 
-public static class FileSystemInfo
+public static class MountInfo
 {
     private static readonly HashSet<string> LocalFileSystems = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -46,9 +46,9 @@ public static class FileSystemInfo
         "ramfs", "rpc_pipefs", "overlay", "aufs", "squashfs",
     };
 
-    public static FileSystemEntry[] GetFileSystems(bool includeVirtual = false)
+    public static MountEntry[] GetMounts(bool includeVirtual = false)
     {
-        var result = new List<FileSystemEntry>();
+        var result = new List<MountEntry>();
 
         if (!File.Exists("/proc/mounts"))
         {
@@ -89,7 +89,7 @@ public static class FileSystemInfo
 
                 var isLocal = LocalFileSystems.Contains(fsType);
 
-                result.Add(new FileSystemEntry
+                result.Add(new MountEntry
                 {
                     MountPoint = mountPoint,
                     TypeName = fsType,
@@ -173,3 +173,4 @@ public static class FileSystemInfo
     [DllImport("libc", EntryPoint = "statfs64", SetLastError = true)]
     private static extern int statfs64_native([MarshalAs(UnmanagedType.LPStr)] string path, ref statfs64 buf);
 }
+

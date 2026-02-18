@@ -34,12 +34,12 @@ public static class PlatformProvider
     // Storage
     //--------------------------------------------------------------------------------
 
-    public static IReadOnlyList<Partition> GetPartitions() => Partition.GetPartitions();
+    public static IReadOnlyList<PartitionInfo> GetPartitions() => PartitionInfo.GetPartitions();
 
     public static DiskStat GetDiskStat() => new();
 
     // TODO order ?
-    //public static IReadOnlyList<FileSystemEntry> GetFileSystems(bool includeVirtual = false) => FileSystemInfo.GetFileSystems(includeVirtual);
+    //public static IReadOnlyList<MountEntry> GetMounts(bool includeVirtual = false) => MountInfo.GetMounts(includeVirtual);
 
     public static FileHandleStat GetFileHandleStat() => new();
 
