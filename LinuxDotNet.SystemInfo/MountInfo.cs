@@ -133,9 +133,9 @@ public sealed class MountInfo
             var mountPoint = span[range[1]].ToString().Replace("\\040", " ", StringComparison.Ordinal).Replace("\\011", "\t", StringComparison.Ordinal);
             var fsType = span[range[2]].ToString();
             var option = MountOption.None;
-            foreach (var key in span[range[3]].Split(','))
+            foreach (var key in span[range[3]].ToString().Split(','))
             {
-                if (OptionMap.TryGetValue(key.ToString(), out var flag))
+                if (OptionMap.TryGetValue(key, out var flag))
                 {
                     option |= flag;
                 }

@@ -18,7 +18,7 @@ public static class CommandBuilderExtensions
         commands.AddCommand<MemoryCommand>();
         commands.AddCommand<VirtualCommand>();
         commands.AddCommand<PartitionCommand>();
-        // TODO Mount
+        commands.AddCommand<MountCommand>();
         commands.AddCommand<DiskCommand>();
         commands.AddCommand<NetworkCommand>();
         commands.AddCommand<TcpCommand>();
@@ -228,21 +228,51 @@ public sealed class PartitionCommand : ICommandHandler
             Console.WriteLine($"No:            {partition.No}");
             Console.WriteLine($"Blocks:        {partition.Blocks}");
 
-            // TODO
             var mounts = partition.GetMounts();
-            if (mounts.Length > 0)
+            if (mounts.Count > 0)
             {
                 Console.WriteLine($"MountPoint:    {String.Join(' ', mounts.Select(m => m.MountPoint))}");
+            }
 
-                var mount = mounts[0];
-                var stat = mount.GetFileSystemStat();
-                if (stat is not null)
-                {
-                    var usage = (int)Math.Ceiling((double)(stat.TotalSize - stat.AvailableSize) / stat.TotalSize * 100);
-                    Console.WriteLine($"TotalSize:     {stat.TotalSize / 1024}");
-                    Console.WriteLine($"FreeSize:      {stat.FreeSize / 1024}");
-                    Console.WriteLine($"Usage:         {usage}");
-                }
+            Console.WriteLine();
+        }
+
+        return ValueTask.CompletedTask;
+    }
+}
+
+//--------------------------------------------------------------------------------
+// Mount
+//--------------------------------------------------------------------------------
+[Command("mount", "Get mount points")]
+public sealed class MountCommand : ICommandHandler
+{
+    [Option("v", "virtual", Description = "Include virtual file systems")]
+    public bool IncludeVirtual { get; set; }
+
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var mounts = PlatformProvider.GetMounts(IncludeVirtual);
+        foreach (var mount in mounts)
+        {
+            Console.WriteLine($"Device:        {mount.DeviceName}");
+            Console.WriteLine($"MountPoint:    {mount.MountPoint}");
+            Console.WriteLine($"FileSystem:    {mount.FileSystem}");
+            Console.WriteLine($"Options:       {mount.Option}");
+            Console.WriteLine($"IsLocal:       {mount.IsLocal}");
+
+            var usage = mount.GetUsage();
+            if (usage is not null)
+            {
+                var usagePercent = usage.TotalSize > 0
+                    ? (int)Math.Ceiling((double)(usage.TotalSize - usage.AvailableSize) / usage.TotalSize * 100)
+                    : 0;
+                Console.WriteLine($"TotalSize:     {usage.TotalSize}");
+                Console.WriteLine($"FreeSize:      {usage.FreeSize}");
+                Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
+                Console.WriteLine($"Usage:         {usagePercent}%");
+                Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
+                Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
             }
 
             Console.WriteLine();
@@ -575,6 +605,8 @@ public sealed class HwmonCommand : ICommandHandler
                 Console.WriteLine($"Label:   {sensor.Label}");
                 Console.WriteLine($"Value:   {sensor.Value}");
             }
+
+            Console.WriteLine();
         }
 
         return ValueTask.CompletedTask;
