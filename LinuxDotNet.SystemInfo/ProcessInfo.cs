@@ -1,0 +1,274 @@
+namespace LinuxDotNet.SystemInfo;
+
+using static LinuxDotNet.SystemInfo.NativeMethods;
+
+public enum ProcessState
+{
+    Unknown,
+    Running,
+    Sleeping,
+    DiskSleep,
+    Zombie,
+    Stopped,
+    TracingStop,
+    Dead,
+    WakeKill,
+    Waking,
+    Parked,
+    Idle
+}
+
+public sealed record ProcessInfo
+{
+    private static readonly long ClockTick = GetClockTick();
+    private static readonly long BootTime = GetBootTime();
+    private static readonly long PageSize = Environment.SystemPageSize;
+
+    // Basic
+
+    public int ProcessId { get; private init; }
+
+    public int ParentProcessId { get; private set; }
+
+    public string Name { get; init; } = default!;
+
+    // Scheduler
+
+    public int Priority { get; private set; }
+
+    public int Nice { get; private set; }
+
+    // Thread
+
+    public int ThreadCount { get; private set; }
+
+    // CPU
+
+    public ProcessState State { get; private set; }
+
+    public ulong UserTime { get; private set; }
+
+    public ulong SystemTime { get; private set; }
+
+    public DateTimeOffset StartTime { get; private set; }
+
+    // Memory
+
+    public ulong VirtualSize { get; private set; }
+
+    public ulong ResidentSize { get; private set; }
+
+    // I/O
+
+    public long MajorFaults { get; private set; }
+
+    public long MinorFaults { get; private set; }
+
+    // Identify
+
+    public uint UserId { get; private set; }
+
+    public uint GroupId { get; private set; }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
+    private static long GetClockTick()
+    {
+#pragma warning disable CA1031
+        try
+        {
+            return sysconf(SC_CLK_TCK);
+        }
+        catch
+        {
+            return 100; // Default value
+        }
+    }
+#pragma warning restore CA1031
+
+    // ReSharper disable StringLiteralTypo
+    private static long GetBootTime()
+    {
+        using var reader = new StreamReader("/proc/stat");
+        while (reader.ReadLine() is { } line)
+        {
+            var span = line.AsSpan();
+            if (span.StartsWith("btime"))
+            {
+                return ExtractInt64(span);
+            }
+        }
+
+        return 0;
+
+        static long ExtractInt64(ReadOnlySpan<char> span)
+        {
+            var range = (Span<Range>)stackalloc Range[3];
+            return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], out var result) ? result : 0;
+        }
+    }
+    // ReSharper restore StringLiteralTypo
+
+    //--------------------------------------------------------------------------------
+    // Factory
+    //--------------------------------------------------------------------------------
+
+    public static IReadOnlyList<ProcessInfo> GetProcesses()
+    {
+        var result = new List<ProcessInfo>();
+
+        foreach (var dir in Directory.EnumerateDirectories("/proc"))
+        {
+            var name = System.IO.Path.GetFileName(dir).AsSpan();
+            if (!Int32.TryParse(name, out var pid))
+            {
+                continue;
+            }
+
+            var entry = GetProcess(pid);
+            if (entry is not null)
+            {
+                result.Add(entry);
+            }
+        }
+
+        result.Sort(static (x, y) => x.ProcessId.CompareTo(y.ProcessId));
+        return result;
+    }
+
+    public static ProcessInfo? GetProcess(int processId)
+    {
+        var procPath = $"/proc/{processId}";
+        if (!Directory.Exists(procPath))
+        {
+            return null;
+        }
+
+        var statPath = System.IO.Path.Combine(procPath, "stat");
+        if (!File.Exists(statPath))
+        {
+            return null;
+        }
+
+        var statContent = File.ReadAllText(statPath).AsSpan();
+        var commStart = statContent.IndexOf('(');
+        var commEnd = statContent.LastIndexOf(')');
+        if ((commStart < 0) || (commEnd < 0) || (commEnd <= commStart))
+        {
+            return null;
+        }
+
+        var name = statContent.Slice(commStart + 1, commEnd - commStart - 1);
+        var rest = statContent[(commEnd + 2)..];
+
+        var statRange = (Span<Range>)stackalloc Range[23];
+        var statCount = rest.Split(statRange, ' ', StringSplitOptions.RemoveEmptyEntries);
+        if (statCount < 22)
+        {
+            return null;
+        }
+
+        var result = new ProcessInfo
+        {
+            ProcessId = processId,
+            Name = name.ToString()
+        };
+
+        var stateChar = rest[statRange[0]].Length > 0 ? rest[statRange[0]][0] : '?';
+        result.State = stateChar switch
+        {
+            'R' => ProcessState.Running,
+            'S' => ProcessState.Sleeping,
+            'D' => ProcessState.DiskSleep,
+            'Z' => ProcessState.Zombie,
+            'T' => ProcessState.Stopped,
+            't' => ProcessState.TracingStop,
+            'X' or 'x' => ProcessState.Dead,
+            'K' => ProcessState.WakeKill,
+            'W' => ProcessState.Waking,
+            'P' => ProcessState.Parked,
+            'I' => ProcessState.Idle,
+            _ => ProcessState.Unknown
+        };
+
+        if (Int32.TryParse(rest[statRange[1]], out var parentProcessId))
+        {
+            result.ParentProcessId = parentProcessId;
+        }
+        if (Int64.TryParse(rest[statRange[7]], out var minorFault))
+        {
+            result.MinorFaults = minorFault;
+        }
+        if (Int64.TryParse(rest[statRange[9]], out var majorFault))
+        {
+            result.MajorFaults = majorFault;
+        }
+        if (UInt64.TryParse(rest[statRange[11]], out var userTime))
+        {
+            result.UserTime = userTime;
+        }
+        if (UInt64.TryParse(rest[statRange[12]], out var systemTime))
+        {
+            result.SystemTime = systemTime;
+        }
+        if (Int32.TryParse(rest[statRange[15]], out var priority))
+        {
+            result.Priority = priority;
+        }
+        if (Int32.TryParse(rest[statRange[16]], out var nice))
+        {
+            result.Nice = nice;
+        }
+        if (Int32.TryParse(rest[statRange[17]], out var threadCount))
+        {
+            result.ThreadCount = threadCount;
+        }
+        if (UInt64.TryParse(rest[statRange[19]], out var startTimeTicks))
+        {
+            var startTimeSec = BootTime + (long)(startTimeTicks / (ulong)ClockTick);
+            result.StartTime = DateTimeOffset.FromUnixTimeSeconds(startTimeSec);
+        }
+        if (UInt64.TryParse(rest[statRange[20]], out var virtualSize))
+        {
+            result.VirtualSize = virtualSize;
+        }
+        if (Int64.TryParse(rest[statRange[21]], out var rss))
+        {
+            result.ResidentSize = (ulong)rss * (ulong)PageSize;
+        }
+
+        // Status
+        var statusPath = System.IO.Path.Combine(procPath, "status");
+        if (File.Exists(statusPath))
+        {
+            using var reader = new StreamReader(statusPath);
+            while (reader.ReadLine() is { } line)
+            {
+                var span = line.AsSpan();
+
+                if (span.StartsWith("Uid:"))
+                {
+                    result.UserId = ExtractStatUInt32(span);
+                }
+                else if (span.StartsWith("Gid:"))
+                {
+                    result.GroupId = ExtractStatUInt32(span);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Extract Helper
+    //--------------------------------------------------------------------------------
+
+    private static uint ExtractStatUInt32(ReadOnlySpan<char> span)
+    {
+        var range = (Span<Range>)stackalloc Range[3];
+        return (span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt32.TryParse(span[range[1]], out var result) ? result : 0;
+    }
+}

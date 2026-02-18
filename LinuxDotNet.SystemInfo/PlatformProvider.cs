@@ -15,12 +15,6 @@ public static class PlatformProvider
     public static Uptime GetUptime() => new();
 
     //--------------------------------------------------------------------------------
-    // CPU
-    //--------------------------------------------------------------------------------
-
-    public static CpuDevice GetCpuDevice() => new();
-
-    //--------------------------------------------------------------------------------
     // Load
     //--------------------------------------------------------------------------------
 
@@ -53,9 +47,9 @@ public static class PlatformProvider
     // Network
     //--------------------------------------------------------------------------------
 
-    public static NetworkStaticInfo GetNetworkStatic() => new();
+    public static NetworkStat GetNetworkStat() => new();
 
-    // TODO
+    // TODO statはstat側？
     //public static IReadOnlyList<NetworkInterface> GetNetworkInterfaces() => NetworkInfo.GetInterfaces();
 
     // TODO
@@ -69,13 +63,17 @@ public static class PlatformProvider
     // Process
     //--------------------------------------------------------------------------------
 
-    public static ProcessSummaryInfo GetProcessSummary() => new();
+    public static ProcessSummary GetProcessSummary() => new();
 
-    // TODO
-    //public static ProcessEntry? GetProcess(int pid) => ProcessInfo.GetProcess(pid);
+    public static IReadOnlyList<ProcessInfo> GetProcesses() => ProcessInfo.GetProcesses();
 
-    // TODO
-    //public static IReadOnlyList<ProcessEntry> GetProcesses() => ProcessInfo.GetProcesses();
+    public static ProcessInfo? GetProcess(int pid) => ProcessInfo.GetProcess(pid);
+
+    //--------------------------------------------------------------------------------
+    // CPU
+    //--------------------------------------------------------------------------------
+
+    public static CpuDevice GetCpuDevice() => new();
 
     //--------------------------------------------------------------------------------
     // Power

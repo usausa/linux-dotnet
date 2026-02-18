@@ -2,7 +2,7 @@ namespace LinuxDotNet.SystemInfo;
 
 using System.Text.RegularExpressions;
 
-public sealed class ProcessSummaryInfo
+public sealed class ProcessSummary
 {
     private readonly Regex regex = new(@"^\d+$", RegexOptions.Compiled);
 
@@ -12,7 +12,7 @@ public sealed class ProcessSummaryInfo
 
     public int ThreadCount { get; private set; }
 
-    internal ProcessSummaryInfo()
+    internal ProcessSummary()
     {
         Update();
     }

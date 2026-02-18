@@ -1,6 +1,6 @@
 namespace LinuxDotNet.SystemInfo;
 
-public sealed class NetworkStatics
+public sealed class NetworkStatEntry
 {
     internal bool Live { get; set; }
 
@@ -38,21 +38,21 @@ public sealed class NetworkStatics
 
     public long TxCompressed { get; internal set; }
 
-    internal NetworkStatics(string interfaceName)
+    internal NetworkStatEntry(string interfaceName)
     {
         Interface = interfaceName;
     }
 }
 
-public class NetworkStaticInfo
+public class NetworkStat
 {
-    private readonly List<NetworkStatics> interfaces = new();
+    private readonly List<NetworkStatEntry> interfaces = new();
 
     public DateTime UpdateAt { get; internal set; }
 
-    public IReadOnlyList<NetworkStatics> Interfaces => interfaces;
+    public IReadOnlyList<NetworkStatEntry> Interfaces => interfaces;
 
-    internal NetworkStaticInfo()
+    internal NetworkStat()
     {
         Update();
     }
@@ -77,7 +77,7 @@ public class NetworkStaticInfo
             }
 
             var name = span[range[0]].TrimEnd(':');
-            var network = default(NetworkStatics);
+            var network = default(NetworkStatEntry);
             foreach (var item in interfaces)
             {
                 if (item.Interface == name)
@@ -89,7 +89,7 @@ public class NetworkStaticInfo
 
             if (network == null)
             {
-                network = new NetworkStatics(name.ToString());
+                network = new NetworkStatEntry(name.ToString());
                 interfaces.Add(network);
             }
 

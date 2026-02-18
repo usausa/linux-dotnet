@@ -10,22 +10,27 @@ public static class CommandBuilderExtensions
 {
     public static void AddCommands(this ICommandBuilder commands)
     {
+        // TODO
         commands.AddCommand<KernelCommand>();
         commands.AddCommand<UptimeCommand>();
+
         commands.AddCommand<StatCommand>();
         commands.AddCommand<LoadCommand>();
         commands.AddCommand<MemoryCommand>();
         commands.AddCommand<VirtualCommand>();
+        // TODO
         commands.AddCommand<PartitionCommand>();
         commands.AddCommand<DiskCommand>();
         commands.AddCommand<FdCommand>();
         commands.AddCommand<NetworkCommand>();
+        // TODO
         commands.AddCommand<TcpCommand>();
         commands.AddCommand<Tcp6Command>();
         commands.AddCommand<ProcessCommand>();
+        commands.AddCommand<ProcessesCommand>();
         commands.AddCommand<CpuCommand>();
-        commands.AddCommand<BatteryCommand>();
         commands.AddCommand<AcCommand>();
+        commands.AddCommand<BatteryCommand>();
         commands.AddCommand<HwmonCommand>();
     }
 }
@@ -317,7 +322,7 @@ public sealed class NetworkCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var network = PlatformProvider.GetNetworkStatic();
+        var network = PlatformProvider.GetNetworkStat();
         foreach (var nif in network.Interfaces)
         {
             Console.WriteLine($"Interface:    {nif.Interface}");
@@ -415,6 +420,57 @@ public sealed class ProcessCommand : ICommandHandler
 }
 
 //--------------------------------------------------------------------------------
+// Processes
+//--------------------------------------------------------------------------------
+[Command("processes", "Get all processes")]
+public sealed class ProcessesCommand : ICommandHandler
+{
+    [Option<int>("--top", "-t", Description = "Top", DefaultValue = 100)]
+    public int Top { get; set; }
+
+    [Option<string>("--sort", "-s", Description = "Sort", Completions = ["pid", "name", "cpu", "memory"], DefaultValue = "pid")]
+    public string Sort { get; set; } = default!;
+
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var processes = PlatformProvider.GetProcesses();
+
+#pragma warning disable CA1308
+        var sorted = Sort.ToLowerInvariant() switch
+        {
+            "name" => processes.OrderBy(p => p.Name),
+            "cpu" => processes.OrderByDescending(p => p.UserTime + p.SystemTime),
+            "memory" => processes.OrderByDescending(p => p.ResidentSize),
+            _ => processes.OrderBy(p => p.ProcessId)
+        };
+#pragma warning restore CA1308
+
+        var topProcesses = sorted.Take(Top).ToList();
+
+        Console.WriteLine($"{"PID",-6} {"Name",-20} {"State",-12} {"User",-5} {"Threads",7} {"RSS (MB)",10} {"CPU Time",10}");
+        Console.WriteLine(new string('-', 76));
+
+        foreach (var p in topProcesses)
+        {
+            var rss = (double)p.ResidentSize / 1024 / 1024;
+            var cpuTime = (p.UserTime + p.SystemTime) / 100.0;
+
+            Console.WriteLine($"{p.ProcessId,-6} {TruncateName(p.Name, 20),-20} {p.State,-12} {p.UserId,-5} {p.ThreadCount,7} {rss,10:F2} {cpuTime,10:F2}");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Total processes: {processes.Count}");
+
+        return ValueTask.CompletedTask;
+    }
+
+    private static string TruncateName(string name, int maxLength)
+    {
+        return name.Length <= maxLength ? name : name[..(maxLength - 3)] + "...";
+    }
+}
+
+//--------------------------------------------------------------------------------
 // Cpu
 //--------------------------------------------------------------------------------
 [Command("cpu", "Get cpu device")]
@@ -444,6 +500,22 @@ public sealed class CpuCommand : ICommandHandler
 }
 
 //--------------------------------------------------------------------------------
+// MainsAdapter
+//--------------------------------------------------------------------------------
+[Command("ac", "Get A/C device")]
+public sealed class AcCommand : ICommandHandler
+{
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var adapter = PlatformProvider.GetMainsDevice();
+
+        Console.WriteLine(adapter.Supported ? $"Online: {adapter.Online}" : "No adapter found");
+
+        return ValueTask.CompletedTask;
+    }
+}
+
+//--------------------------------------------------------------------------------
 // Battery
 //--------------------------------------------------------------------------------
 [Command("battery", "Get battery device")]
@@ -466,22 +538,6 @@ public sealed class BatteryCommand : ICommandHandler
         {
             Console.WriteLine("No battery found");
         }
-
-        return ValueTask.CompletedTask;
-    }
-}
-
-//--------------------------------------------------------------------------------
-// MainsAdapter
-//--------------------------------------------------------------------------------
-[Command("ac", "Get A/C device")]
-public sealed class AcCommand : ICommandHandler
-{
-    public ValueTask ExecuteAsync(CommandContext context)
-    {
-        var adapter = PlatformProvider.GetMainsDevice();
-
-        Console.WriteLine(adapter.Supported ? $"Online: {adapter.Online}" : "No adapter found");
 
         return ValueTask.CompletedTask;
     }
