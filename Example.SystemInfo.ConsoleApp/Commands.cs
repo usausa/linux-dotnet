@@ -312,20 +312,17 @@ public sealed class MountCommand : ICommandHandler
             Console.WriteLine($"Options:       {mount.Option}");
             Console.WriteLine($"IsLocal:       {mount.IsLocal}");
 
-            var usage = mount.GetUsage();
-            if (usage is not null)
-            {
-                var used = usage.TotalSize - usage.FreeSize;
-                var usagePercent = (used + usage.AvailableSize) > 0
-                    ? (int)Math.Ceiling((double)used / (used + usage.AvailableSize) * 100)
-                    : 0;
-                Console.WriteLine($"TotalSize:     {usage.TotalSize}");
-                Console.WriteLine($"FreeSize:      {usage.FreeSize}");
-                Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
-                Console.WriteLine($"Usage:         {usagePercent}%");
-                Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
-                Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
-            }
+            var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
+            var used = usage.TotalSize - usage.FreeSize;
+            var usagePercent = (used + usage.AvailableSize) > 0
+                ? (int)Math.Ceiling((double)used / (used + usage.AvailableSize) * 100)
+                : 0;
+            Console.WriteLine($"TotalSize:     {usage.TotalSize}");
+            Console.WriteLine($"FreeSize:      {usage.FreeSize}");
+            Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
+            Console.WriteLine($"Usage:         {usagePercent}%");
+            Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
+            Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
 
             Console.WriteLine();
         }

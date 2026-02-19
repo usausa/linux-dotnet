@@ -1,7 +1,5 @@
 namespace LinuxDotNet.SystemInfo;
 
-using static LinuxDotNet.SystemInfo.NativeMethods;
-
 [Flags]
 public enum MountOption
 {
@@ -150,28 +148,5 @@ public sealed class MountInfo
         }
 
         return list;
-    }
-
-    //--------------------------------------------------------------------------------
-    // Usage
-    //--------------------------------------------------------------------------------
-
-    public FileSystemUsage? GetUsage()
-    {
-        var buf = default(statfs);
-        if (statfs64(MountPoint, ref buf) != 0)
-        {
-            return null;
-        }
-
-        var blockSize = buf.f_frsize != 0 ? buf.f_frsize : buf.f_bsize;
-
-        return new FileSystemUsage(
-            buf.f_blocks * blockSize,
-            buf.f_bfree * blockSize,
-            buf.f_bavail * blockSize,
-            blockSize,
-            buf.f_files,
-            buf.f_ffree);
     }
 }

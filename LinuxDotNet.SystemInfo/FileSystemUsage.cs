@@ -1,26 +1,58 @@
 namespace LinuxDotNet.SystemInfo;
 
+using static LinuxDotNet.SystemInfo.NativeMethods;
+
 public sealed class FileSystemUsage
 {
-    public ulong TotalSize { get; }
+    public string Path { get; }
 
-    public ulong FreeSize { get; }
+    public DateTime UpdateAt { get; private set; }
 
-    public ulong AvailableSize { get; }
+    public ulong TotalSize { get; private set; }
 
-    public ulong BlockSize { get; }
+    public ulong FreeSize { get; private set; }
 
-    public ulong TotalFiles { get; }
+    public ulong AvailableSize { get; private set; }
 
-    public ulong FreeFiles { get; }
+    public ulong BlockSize { get; private set; }
 
-    internal FileSystemUsage(ulong totalSize, ulong freeSize, ulong availableSize, ulong blockSize, ulong totalFiles, ulong freeFiles)
+    public ulong TotalFiles { get; private set; }
+
+    public ulong FreeFiles { get; private set; }
+
+    //--------------------------------------------------------------------------------
+    // Constructor
+    //--------------------------------------------------------------------------------
+
+    internal FileSystemUsage(string path)
     {
-        TotalSize = totalSize;
-        FreeSize = freeSize;
-        AvailableSize = availableSize;
+        Path = path;
+        Update();
+    }
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
+
+    public bool Update()
+    {
+        var buf = default(statfs);
+        if (statfs64(Path, ref buf) != 0)
+        {
+            return false;
+        }
+
+        var blockSize = buf.f_frsize != 0 ? buf.f_frsize : buf.f_bsize;
+
+        TotalSize = buf.f_blocks * blockSize;
+        FreeSize = buf.f_bfree * blockSize;
+        AvailableSize = buf.f_bavail * blockSize;
         BlockSize = blockSize;
-        TotalFiles = totalFiles;
-        FreeFiles = freeFiles;
+        TotalFiles = buf.f_files;
+        FreeFiles = buf.f_ffree;
+
+        UpdateAt = DateTime.Now;
+
+        return true;
     }
 }

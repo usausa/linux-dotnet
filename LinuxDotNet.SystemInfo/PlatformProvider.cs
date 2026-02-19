@@ -39,6 +39,8 @@ public static class PlatformProvider
 
     public static IReadOnlyList<MountInfo> GetMounts(bool includeVirtual = false) => MountInfo.GetMounts(includeVirtual);
 
+    public static FileSystemUsage GetFileSystemUsage(string path) => new(path);
+
     //--------------------------------------------------------------------------------
     // Network
     //--------------------------------------------------------------------------------

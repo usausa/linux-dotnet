@@ -352,15 +352,12 @@ foreach (var mount in mounts)
     Console.WriteLine($"Options:       {mount.Option}");
     Console.WriteLine($"IsLocal:       {mount.IsLocal}");
 
-    var usage = mount.GetUsage();
-    if (usage is not null)
-    {
-        Console.WriteLine($"TotalSize:     {usage.TotalSize}");
-        Console.WriteLine($"FreeSize:      {usage.FreeSize}");
-        Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
-        Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
-        Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
-    }
+    var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
+    Console.WriteLine($"TotalSize:     {usage.TotalSize}");
+    Console.WriteLine($"FreeSize:      {usage.FreeSize}");
+    Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
+    Console.WriteLine($"TotalFiles:    {usage.TotalFiles}");
+    Console.WriteLine($"FreeFiles:     {usage.FreeFiles}");
 }
 ```
 
