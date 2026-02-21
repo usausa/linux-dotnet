@@ -121,7 +121,7 @@ public sealed class WirelessStat
 
         if (added)
         {
-            // TODO sort by Interface name
+            interfaces.Sort(static (x, y) => String.Compare(x.Interface, y.Interface, StringComparison.Ordinal));
         }
 
         UpdateAt = DateTime.Now;

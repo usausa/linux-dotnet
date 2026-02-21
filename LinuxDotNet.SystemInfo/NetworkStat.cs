@@ -75,6 +75,7 @@ public sealed class NetworkStat
         var range = (Span<Range>)stackalloc Range[18];
         using var reader = new StreamReader("/proc/net/dev");
         reader.ReadLine();
+        var added = false;
         while (reader.ReadLine() is { } line)
         {
             range.Clear();
@@ -99,6 +100,7 @@ public sealed class NetworkStat
             {
                 network = new NetworkStatEntry(name.ToString());
                 interfaces.Add(network);
+                added = true;
             }
 
             network.Live = true;
@@ -127,6 +129,11 @@ public sealed class NetworkStat
             {
                 interfaces.RemoveAt(i);
             }
+        }
+
+        if (added)
+        {
+            interfaces.Sort(static (x, y) => String.Compare(x.Interface, y.Interface, StringComparison.Ordinal));
         }
 
         UpdateAt = DateTime.Now;

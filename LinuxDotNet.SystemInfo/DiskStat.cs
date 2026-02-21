@@ -64,6 +64,7 @@ public sealed class DiskStat
 
         var range = (Span<Range>)stackalloc Range[21];
         using var reader = new StreamReader("/proc/diskstats");
+        var added = false;
         while (reader.ReadLine() is { } line)
         {
             range.Clear();
@@ -94,6 +95,7 @@ public sealed class DiskStat
             {
                 device = new DiskStatEntry(name.ToString());
                 devices.Add(device);
+                added = true;
             }
 
             device.Live = true;
@@ -117,6 +119,11 @@ public sealed class DiskStat
             {
                 devices.RemoveAt(i);
             }
+        }
+
+        if (added)
+        {
+            devices.Sort(static (x, y) => String.Compare(x.Name, y.Name, StringComparison.Ordinal));
         }
 
         UpdateAt = DateTime.Now;
