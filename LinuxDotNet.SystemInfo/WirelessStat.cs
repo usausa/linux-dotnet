@@ -69,6 +69,7 @@ public sealed class WirelessStat
         using var reader = new StreamReader("/proc/net/wireless");
         reader.ReadLine();
         reader.ReadLine();
+        var added = false;
         while (reader.ReadLine() is { } line)
         {
             range.Clear();
@@ -93,6 +94,7 @@ public sealed class WirelessStat
             {
                 wireless = new WirelessStatEntry(name.ToString());
                 interfaces.Add(wireless);
+                added = true;
             }
 
             wireless.Live = true;
@@ -115,6 +117,11 @@ public sealed class WirelessStat
             {
                 interfaces.RemoveAt(i);
             }
+        }
+
+        if (added)
+        {
+            // TODO sort by Interface name
         }
 
         UpdateAt = DateTime.Now;
