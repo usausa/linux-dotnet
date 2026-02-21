@@ -51,6 +51,8 @@ public static class PlatformProvider
 
     public static TcpStat GetTcp6Stat() => new(6);
 
+    public static WirelessStat GetWirelessStat() => new();
+
     //--------------------------------------------------------------------------------
     // Process
     //--------------------------------------------------------------------------------
