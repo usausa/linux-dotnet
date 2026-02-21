@@ -23,6 +23,7 @@ public static class CommandBuilderExtensions
         commands.AddCommand<NetworkCommand>();
         commands.AddCommand<TcpCommand>();
         commands.AddCommand<Tcp6Command>();
+        commands.AddCommand<WirelessCommand>();
         commands.AddCommand<ProcessCommand>();
         commands.AddCommand<ProcessesCommand>();
         commands.AddCommand<FdCommand>();
@@ -471,6 +472,35 @@ public sealed class Tcp6Command : ICommandHandler
         Console.WriteLine($"Listen:      {tcp.Listen}");
         Console.WriteLine($"Closing:     {tcp.Closing}");
         Console.WriteLine($"Total:       {tcp.Total}");
+
+        return ValueTask.CompletedTask;
+    }
+}
+
+//--------------------------------------------------------------------------------
+// WirelessStat
+//--------------------------------------------------------------------------------
+[Command("wireless", "Get wireless stat")]
+public sealed class WirelessCommand : ICommandHandler
+{
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        var wireless = PlatformProvider.GetWirelessStat();
+        foreach (var wif in wireless.Interfaces)
+        {
+            Console.WriteLine($"Interface:         {wif.Interface}");
+            Console.WriteLine($"Status:            {wif.Status:X4}");
+            Console.WriteLine($"LinkQuality:       {wif.LinkQuality}");
+            Console.WriteLine($"SignalLevel:       {wif.SignalLevel}");
+            Console.WriteLine($"NoiseLevel:        {wif.NoiseLevel}");
+            Console.WriteLine($"DiscardedNetworkId:{wif.DiscardedNetworkId}");
+            Console.WriteLine($"DiscardedCrypt:    {wif.DiscardedCrypt}");
+            Console.WriteLine($"DiscardedFragment: {wif.DiscardedFragment}");
+            Console.WriteLine($"DiscardedRetry:    {wif.DiscardedRetry}");
+            Console.WriteLine($"DiscardedMisc:     {wif.DiscardedMisc}");
+            Console.WriteLine($"MissedBeacon:      {wif.MissedBeacon}");
+            Console.WriteLine();
+        }
 
         return ValueTask.CompletedTask;
     }

@@ -6,7 +6,7 @@ public sealed class WirelessStatEntry
 
     public string Interface { get; }
 
-    public long Status { get; internal set; }
+    public int Status { get; internal set; }
 
     public double LinkQuality { get; internal set; }
 
@@ -97,7 +97,7 @@ public sealed class WirelessStat
 
             wireless.Live = true;
 
-            wireless.Status = Int64.TryParse(span[range[1]], out var status) ? status : 0;
+            wireless.Status = Int32.TryParse(span[range[1]], System.Globalization.NumberStyles.HexNumber, null, out var status) ? status : 0;
             wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), out var qualityLink) ? qualityLink : 0;
             wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), out var qualityLevel) ? qualityLevel : 0;
             wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), out var qualityNoise) ? qualityNoise : 0;
