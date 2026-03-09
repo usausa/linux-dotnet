@@ -32,6 +32,8 @@ public sealed record ProcessInfo
 
     public string Name { get; init; } = default!;
 
+    public ProcessState State { get; private set; }
+
     // Scheduler
 
     public int Priority { get; private set; }
@@ -44,19 +46,17 @@ public sealed record ProcessInfo
 
     // CPU
 
-    public ProcessState State { get; private set; }
+    public TimeSpan UserTime { get; private set; }
 
-    public ulong UserTime { get; private set; }
-
-    public ulong SystemTime { get; private set; }
+    public TimeSpan SystemTime { get; private set; }
 
     public DateTimeOffset StartTime { get; private set; }
 
     // Memory
 
-    public ulong VirtualSize { get; private set; }
+    public ulong VirtualMemorySize { get; private set; }
 
-    public ulong ResidentSize { get; private set; }
+    public ulong ResidentMemorySize { get; private set; }
 
     // I/O
 
@@ -199,16 +199,16 @@ public sealed record ProcessInfo
             result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
             result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
             result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
-            result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? userTime : 0;
-            result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? systemTime : 0;
+            result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? TimeSpan.FromSeconds((double)userTime / ClockTick) : TimeSpan.Zero;
+            result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? TimeSpan.FromSeconds((double)systemTime / ClockTick) : TimeSpan.Zero;
             result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
             result.Nice = Int32.TryParse(rest[statRange[16]], out var nice) ? nice : 0;
             result.ThreadCount = Int32.TryParse(rest[statRange[17]], out var threadCount) ? threadCount : 0;
             result.StartTime = UInt64.TryParse(rest[statRange[19]], out var startTimeTicks)
                 ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
                 : DateTimeOffset.MinValue;
-            result.VirtualSize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
-            result.ResidentSize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
+            result.VirtualMemorySize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
+            result.ResidentMemorySize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
 
             // Status
             var statusPath = Path.Combine(procPath, "status");

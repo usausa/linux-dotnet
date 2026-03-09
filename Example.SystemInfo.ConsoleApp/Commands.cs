@@ -544,7 +544,7 @@ public sealed class ProcessesCommand : ICommandHandler
         {
             "name" => processes.OrderBy(p => p.Name),
             "cpu" => processes.OrderByDescending(p => p.UserTime + p.SystemTime),
-            "memory" => processes.OrderByDescending(p => p.ResidentSize),
+            "memory" => processes.OrderByDescending(p => p.ResidentMemorySize),
             _ => processes.OrderBy(p => p.ProcessId)
         };
 #pragma warning restore CA1308
@@ -556,8 +556,8 @@ public sealed class ProcessesCommand : ICommandHandler
 
         foreach (var p in topProcesses)
         {
-            var rss = (double)p.ResidentSize / 1024 / 1024;
-            var cpuTime = (p.UserTime + p.SystemTime) / 100.0;
+            var rss = (double)p.ResidentMemorySize / 1024 / 1024;
+            var cpuTime = (p.UserTime + p.SystemTime).TotalSeconds;
 
             Console.WriteLine($"{p.ProcessId,-6} {TruncateName(p.Name, 20),-20} {p.State,-12} {p.UserId,-5} {p.ThreadCount,7} {rss,10:F2} {cpuTime,10:F2}");
         }
