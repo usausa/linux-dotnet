@@ -30,6 +30,8 @@ public sealed record ProcessInfo
 
     public int ParentProcessId { get; private set; }
 
+    public int ProcessGroupId { get; private set; }
+
     public string Name { get; init; } = default!;
 
     public ProcessState State { get; private set; }
@@ -197,6 +199,7 @@ public sealed record ProcessInfo
             };
 
             result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
+            result.ProcessGroupId = Int32.TryParse(rest[statRange[2]], out var processGroupId) ? processGroupId : 0;
             result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
             result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
             result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? TimeSpan.FromSeconds((double)userTime / ClockTick) : TimeSpan.Zero;
