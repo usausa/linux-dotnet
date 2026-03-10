@@ -16,13 +16,13 @@ public sealed class KernelInfo
 
     public string? OsId { get; private set; }
 
+    public long MaxProcesses { get; }
+
+    public long MaxFiles { get; }
+
+    public long MaxFilesPerProcess { get; }
+
     public DateTimeOffset BootTime { get; private set; }
-
-    public long MaxProcessCount { get; }
-
-    public long MaxFileCount { get; }
-
-    public long MaxFileCountPerProcess { get; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -37,9 +37,9 @@ public sealed class KernelInfo
 
         ParseOsRelease();
 
-        MaxProcessCount = ReadProcFileAsInt64("sys/kernel/pid_max");
-        MaxFileCount = ReadProcFileAsInt64("sys/fs/file-max");
-        MaxFileCountPerProcess = ReadProcFileAsInt64("sys/fs/nr_open");
+        MaxProcesses = ReadProcFileAsInt64("sys/kernel/pid_max");
+        MaxFiles = ReadProcFileAsInt64("sys/fs/file-max");
+        MaxFilesPerProcess = ReadProcFileAsInt64("sys/fs/nr_open");
 
         ParseBootTime();
     }

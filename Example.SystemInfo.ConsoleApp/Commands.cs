@@ -95,17 +95,17 @@ public sealed class KernelCommand : ICommandHandler
     {
         var kernel = PlatformProvider.GetKernel();
 
-        Console.WriteLine($"OsType:                 {kernel.OsType}");
-        Console.WriteLine($"OsRelease:              {kernel.OsRelease}");
-        Console.WriteLine($"KernelVersion:          {kernel.KernelVersion}");
-        Console.WriteLine($"OsProductVersion:       {kernel.OsProductVersion}");
-        Console.WriteLine($"OsName:                 {kernel.OsName}");
-        Console.WriteLine($"OsPrettyName:           {kernel.OsPrettyName}");
-        Console.WriteLine($"OsId:                   {kernel.OsId}");
-        Console.WriteLine($"BootTime:               {kernel.BootTime}");
-        Console.WriteLine($"MaxProcessCount:        {kernel.MaxProcessCount}");
-        Console.WriteLine($"MaxFileCount:           {kernel.MaxFileCount}");
-        Console.WriteLine($"MaxFileCountPerProcess: {kernel.MaxFileCountPerProcess}");
+        Console.WriteLine($"OsType:             {kernel.OsType}");
+        Console.WriteLine($"OsRelease:          {kernel.OsRelease}");
+        Console.WriteLine($"KernelVersion:      {kernel.KernelVersion}");
+        Console.WriteLine($"OsProductVersion:   {kernel.OsProductVersion}");
+        Console.WriteLine($"OsName:             {kernel.OsName}");
+        Console.WriteLine($"OsPrettyName:       {kernel.OsPrettyName}");
+        Console.WriteLine($"OsId:               {kernel.OsId}");
+        Console.WriteLine($"MaxProcesses:       {kernel.MaxProcesses}");
+        Console.WriteLine($"MaxFiles:           {kernel.MaxFiles}");
+        Console.WriteLine($"MaxFilesPerProcess: {kernel.MaxFilesPerProcess}");
+        Console.WriteLine($"BootTime:           {kernel.BootTime}");
 
         return ValueTask.CompletedTask;
     }
