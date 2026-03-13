@@ -4,7 +4,7 @@ using System;
 
 public sealed class CpuStat
 {
-    public string Name { get; }
+    public int Number { get; }
 
     public long User { get; internal set; }
 
@@ -26,9 +26,9 @@ public sealed class CpuStat
 
     public long GuestNice { get; internal set; }
 
-    internal CpuStat(string name)
+    internal CpuStat(int number)
     {
-        Name = name;
+        Number = number;
     }
 }
 
@@ -37,8 +37,6 @@ public sealed class SystemStat
     private readonly List<CpuStat> cpuCores = new();
 
     public DateTime UpdateAt { get; private set; }
-
-    public CpuStat CpuTotal { get; } = new("total");
 
     public IReadOnlyList<CpuStat> CpuCores => cpuCores;
 
@@ -120,7 +118,13 @@ public sealed class SystemStat
         var range = (Span<Range>)stackalloc Range[12];
         span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
 
-        var stat = span[range[0]] is "cpu" ? CpuTotal : FindCpu(span[range[0]]);
+        var name = span[range[0]];
+        if (name is "cpu")
+        {
+            return;
+        }
+
+        var stat = FindCpu(name);
 
         stat.User = Int64.TryParse(span[range[1]], out var value) ? value : 0;
         stat.Nice = Int64.TryParse(span[range[2]], out value) ? value : 0;
@@ -136,15 +140,17 @@ public sealed class SystemStat
 
     private CpuStat FindCpu(ReadOnlySpan<char> name)
     {
+        var number = Int32.TryParse(name[3..], out var n) ? n : -1;
+
         foreach (var core in cpuCores)
         {
-            if (core.Name.AsSpan().Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (core.Number == number)
             {
                 return core;
             }
         }
 
-        var cpu = new CpuStat(name.ToString());
+        var cpu = new CpuStat(number);
         cpuCores.Add(cpu);
         return cpu;
     }

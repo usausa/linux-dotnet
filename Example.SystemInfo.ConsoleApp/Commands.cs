@@ -144,31 +144,26 @@ public sealed class StatCommand : ICommandHandler
         Console.WriteLine($"RunnableTasks:  {stat.RunnableTasks}");
         Console.WriteLine($"BlockedTasks:   {stat.BlockedTasks}");
 
-        Console.WriteLine($"User:           {stat.CpuTotal.User}");
-        Console.WriteLine($"Nice:           {stat.CpuTotal.Nice}");
-        Console.WriteLine($"System:         {stat.CpuTotal.System}");
-        Console.WriteLine($"Idle:           {stat.CpuTotal.Idle}");
-        Console.WriteLine($"IoWait:         {stat.CpuTotal.IoWait}");
-        Console.WriteLine($"Irq:            {stat.CpuTotal.Irq}");
-        Console.WriteLine($"SoftIrq:        {stat.CpuTotal.SoftIrq}");
-        Console.WriteLine($"Steal:          {stat.CpuTotal.Steal}");
-        Console.WriteLine($"Guest:          {stat.CpuTotal.Guest}");
-        Console.WriteLine($"GuestNice:      {stat.CpuTotal.GuestNice}");
+        Console.WriteLine($"User:           {stat.CpuCores.Sum(static x => x.User)}");
+        Console.WriteLine($"Nice:           {stat.CpuCores.Sum(static x => x.Nice)}");
+        Console.WriteLine($"System:         {stat.CpuCores.Sum(static x => x.System)}");
+        Console.WriteLine($"Idle:           {stat.CpuCores.Sum(static x => x.Idle)}");
+        Console.WriteLine($"IoWait:         {stat.CpuCores.Sum(static x => x.IoWait)}");
+        Console.WriteLine($"Irq:            {stat.CpuCores.Sum(static x => x.Irq)}");
+        Console.WriteLine($"SoftIrq:        {stat.CpuCores.Sum(static x => x.SoftIrq)}");
+        Console.WriteLine($"Steal:          {stat.CpuCores.Sum(static x => x.Steal)}");
+        Console.WriteLine($"Guest:          {stat.CpuCores.Sum(static x => x.Guest)}");
+        Console.WriteLine($"GuestNice:      {stat.CpuCores.Sum(static x => x.GuestNice)}");
 
         Console.WriteLine();
 
         for (var i = 0; i < 10; i++)
         {
             var previousValues = stat.CpuCores
-                .Select(x =>
+                .Select(static x => new
                 {
-                    var nonIdle = CalcCpuNonIdle(x);
-                    var total = nonIdle + CalcCpuIdle(x);
-                    return new
-                    {
-                        NonIdle = nonIdle,
-                        Total = total
-                    };
+                    Idle = CalcCpuIdle(x),
+                    Total = CalcCpuTotal(x)
                 })
                 .ToList();
 
@@ -179,14 +174,14 @@ public sealed class StatCommand : ICommandHandler
             for (var j = 0; j < stat.CpuCores.Count; j++)
             {
                 var core = stat.CpuCores[j];
-                var nonIdle = CalcCpuNonIdle(core);
-                var total = nonIdle + CalcCpuIdle(core);
+                var idle = CalcCpuIdle(core);
+                var total = CalcCpuTotal(core);
 
-                var nonIdleDiff = nonIdle - previousValues[j].NonIdle;
+                var idleDiff = idle - previousValues[j].Idle;
                 var totalDiff = total - previousValues[j].Total;
-                var usage = totalDiff > 0 ? (int)Math.Ceiling((double)nonIdleDiff / totalDiff * 100.0) : 0;
+                var usage = totalDiff > 0 ? (int)Math.Ceiling((double)(totalDiff - idleDiff) / totalDiff * 100d) : 0;
 
-                Console.WriteLine($"Name:  {core.Name}");
+                Console.WriteLine($"Number: {core.Number}");
                 Console.WriteLine($"Usage: {usage}");
             }
         }
@@ -196,9 +191,9 @@ public sealed class StatCommand : ICommandHandler
             return cpu.Idle + cpu.IoWait;
         }
 
-        static long CalcCpuNonIdle(CpuStat cpu)
+        static long CalcCpuTotal(CpuStat cpu)
         {
-            return cpu.User + cpu.Nice + cpu.System + cpu.Irq + cpu.SoftIrq + cpu.Steal;
+            return cpu.User + cpu.Nice + cpu.System + cpu.Irq + cpu.SoftIrq + cpu.Steal + cpu.Idle + cpu.IoWait;
         }
     }
 }
