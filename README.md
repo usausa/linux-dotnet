@@ -277,16 +277,16 @@ Console.WriteLine($"SoftIrq:        {stat.SoftIrq}");
 Console.WriteLine($"ProcessRunning: {stat.ProcessRunning}");
 Console.WriteLine($"ProcessBlocked: {stat.ProcessBlocked}");
 
-Console.WriteLine($"User:           {stat.CpuTotal.User}");
-Console.WriteLine($"Nice:           {stat.CpuTotal.Nice}");
-Console.WriteLine($"System:         {stat.CpuTotal.System}");
-Console.WriteLine($"Idle:           {stat.CpuTotal.Idle}");
-Console.WriteLine($"IoWait:         {stat.CpuTotal.IoWait}");
-Console.WriteLine($"Irq:            {stat.CpuTotal.Irq}");
-Console.WriteLine($"SoftIrq:        {stat.CpuTotal.SoftIrq}");
-Console.WriteLine($"Steal:          {stat.CpuTotal.Steal}");
-Console.WriteLine($"Guest:          {stat.CpuTotal.Guest}");
-Console.WriteLine($"GuestNice:      {stat.CpuTotal.GuestNice}");
+Console.WriteLine($"User:           {stat.CpuCores.Sum(static x => x.User)}");
+Console.WriteLine($"Nice:           {stat.CpuCores.Sum(static x => x.Nice)}");
+Console.WriteLine($"System:         {stat.CpuCores.Sum(static x => x.System)}");
+Console.WriteLine($"Idle:           {stat.CpuCores.Sum(static x => x.Idle)}");
+Console.WriteLine($"IoWait:         {stat.CpuCores.Sum(static x => x.IoWait)}");
+Console.WriteLine($"Irq:            {stat.CpuCores.Sum(static x => x.Irq)}");
+Console.WriteLine($"SoftIrq:        {stat.CpuCores.Sum(static x => x.SoftIrq)}");
+Console.WriteLine($"Steal:          {stat.CpuCores.Sum(static x => x.Steal)}");
+Console.WriteLine($"Guest:          {stat.CpuCores.Sum(static x => x.Guest)}");
+Console.WriteLine($"GuestNice:      {stat.CpuCores.Sum(static x => x.GuestNice)}");
 ```
 
 ### LoadAverage
