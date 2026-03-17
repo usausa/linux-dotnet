@@ -209,7 +209,7 @@ public sealed class StatCommand : ICommandHandler
                 var totalDiff = total - previousValues[j].Total;
                 var usage = totalDiff > 0 ? (int)Math.Ceiling((double)(totalDiff - idleDiff) / totalDiff * 100d) : 0;
 
-                Console.WriteLine($"cpu{core.Number,2}: {DisplayFormatter.MakeBar(usage, 100)} {usage,3}%");
+                Console.WriteLine($"{core.Name}: {DisplayFormatter.MakeBar(usage, 100)} {usage,3}%");
             }
 
             Console.WriteLine();
