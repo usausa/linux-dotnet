@@ -632,6 +632,6 @@ capture.StartCapture();
 
 ## Link
 
-- [MacDotNet](https://github-readme-stats.vercel.app/api/pin/?username=usausa&repo=mac-dotnet)(https://github.com/usausa/mac-dotnet)
-- [RaspberryDotNet](https://github-readme-stats.vercel.app/api/pin/?username=usausa&repo=mac-dotnet)(https://github.com/usausa/raspberrypi-dotnet)
-- [Disk information library](https://github-readme-stats.vercel.app/api/pin/?username=usausa&repo=hardwareinfo-disk)(https://github.com/usausa/hardwareinfo-disk)
+- [MacDotNet](https://github.com/usausa/mac-dotnet)
+- [RaspberryDotNet](https://github.com/usausa/raspberrypi-dotnet)
+- [Disk information library](https://github.com/usausa/hardwareinfo-disk)
