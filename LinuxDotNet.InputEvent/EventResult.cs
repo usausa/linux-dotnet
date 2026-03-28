@@ -28,22 +28,22 @@ public struct EventResult : IEquatable<EventResult>
 
     public int Value { get; set; }
 
-    public bool Equals(EventResult other) =>
+    public readonly bool Equals(EventResult other) =>
         Timestamp == other.Timestamp &&
        Type == other.Type &&
        Code == other.Code &&
        Value == other.Value;
 
-    public override bool Equals(object? obj) =>
+    public override readonly bool Equals(object? obj) =>
         obj is EventResult other && Equals(other);
 
-    public override int GetHashCode() =>
+    public override readonly int GetHashCode() =>
         HashCode.Combine(Timestamp, Type, Code, Value);
 
     public static bool operator ==(EventResult left, EventResult right) => left.Equals(right);
 
     public static bool operator !=(EventResult left, EventResult right) => !left.Equals(right);
 
-    public override string ToString() =>
+    public override readonly string ToString() =>
         $"Timestamp={Timestamp.TotalSeconds:F6}s, Type={Type}, Code={Code}, Value={Value}";
 }

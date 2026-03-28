@@ -8,7 +8,7 @@ public sealed class PrinterInfo
 
     public bool IsDefault { get; }
 
-    public Dictionary<string, string> Options { get; } = new();
+    public Dictionary<string, string> Options { get; } = [];
 
     public PrinterInfo(string name, string? instance, bool isDefault)
     {

@@ -3,6 +3,7 @@ namespace Example.Video4Linux2.ConsoleApp;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable IDE0032
 internal sealed class PooledBufferWriter<T> : IBufferWriter<T>, IDisposable
 {
     private T[] buffer;
@@ -77,3 +78,4 @@ internal sealed class PooledBufferWriter<T> : IBufferWriter<T>, IDisposable
         }
     }
 }
+#pragma warning restore IDE0032

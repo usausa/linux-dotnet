@@ -2,29 +2,29 @@ namespace LinuxDotNet.Disk;
 
 public interface IDiskInfo : IDisposable
 {
-    public uint Index { get; }
+    uint Index { get; }
 
-    public string DeviceName { get; }
+    string DeviceName { get; }
 
-    public string Model { get; }
+    string Model { get; }
 
-    public string SerialNumber { get; }
+    string SerialNumber { get; }
 
-    public string FirmwareRevision { get; }
+    string FirmwareRevision { get; }
 
-    public ulong Size { get; }
+    ulong Size { get; }
 
-    public uint PhysicalBlockSize { get; }
+    uint PhysicalBlockSize { get; }
 
-    public uint LogicalBlockSize { get; }
+    uint LogicalBlockSize { get; }
 
-    public ulong TotalSectors { get; }
+    ulong TotalSectors { get; }
 
-    public bool Removable { get; }
+    bool Removable { get; }
 
-    public DiskType DiskType { get; }
+    DiskType DiskType { get; }
 
-    public SmartType SmartType { get; }
+    SmartType SmartType { get; }
 
-    public ISmart Smart { get; }
+    ISmart Smart { get; }
 }

@@ -39,7 +39,7 @@ public sealed class WirelessStatEntry
 
 public sealed class WirelessStat
 {
-    private readonly List<WirelessStatEntry> interfaces = new();
+    private readonly List<WirelessStatEntry> interfaces = [];
 
     public DateTime UpdateAt { get; internal set; }
 

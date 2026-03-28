@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 // ReSharper disable CommentTypo
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
+#pragma warning disable IDE0044
 #pragma warning disable IDE1006
 #pragma warning disable CA2101
 #pragma warning disable CA5392

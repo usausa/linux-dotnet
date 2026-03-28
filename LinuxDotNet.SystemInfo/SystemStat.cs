@@ -34,7 +34,7 @@ public sealed class CpuStat
 
 public sealed class SystemStat
 {
-    private readonly List<CpuStat> cpuCores = new();
+    private readonly List<CpuStat> cpuCores = [];
 
     public DateTime UpdateAt { get; private set; }
 

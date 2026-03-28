@@ -21,7 +21,7 @@ public readonly unsafe struct FrameBuffer
     public ReadOnlySpan<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => IsEmpty ? Span<byte>.Empty : new Span<byte>((void*)buffer, length);
+        get => IsEmpty ? [] : new Span<byte>((void*)buffer, length);
     }
 
     internal FrameBuffer(IntPtr buffer, int length)

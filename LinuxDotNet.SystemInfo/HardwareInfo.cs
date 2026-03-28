@@ -131,7 +131,7 @@ public sealed class HardwareInfo
                         CpuVendor = value.ToString();
                         break;
                     case "cpu family":
-                        CpuFamily = Int32.TryParse(value, out var family) ?  family : 0;
+                        CpuFamily = Int32.TryParse(value, out var family) ? family : 0;
                         break;
                     case "model":
                         CpuModel = Int32.TryParse(value, out var model) ? model : 0;

@@ -36,7 +36,7 @@ public sealed class DiskStatEntry
 
 public sealed class DiskStat
 {
-    private readonly List<DiskStatEntry> devices = new();
+    private readonly List<DiskStatEntry> devices = [];
 
     public DateTime UpdateAt { get; internal set; }
 

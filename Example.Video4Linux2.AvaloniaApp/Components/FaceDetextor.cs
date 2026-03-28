@@ -31,7 +31,7 @@ public sealed class FaceDetector : IDisposable
     private float[] inputBuffer;
 
 #pragma warning disable CA1002
-    public List<FaceBox> DetectedFaceBoxes { get; } = new();
+    public List<FaceBox> DetectedFaceBoxes { get; } = [];
 #pragma warning restore CA1002
 
     public int ModelWidth { get; }

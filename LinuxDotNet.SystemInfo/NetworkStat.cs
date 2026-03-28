@@ -46,7 +46,7 @@ public sealed class NetworkStatEntry
 
 public sealed class NetworkStat
 {
-    private readonly List<NetworkStatEntry> interfaces = new();
+    private readonly List<NetworkStatEntry> interfaces = [];
 
     public DateTime UpdateAt { get; internal set; }
 

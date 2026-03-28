@@ -1,5 +1,6 @@
 namespace Example.Video4Linux2.AvaloniaApp.Components;
 
+#pragma warning disable IDE0032
 public sealed class BufferManager : IDisposable
 {
     public sealed class BufferSlot
@@ -15,7 +16,7 @@ public sealed class BufferManager : IDisposable
         public Span<byte> Buffer => buffer.AsSpan(0, bufferSize);
 
 #pragma warning disable CA1002
-        public List<FaceBox> FaceBoxes { get; } = new();
+        public List<FaceBox> FaceBoxes { get; } = [];
 #pragma warning restore CA1002
 
         public Lock Lock { get; }
@@ -139,3 +140,4 @@ public sealed class BufferManager : IDisposable
         }
     }
 }
+#pragma warning restore IDE0032

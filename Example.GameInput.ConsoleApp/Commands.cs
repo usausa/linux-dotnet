@@ -64,10 +64,10 @@ public sealed class LoopCommand : ICommandHandler
         while (true)
         {
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"Connected: {controller.IsConnected.ToString(),-5}");
+            Console.WriteLine($"Connected: {controller.IsConnected,-5}");
             for (var i = (byte)0; i < 8; i++)
             {
-                Console.WriteLine($"Button {i}: {controller.GetButtonPressed(i).ToString(),-5}");
+                Console.WriteLine($"Button {i}: {controller.GetButtonPressed(i),-5}");
             }
             for (var i = (byte)0; i < 8; i++)
             {
