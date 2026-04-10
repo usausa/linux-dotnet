@@ -2,7 +2,6 @@ namespace Example.GameInput.AvaloniaApp;
 
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -29,10 +28,6 @@ public partial class App : Application
     // ReSharper disable once AsyncVoidMethod
     public override async void OnFrameworkInitializationCompleted()
     {
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        BindingPlugins.DataValidators.RemoveAt(0);
-
         if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             // Main view

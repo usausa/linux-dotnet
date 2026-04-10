@@ -28,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.13" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
+    <PackageReference Include="Avalonia" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.13">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
@@ -37,20 +37,20 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>none</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.13" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.4" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <PackageReference Include="Usa.Smart.Avalonia" Version="2.11.3" />
-    <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.11.3" />
+    <PackageReference Include="Usa.Smart.Avalonia" Version="2.12.0" />
+    <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.12.0" />
     <PackageReference Include="Usa.Smart.Core" Version="2.5.0" />
     <PackageReference Include="Usa.Smart.Mvvm" Version="1.9.3" />
     <PackageReference Include="Usa.Smart.Reactive" Version="2.6.0" />
     <PackageReference Include="Usa.Smart.Resolver" Version="2.7.1" />
     <PackageReference Include="Usa.Smart.Resolver.Extensions.Configuration" Version="2.7.1" />
     <PackageReference Include="Usa.Smart.Resolver.Extensions.DependencyInjection" Version="2.7.1" />
-    <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.9.5" />
+    <PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0" />
   </ItemGroup>
 
   <ItemGroup>
