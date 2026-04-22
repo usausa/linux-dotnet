@@ -26,15 +26,15 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1" />
     <PackageReference Include="Avalonia.LinuxFramebuffer" Version="12.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageReference Include="Usa.Smart.Avalonia" Version="2.12.0" />
     <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.12.0" />
     <PackageReference Include="Usa.Smart.Core" Version="2.5.0" />
     <PackageReference Include="Usa.Smart.Mvvm" Version="1.9.4" />
     <PackageReference Include="Usa.Smart.Reactive" Version="2.6.0" />
-    <PackageReference Include="Usa.Smart.Resolver" Version="2.7.1" />
-    <PackageReference Include="Usa.Smart.Resolver.Extensions.Configuration" Version="2.7.1" />
-    <PackageReference Include="Usa.Smart.Resolver.Extensions.DependencyInjection" Version="2.7.1" />
+    <PackageReference Include="Usa.Smart.Resolver" Version="2.7.2" />
+    <PackageReference Include="Usa.Smart.Resolver.Extensions.Configuration" Version="2.7.2" />
+    <PackageReference Include="Usa.Smart.Resolver.Extensions.DependencyInjection" Version="2.7.2" />
     <PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0" />
   </ItemGroup>
 
