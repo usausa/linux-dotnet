@@ -44,23 +44,23 @@ public sealed class HardwareInfo
 
     public int CoresPerSocket { get; private set; }
 
-    public long CpuFrequencyMax { get; private set; }
+    public ulong CpuFrequencyMax { get; private set; }
 
-    public long L1DCacheSize { get; private set; }
+    public ulong L1DCacheSize { get; private set; }
 
-    public long L1ICacheSize { get; private set; }
+    public ulong L1ICacheSize { get; private set; }
 
-    public long L2CacheSize { get; private set; }
+    public ulong L2CacheSize { get; private set; }
 
-    public long L3CacheSize { get; private set; }
+    public ulong L3CacheSize { get; private set; }
 
     // Memory
 
-    public long MemoryTotal { get; }
+    public ulong MemoryTotal { get; }
 
     // PageSize
 
-    public long PageSize { get; }
+    public ulong PageSize { get; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -86,7 +86,7 @@ public sealed class HardwareInfo
 
         MemoryTotal = ReadMemoryTotal();
 
-        PageSize = Environment.SystemPageSize;
+        PageSize = (ulong)Environment.SystemPageSize;
     }
 
     private void ParseCpuInfo()
@@ -155,13 +155,13 @@ public sealed class HardwareInfo
     }
 
     // ReSharper disable StringLiteralTypo
-    private static long ReadCpuFrequencyMax()
+    private static ulong ReadCpuFrequencyMax()
     {
         var path = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
         if (File.Exists(path))
         {
             var value = File.ReadAllText(path).Trim();
-            if (Int64.TryParse(value, out var khz))
+            if (UInt64.TryParse(value, out var khz))
             {
                 return khz * 1000;
             }
@@ -211,7 +211,7 @@ public sealed class HardwareInfo
         }
     }
 
-    private static long ParseCacheSize(string size)
+    private static ulong ParseCacheSize(string size)
     {
         if (String.IsNullOrEmpty(size))
         {
@@ -221,18 +221,18 @@ public sealed class HardwareInfo
         size = size.Trim().ToUpperInvariant();
         if (size.EndsWith('K'))
         {
-            return Int64.TryParse(size[..^1], out var kb) ? kb : 0;
+            return UInt64.TryParse(size[..^1], out var kb) ? kb : 0;
         }
 
         if (size.EndsWith('M'))
         {
-            return Int64.TryParse(size[..^1], out var mb) ? mb * 1024 : 0;
+            return UInt64.TryParse(size[..^1], out var mb) ? mb * 1024 : 0;
         }
 
-        return Int64.TryParse(size, out var bytes) ? bytes / 1024 : 0;
+        return UInt64.TryParse(size, out var bytes) ? bytes / 1024 : 0;
     }
 
-    private static long ReadMemoryTotal()
+    private static ulong ReadMemoryTotal()
     {
         using var reader = new StreamReader("/proc/meminfo");
         while (reader.ReadLine() is { } line)
@@ -240,7 +240,7 @@ public sealed class HardwareInfo
             var span = line.AsSpan();
             if (span.StartsWith("MemTotal:"))
             {
-                return ExtractInt64(span) * 1024;
+                return ExtractUInt64(span) * 1024;
             }
         }
 
@@ -281,9 +281,9 @@ public sealed class HardwareInfo
         return string.Empty;
     }
 
-    private static long ExtractInt64(ReadOnlySpan<char> span)
+    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
     }
 }

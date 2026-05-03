@@ -6,37 +6,37 @@ public sealed class NetworkStatEntry
 
     public string Interface { get; }
 
-    public long RxBytes { get; internal set; }
+    public ulong RxBytes { get; internal set; }
 
-    public long RxPackets { get; internal set; }
+    public ulong RxPackets { get; internal set; }
 
-    public long RxErrors { get; internal set; }
+    public ulong RxErrors { get; internal set; }
 
-    public long RxDropped { get; internal set; }
+    public ulong RxDropped { get; internal set; }
 
-    public long RxFifo { get; internal set; }
+    public ulong RxFifo { get; internal set; }
 
-    public long RxFrame { get; internal set; }
+    public ulong RxFrame { get; internal set; }
 
-    public long RxCompressed { get; internal set; }
+    public ulong RxCompressed { get; internal set; }
 
-    public long RxMulticast { get; internal set; }
+    public ulong RxMulticast { get; internal set; }
 
-    public long TxBytes { get; internal set; }
+    public ulong TxBytes { get; internal set; }
 
-    public long TxPackets { get; internal set; }
+    public ulong TxPackets { get; internal set; }
 
-    public long TxErrors { get; internal set; }
+    public ulong TxErrors { get; internal set; }
 
-    public long TxDropped { get; internal set; }
+    public ulong TxDropped { get; internal set; }
 
-    public long TxFifo { get; internal set; }
+    public ulong TxFifo { get; internal set; }
 
-    public long TxCollisions { get; internal set; }
+    public ulong TxCollisions { get; internal set; }
 
-    public long TxCarrier { get; internal set; }
+    public ulong TxCarrier { get; internal set; }
 
-    public long TxCompressed { get; internal set; }
+    public ulong TxCompressed { get; internal set; }
 
     internal NetworkStatEntry(string interfaceName)
     {
@@ -105,22 +105,22 @@ public sealed class NetworkStat
 
             network.Live = true;
 
-            network.RxBytes = Int64.TryParse(span[range[1]], out var rxBytes) ? rxBytes : 0;
-            network.RxPackets = Int64.TryParse(span[range[2]], out var rxPackets) ? rxPackets : 0;
-            network.RxErrors = Int64.TryParse(span[range[3]], out var rxErrors) ? rxErrors : 0;
-            network.RxDropped = Int64.TryParse(span[range[4]], out var rxDropped) ? rxDropped : 0;
-            network.RxFifo = Int64.TryParse(span[range[5]], out var rxFifo) ? rxFifo : 0;
-            network.RxFrame = Int64.TryParse(span[range[6]], out var rxFrame) ? rxFrame : 0;
-            network.RxCompressed = Int64.TryParse(span[range[7]], out var rxCompressed) ? rxCompressed : 0;
-            network.RxMulticast = Int64.TryParse(span[range[8]], out var rxMulticast) ? rxMulticast : 0;
-            network.TxBytes = Int64.TryParse(span[range[9]], out var txBytes) ? txBytes : 0;
-            network.TxPackets = Int64.TryParse(span[range[10]], out var txPackets) ? txPackets : 0;
-            network.TxErrors = Int64.TryParse(span[range[11]], out var txErrors) ? txErrors : 0;
-            network.TxDropped = Int64.TryParse(span[range[12]], out var txDropped) ? txDropped : 0;
-            network.TxFifo = Int64.TryParse(span[range[13]], out var txFifo) ? txFifo : 0;
-            network.TxCollisions = Int64.TryParse(span[range[14]], out var txCollisions) ? txCollisions : 0;
-            network.TxCarrier = Int64.TryParse(span[range[15]], out var txCarrier) ? txCarrier : 0;
-            network.TxCompressed = Int64.TryParse(span[range[16]], out var txCompressed) ? txCompressed : 0;
+            network.RxBytes = UInt64.TryParse(span[range[1]], out var rxBytes) ? rxBytes : 0;
+            network.RxPackets = UInt64.TryParse(span[range[2]], out var rxPackets) ? rxPackets : 0;
+            network.RxErrors = UInt64.TryParse(span[range[3]], out var rxErrors) ? rxErrors : 0;
+            network.RxDropped = UInt64.TryParse(span[range[4]], out var rxDropped) ? rxDropped : 0;
+            network.RxFifo = UInt64.TryParse(span[range[5]], out var rxFifo) ? rxFifo : 0;
+            network.RxFrame = UInt64.TryParse(span[range[6]], out var rxFrame) ? rxFrame : 0;
+            network.RxCompressed = UInt64.TryParse(span[range[7]], out var rxCompressed) ? rxCompressed : 0;
+            network.RxMulticast = UInt64.TryParse(span[range[8]], out var rxMulticast) ? rxMulticast : 0;
+            network.TxBytes = UInt64.TryParse(span[range[9]], out var txBytes) ? txBytes : 0;
+            network.TxPackets = UInt64.TryParse(span[range[10]], out var txPackets) ? txPackets : 0;
+            network.TxErrors = UInt64.TryParse(span[range[11]], out var txErrors) ? txErrors : 0;
+            network.TxDropped = UInt64.TryParse(span[range[12]], out var txDropped) ? txDropped : 0;
+            network.TxFifo = UInt64.TryParse(span[range[13]], out var txFifo) ? txFifo : 0;
+            network.TxCollisions = UInt64.TryParse(span[range[14]], out var txCollisions) ? txCollisions : 0;
+            network.TxCarrier = UInt64.TryParse(span[range[15]], out var txCarrier) ? txCarrier : 0;
+            network.TxCompressed = UInt64.TryParse(span[range[16]], out var txCompressed) ? txCompressed : 0;
         }
 
         for (var i = interfaces.Count - 1; i >= 0; i--)

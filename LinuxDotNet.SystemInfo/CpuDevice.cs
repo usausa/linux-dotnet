@@ -10,7 +10,7 @@ public sealed class CpuCore
 
     public string Name { get; }
 
-    public long Frequency { get; private set; }
+    public ulong Frequency { get; private set; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -29,7 +29,7 @@ public sealed class CpuCore
 
     public bool Update()
     {
-        Frequency = Int64.TryParse(File.ReadAllText(frequencyPath).AsSpan().Trim(), out var value) ? value : 0;
+        Frequency = UInt64.TryParse(File.ReadAllText(frequencyPath).AsSpan().Trim(), out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -45,7 +45,7 @@ public sealed class CpuPower
 
     public string Name { get; }
 
-    public long Energy { get; private set; }
+    public ulong Energy { get; private set; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -64,7 +64,7 @@ public sealed class CpuPower
 
     public bool Update()
     {
-        Energy = Int64.TryParse(File.ReadAllText(energyPath).AsSpan().Trim(), out var value) ? value : 0;
+        Energy = UInt64.TryParse(File.ReadAllText(energyPath).AsSpan().Trim(), out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 

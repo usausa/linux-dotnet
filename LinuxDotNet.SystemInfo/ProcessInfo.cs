@@ -62,9 +62,9 @@ public sealed record ProcessInfo
 
     // I/O
 
-    public long MajorFaults { get; private set; }
+    public ulong MajorFaults { get; private set; }
 
-    public long MinorFaults { get; private set; }
+    public ulong MinorFaults { get; private set; }
 
     // Identify
 
@@ -200,8 +200,8 @@ public sealed record ProcessInfo
 
             result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
             result.ProcessGroupId = Int32.TryParse(rest[statRange[2]], out var processGroupId) ? processGroupId : 0;
-            result.MinorFaults = Int64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
-            result.MajorFaults = Int64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
+            result.MinorFaults = UInt64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
+            result.MajorFaults = UInt64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
             result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? TimeSpan.FromSeconds((double)userTime / ClockTick) : TimeSpan.Zero;
             result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? TimeSpan.FromSeconds((double)systemTime / ClockTick) : TimeSpan.Zero;
             result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
@@ -211,7 +211,7 @@ public sealed record ProcessInfo
                 ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
                 : DateTimeOffset.MinValue;
             result.VirtualMemorySize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
-            result.ResidentMemorySize = Int64.TryParse(rest[statRange[21]], out var rss) ? (ulong)rss * PageSize : 0;
+            result.ResidentMemorySize = UInt64.TryParse(rest[statRange[21]], out var rss) ? rss * PageSize : 0;
 
             // Status
             var statusPath = Path.Combine(procPath, "status");

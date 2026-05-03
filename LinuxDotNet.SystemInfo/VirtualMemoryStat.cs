@@ -8,37 +8,37 @@ public sealed class VirtualMemoryStat
 
     // Page
 
-    public long PageIn { get; internal set; }
+    public ulong PageIn { get; internal set; }
 
-    public long PageOut { get; internal set; }
+    public ulong PageOut { get; internal set; }
 
     // Swap
 
-    public long SwapIn { get; internal set; }
+    public ulong SwapIn { get; internal set; }
 
-    public long SwapOut { get; internal set; }
+    public ulong SwapOut { get; internal set; }
 
     // Fault
 
-    public long PageFaults { get; internal set; }
+    public ulong PageFaults { get; internal set; }
 
-    public long MajorPageFaults { get; internal set; }
+    public ulong MajorPageFaults { get; internal set; }
 
     // Steal
 
-    public long StealKernel { get; internal set; }
+    public ulong StealKernel { get; internal set; }
 
-    public long StealDirect { get; internal set; }
+    public ulong StealDirect { get; internal set; }
 
     // Scan
 
-    public long ScanKernel { get; internal set; }
+    public ulong ScanKernel { get; internal set; }
 
-    public long ScanDirect { get; internal set; }
+    public ulong ScanDirect { get; internal set; }
 
     // OOM
 
-    public long OutOfMemoryKiller { get; internal set; }
+    public ulong OutOfMemoryKiller { get; internal set; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -62,47 +62,47 @@ public sealed class VirtualMemoryStat
             var span = line.AsSpan();
             if (span.StartsWith("pgpgin"))
             {
-                PageIn = ExtractInt64(span);
+                PageIn = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgpgout"))
             {
-                PageOut = ExtractInt64(span);
+                PageOut = ExtractUInt64(span);
             }
             else if (span.StartsWith("pswpin"))
             {
-                SwapIn = ExtractInt64(span);
+                SwapIn = ExtractUInt64(span);
             }
             else if (span.StartsWith("pswpout"))
             {
-                SwapOut = ExtractInt64(span);
+                SwapOut = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgfault"))
             {
-                PageFaults = ExtractInt64(span);
+                PageFaults = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgmajfault"))
             {
-                MajorPageFaults = ExtractInt64(span);
+                MajorPageFaults = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgsteal_kswapd"))
             {
-                StealKernel = ExtractInt64(span);
+                StealKernel = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgsteal_direct"))
             {
-                StealDirect = ExtractInt64(span);
+                StealDirect = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgscan_kswapd"))
             {
-                ScanKernel = ExtractInt64(span);
+                ScanKernel = ExtractUInt64(span);
             }
             else if (span.StartsWith("pgscan_direct"))
             {
-                ScanDirect = ExtractInt64(span);
+                ScanDirect = ExtractUInt64(span);
             }
             else if (span.StartsWith("oom_kill"))
             {
-                OutOfMemoryKiller = ExtractInt64(span);
+                OutOfMemoryKiller = ExtractUInt64(span);
             }
         }
 
@@ -116,9 +116,9 @@ public sealed class VirtualMemoryStat
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static long ExtractInt64(ReadOnlySpan<char> span)
+    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
     }
 }

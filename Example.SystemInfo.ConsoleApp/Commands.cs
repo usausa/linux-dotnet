@@ -116,13 +116,13 @@ public sealed class HardwareCommand : ICommandHandler
         Console.WriteLine($"FrequencyMax:   {hw.CpuFrequencyMax / 1_000_000.0:F0} MHz");
 
         Console.WriteLine("[Cache]");
-        Console.WriteLine($"L1D:            {DisplayFormatter.FormatBytes((ulong)hw.L1DCacheSize)}");
-        Console.WriteLine($"L1I:            {DisplayFormatter.FormatBytes((ulong)hw.L1ICacheSize)}");
-        Console.WriteLine($"L2:             {DisplayFormatter.FormatBytes((ulong)hw.L2CacheSize)}");
-        Console.WriteLine($"L3:             {DisplayFormatter.FormatBytes((ulong)hw.L3CacheSize)}");
+        Console.WriteLine($"L1D:            {DisplayFormatter.FormatBytes(hw.L1DCacheSize)}");
+        Console.WriteLine($"L1I:            {DisplayFormatter.FormatBytes(hw.L1ICacheSize)}");
+        Console.WriteLine($"L2:             {DisplayFormatter.FormatBytes(hw.L2CacheSize)}");
+        Console.WriteLine($"L3:             {DisplayFormatter.FormatBytes(hw.L3CacheSize)}");
 
         Console.WriteLine("[Memory]");
-        Console.WriteLine($"MemoryTotal:    {DisplayFormatter.FormatBytes((ulong)hw.MemoryTotal)}");
+        Console.WriteLine($"MemoryTotal:    {DisplayFormatter.FormatBytes(hw.MemoryTotal)}");
         Console.WriteLine($"PageSize:       {hw.PageSize} bytes");
 
         return ValueTask.CompletedTask;
@@ -221,22 +221,22 @@ public sealed class StatCommand : ICommandHandler
             Console.WriteLine($"RunnableTasks:   {stat.RunnableTasks}");
             Console.WriteLine($"BlockedTasks:    {stat.BlockedTasks}");
 
-            Console.WriteLine($"Total User:      {stat.CpuCores.Sum(static x => x.User)}");
-            Console.WriteLine($"Total Nice:      {stat.CpuCores.Sum(static x => x.Nice)}");
-            Console.WriteLine($"Total System:    {stat.CpuCores.Sum(static x => x.System)}");
-            Console.WriteLine($"Total Idle:      {stat.CpuCores.Sum(static x => x.Idle)}");
-            Console.WriteLine($"Total IoWait:    {stat.CpuCores.Sum(static x => x.IoWait)}");
-            Console.WriteLine($"Total Irq:       {stat.CpuCores.Sum(static x => x.Irq)}");
-            Console.WriteLine($"Total SoftIrq:   {stat.CpuCores.Sum(static x => x.SoftIrq)}");
-            Console.WriteLine($"Total Steal:     {stat.CpuCores.Sum(static x => x.Steal)}");
-            Console.WriteLine($"Total Guest:     {stat.CpuCores.Sum(static x => x.Guest)}");
-            Console.WriteLine($"Total GuestNice: {stat.CpuCores.Sum(static x => x.GuestNice)}");
+            Console.WriteLine($"Total User:      {stat.CpuCores.Sum(static x => (decimal)x.User)}");
+            Console.WriteLine($"Total Nice:      {stat.CpuCores.Sum(static x => (decimal)x.Nice)}");
+            Console.WriteLine($"Total System:    {stat.CpuCores.Sum(static x => (decimal)x.System)}");
+            Console.WriteLine($"Total Idle:      {stat.CpuCores.Sum(static x => (decimal)x.Idle)}");
+            Console.WriteLine($"Total IoWait:    {stat.CpuCores.Sum(static x => (decimal)x.IoWait)}");
+            Console.WriteLine($"Total Irq:       {stat.CpuCores.Sum(static x => (decimal)x.Irq)}");
+            Console.WriteLine($"Total SoftIrq:   {stat.CpuCores.Sum(static x => (decimal)x.SoftIrq)}");
+            Console.WriteLine($"Total Steal:     {stat.CpuCores.Sum(static x => (decimal)x.Steal)}");
+            Console.WriteLine($"Total Guest:     {stat.CpuCores.Sum(static x => (decimal)x.Guest)}");
+            Console.WriteLine($"Total GuestNice: {stat.CpuCores.Sum(static x => (decimal)x.GuestNice)}");
         }
 
-        static long CalcCpuIdle(CpuStat cpu) =>
+        static ulong CalcCpuIdle(CpuStat cpu) =>
             cpu.Idle + cpu.IoWait;
 
-        static long CalcCpuTotal(CpuStat cpu) =>
+        static ulong CalcCpuTotal(CpuStat cpu) =>
             cpu.User + cpu.Nice + cpu.System + cpu.Irq + cpu.SoftIrq + cpu.Steal + cpu.Idle + cpu.IoWait;
     }
 }
@@ -285,23 +285,23 @@ public sealed class MemoryCommand : ICommandHandler
         var usagePct = memory.MemoryTotal > 0 ? (double)used / memory.MemoryTotal * 100 : 0;
 
         Console.WriteLine("[Usage]");
-        Console.WriteLine($"  Total:     {DisplayFormatter.FormatBytes((ulong)(memory.MemoryTotal * 1024L))}");
-        Console.WriteLine($"  Used:      {DisplayFormatter.FormatBytes((ulong)(used * 1024L))} ({usagePct:F1}%) {DisplayFormatter.MakeBar(used, memory.MemoryTotal)}");
-        Console.WriteLine($"  Available: {DisplayFormatter.FormatBytes((ulong)(memory.MemoryAvailable * 1024L))}");
-        Console.WriteLine($"  Free:      {DisplayFormatter.FormatBytes((ulong)(memory.MemoryFree * 1024L))}");
+        Console.WriteLine($"  Total:     {DisplayFormatter.FormatBytes(memory.MemoryTotal * 1024L)}");
+        Console.WriteLine($"  Used:      {DisplayFormatter.FormatBytes(used * 1024L)} ({usagePct:F1}%) {DisplayFormatter.MakeBar(used, memory.MemoryTotal)}");
+        Console.WriteLine($"  Available: {DisplayFormatter.FormatBytes(memory.MemoryAvailable * 1024L)}");
+        Console.WriteLine($"  Free:      {DisplayFormatter.FormatBytes(memory.MemoryFree * 1024L)}");
 
         Console.WriteLine("[Buffers/Cache]");
-        Console.WriteLine($"  Buffers:   {DisplayFormatter.FormatBytes((ulong)(memory.Buffers * 1024L))}");
-        Console.WriteLine($"  Cached:    {DisplayFormatter.FormatBytes((ulong)(memory.Cached * 1024L))}");
+        Console.WriteLine($"  Buffers:   {DisplayFormatter.FormatBytes(memory.Buffers * 1024L)}");
+        Console.WriteLine($"  Cached:    {DisplayFormatter.FormatBytes(memory.Cached * 1024L)}");
 
         if (memory.SwapTotal > 0)
         {
             var swapUsed = memory.SwapTotal - memory.SwapFree;
             var swapPct = (double)swapUsed / memory.SwapTotal * 100;
             Console.WriteLine("[Swap]");
-            Console.WriteLine($"  Total:     {DisplayFormatter.FormatBytes((ulong)(memory.SwapTotal * 1024L))}");
-            Console.WriteLine($"  Used:      {DisplayFormatter.FormatBytes((ulong)(swapUsed * 1024L))} ({swapPct:F1}%) {DisplayFormatter.MakeBar(swapUsed, memory.SwapTotal)}");
-            Console.WriteLine($"  Free:      {DisplayFormatter.FormatBytes((ulong)(memory.SwapFree * 1024L))}");
+            Console.WriteLine($"  Total:     {DisplayFormatter.FormatBytes(memory.SwapTotal * 1024L)}");
+            Console.WriteLine($"  Used:      {DisplayFormatter.FormatBytes(swapUsed * 1024L)} ({swapPct:F1}%) {DisplayFormatter.MakeBar(swapUsed, memory.SwapTotal)}");
+            Console.WriteLine($"  Free:      {DisplayFormatter.FormatBytes(memory.SwapFree * 1024L)}");
         }
 
         return ValueTask.CompletedTask;
@@ -481,8 +481,8 @@ public sealed class NetworkCommand : ICommandHandler
                 var txBytesPerSec = elapsed > 0 ? deltaTxBytes / elapsed : 0;
 
                 Console.WriteLine($"[{nif.Interface}]");
-                Console.WriteLine($"  RX: {DisplayFormatter.FormatBytes((ulong)Math.Max(0L, nif.RxBytes)),10} total  {DisplayFormatter.FormatBytes((ulong)Math.Max(0.0, rxBytesPerSec))}/s  ({deltaRxPackets} packet/s, {deltaRxErrors} error)");
-                Console.WriteLine($"  TX: {DisplayFormatter.FormatBytes((ulong)Math.Max(0L, nif.TxBytes)),10} total  {DisplayFormatter.FormatBytes((ulong)Math.Max(0.0, txBytesPerSec))}/s  ({deltaTxPackets} packet/s, {deltaTxErrors} error)");
+                Console.WriteLine($"  RX: {DisplayFormatter.FormatBytes(Math.Max(0L, nif.RxBytes)),10} total  {DisplayFormatter.FormatBytes((ulong)Math.Max(0.0, rxBytesPerSec))}/s  ({deltaRxPackets} packet/s, {deltaRxErrors} error)");
+                Console.WriteLine($"  TX: {DisplayFormatter.FormatBytes(Math.Max(0L, nif.TxBytes)),10} total  {DisplayFormatter.FormatBytes((ulong)Math.Max(0.0, txBytesPerSec))}/s  ({deltaTxPackets} packet/s, {deltaTxErrors} error)");
             }
         }
     }

@@ -6,25 +6,25 @@ public sealed class CpuStat
 {
     public string Name { get; }
 
-    public long User { get; internal set; }
+    public ulong User { get; internal set; }
 
-    public long Nice { get; internal set; }
+    public ulong Nice { get; internal set; }
 
-    public long System { get; internal set; }
+    public ulong System { get; internal set; }
 
-    public long Idle { get; internal set; }
+    public ulong Idle { get; internal set; }
 
-    public long IoWait { get; internal set; }
+    public ulong IoWait { get; internal set; }
 
-    public long Irq { get; internal set; }
+    public ulong Irq { get; internal set; }
 
-    public long SoftIrq { get; internal set; }
+    public ulong SoftIrq { get; internal set; }
 
-    public long Steal { get; internal set; }
+    public ulong Steal { get; internal set; }
 
-    public long Guest { get; internal set; }
+    public ulong Guest { get; internal set; }
 
-    public long GuestNice { get; internal set; }
+    public ulong GuestNice { get; internal set; }
 
     internal CpuStat(string name)
     {
@@ -43,20 +43,20 @@ public sealed class SystemStat
     public IReadOnlyList<CpuStat> CpuCores => cpuCores;
 
     // Total
-    public long Interrupt { get; private set; }
+    public ulong Interrupt { get; private set; }
 
     // Total
-    public long ContextSwitch { get; private set; }
+    public ulong ContextSwitch { get; private set; }
 
     // Total
-    public long Forks { get; private set; }
+    public ulong Forks { get; private set; }
 
     public int RunnableTasks { get; private set; }
 
     public int BlockedTasks { get; private set; }
 
     // Total
-    public long SoftIrq { get; private set; }
+    public ulong SoftIrq { get; private set; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -85,15 +85,15 @@ public sealed class SystemStat
             }
             else if (span.StartsWith("intr"))
             {
-                Interrupt = ExtractInt64(span);
+                Interrupt = ExtractUInt64(span);
             }
             else if (span.StartsWith("ctxt"))
             {
-                ContextSwitch = ExtractInt64(span);
+                ContextSwitch = ExtractUInt64(span);
             }
             else if (span.StartsWith("processes"))
             {
-                Forks = ExtractInt32(span);
+                Forks = ExtractUInt64(span);
             }
             else if (span.StartsWith("procs_running"))
             {
@@ -105,7 +105,7 @@ public sealed class SystemStat
             }
             else if (span.StartsWith("softirq"))
             {
-                SoftIrq = ExtractInt64(span);
+                SoftIrq = ExtractUInt64(span);
             }
         }
 
@@ -122,16 +122,16 @@ public sealed class SystemStat
 
         var stat = span[range[0]] is "cpu" ? CpuTotal : FindCpu(span[range[0]]);
 
-        stat.User = Int64.TryParse(span[range[1]], out var value) ? value : 0;
-        stat.Nice = Int64.TryParse(span[range[2]], out value) ? value : 0;
-        stat.System = Int64.TryParse(span[range[3]], out value) ? value : 0;
-        stat.Idle = Int64.TryParse(span[range[4]], out value) ? value : 0;
-        stat.IoWait = Int64.TryParse(span[range[5]], out value) ? value : 0;
-        stat.Irq = Int64.TryParse(span[range[6]], out value) ? value : 0;
-        stat.SoftIrq = Int64.TryParse(span[range[7]], out value) ? value : 0;
-        stat.Steal = Int64.TryParse(span[range[8]], out value) ? value : 0;
-        stat.Guest = Int64.TryParse(span[range[9]], out value) ? value : 0;
-        stat.GuestNice = Int64.TryParse(span[range[10]], out value) ? value : 0;
+        stat.User = UInt64.TryParse(span[range[1]], out var value) ? value : 0;
+        stat.Nice = UInt64.TryParse(span[range[2]], out value) ? value : 0;
+        stat.System = UInt64.TryParse(span[range[3]], out value) ? value : 0;
+        stat.Idle = UInt64.TryParse(span[range[4]], out value) ? value : 0;
+        stat.IoWait = UInt64.TryParse(span[range[5]], out value) ? value : 0;
+        stat.Irq = UInt64.TryParse(span[range[6]], out value) ? value : 0;
+        stat.SoftIrq = UInt64.TryParse(span[range[7]], out value) ? value : 0;
+        stat.Steal = UInt64.TryParse(span[range[8]], out value) ? value : 0;
+        stat.Guest = UInt64.TryParse(span[range[9]], out value) ? value : 0;
+        stat.GuestNice = UInt64.TryParse(span[range[10]], out value) ? value : 0;
     }
 
     private CpuStat FindCpu(ReadOnlySpan<char> name)
@@ -153,10 +153,10 @@ public sealed class SystemStat
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static long ExtractInt64(ReadOnlySpan<char> span)
+    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
     }
 
     private static int ExtractInt32(ReadOnlySpan<char> span)

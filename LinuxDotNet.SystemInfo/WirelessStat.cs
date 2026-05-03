@@ -19,17 +19,17 @@ public sealed class WirelessStatEntry
 
     public double NoiseLevel { get; internal set; }
 
-    public long DiscardedNetworkId { get; internal set; }
+    public ulong DiscardedNetworkId { get; internal set; }
 
-    public long DiscardedCrypt { get; internal set; }
+    public ulong DiscardedCrypt { get; internal set; }
 
-    public long DiscardedFragment { get; internal set; }
+    public ulong DiscardedFragment { get; internal set; }
 
-    public long DiscardedRetry { get; internal set; }
+    public ulong DiscardedRetry { get; internal set; }
 
-    public long DiscardedMisc { get; internal set; }
+    public ulong DiscardedMisc { get; internal set; }
 
-    public long MissedBeacon { get; internal set; }
+    public ulong MissedBeacon { get; internal set; }
 
     internal WirelessStatEntry(string interfaceName)
     {
@@ -103,12 +103,12 @@ public sealed class WirelessStat
             wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), out var qualityLink) ? qualityLink : 0;
             wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), out var qualityLevel) ? qualityLevel : 0;
             wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), out var qualityNoise) ? qualityNoise : 0;
-            wireless.DiscardedNetworkId = Int64.TryParse(span[range[5]], out var discardedNetworkId) ? discardedNetworkId : 0;
-            wireless.DiscardedCrypt = Int64.TryParse(span[range[6]], out var discardedCrypt) ? discardedCrypt : 0;
-            wireless.DiscardedFragment = Int64.TryParse(span[range[7]], out var discardedFragment) ? discardedFragment : 0;
-            wireless.DiscardedRetry = Int64.TryParse(span[range[8]], out var discardedRetry) ? discardedRetry : 0;
-            wireless.DiscardedMisc = Int64.TryParse(span[range[9]], out var discardedMisc) ? discardedMisc : 0;
-            wireless.MissedBeacon = Int64.TryParse(span[range[10]], out var missedBeacon) ? missedBeacon : 0;
+            wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], out var discardedNetworkId) ? discardedNetworkId : 0;
+            wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], out var discardedCrypt) ? discardedCrypt : 0;
+            wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], out var discardedFragment) ? discardedFragment : 0;
+            wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], out var discardedRetry) ? discardedRetry : 0;
+            wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], out var discardedMisc) ? discardedMisc : 0;
+            wireless.MissedBeacon = UInt64.TryParse(span[range[10]], out var missedBeacon) ? missedBeacon : 0;
         }
 
         for (var i = interfaces.Count - 1; i >= 0; i--)
