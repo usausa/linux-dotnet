@@ -131,12 +131,26 @@ public sealed class MountInfo
             var mountPoint = span[range[1]].ToString().Replace("\\040", " ", StringComparison.Ordinal).Replace("\\011", "\t", StringComparison.Ordinal);
             var fsType = span[range[2]].ToString();
             var option = MountOption.None;
-            foreach (var key in span[range[3]].ToString().Split(','))
+            var remaining = span[range[3]];
+            while (!remaining.IsEmpty)
             {
-                if (OptionMap.TryGetValue(key, out var flag))
+                var commaIndex = remaining.IndexOf(',');
+                var key = commaIndex >= 0 ? remaining[..commaIndex] : remaining;
+                foreach (var pair in OptionMap)
                 {
-                    option |= flag;
+                    if (key.Equals(pair.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        option |= pair.Value;
+                        break;
+                    }
                 }
+
+                if (commaIndex < 0)
+                {
+                    break;
+                }
+
+                remaining = remaining[(commaIndex + 1)..];
             }
 
             var mount = new MountInfo(mountPoint, fsType, device, option);

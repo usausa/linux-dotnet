@@ -190,8 +190,8 @@ internal static class NativeMethods
         public uint field;
 
         // struct timeval
-        public nint tv_sec;
-        public nint tv_usec;
+        public long tv_sec;
+        public long tv_usec;
 
         // struct v4l2_timecode
         public uint timecode_type;
@@ -331,10 +331,10 @@ internal static class NativeMethods
     public static extern int ioctl(int fd, uint request, IntPtr argp);
 
     [DllImport("libc", SetLastError = true)]
-    public static extern IntPtr mmap(IntPtr addr, int length, int prot, int flags, int fd, int offset);
+    public static extern IntPtr mmap(IntPtr addr, IntPtr length, int prot, int flags, int fd, long offset);
 
     [DllImport("libc", SetLastError = true)]
-    public static extern int munmap(IntPtr addr, int length);
+    public static extern int munmap(IntPtr addr, IntPtr length);
 
     [DllImport("libc", SetLastError = true)]
     public static extern int poll(ref pollfd fds, uint nfds, int timeout);

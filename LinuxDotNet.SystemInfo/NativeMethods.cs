@@ -32,8 +32,8 @@ internal static class NativeMethods
         public ulong f_bavail;
         public ulong f_files;
         public ulong f_ffree;
-        public long f_fsid1;
-        public long f_fsid2;
+        public int f_fsid1;
+        public int f_fsid2;
         public ulong f_namelen;
         public ulong f_frsize;
         public ulong f_flags;
