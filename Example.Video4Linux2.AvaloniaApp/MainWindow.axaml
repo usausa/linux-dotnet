@@ -47,12 +47,10 @@
                            Text="FPS:"
                            VerticalAlignment="Center"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"/>
                 <TextBlock Grid.Row="0" Grid.Column="1"
                            Text="{Binding Fps, StringFormat={}{0:F1}}"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"
                            Width="36"
                            TextAlignment="Right"/>
@@ -60,12 +58,10 @@
                 <TextBlock Grid.Row="1" Grid.Column="0"
                            Text="GC0/s:"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"/>
                 <TextBlock Grid.Row="1" Grid.Column="1"
                            Text="{Binding Gc0PerSec, StringFormat={}{0:F1}}"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"
                            Width="36"
                            TextAlignment="Right"/>
@@ -73,12 +69,10 @@
                 <TextBlock Grid.Row="2" Grid.Column="0"
                            Text="GC1/s:"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"/>
                 <TextBlock Grid.Row="2" Grid.Column="1"
                            Text="{Binding Gc1PerSec, StringFormat={}{0:F1}}"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"
                            Width="36"
                            TextAlignment="Right"/>
@@ -86,12 +80,10 @@
                 <TextBlock Grid.Row="3" Grid.Column="0"
                            Text="GC2/s:"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"/>
                 <TextBlock Grid.Row="3" Grid.Column="1"
                            Text="{Binding Gc2PerSec, StringFormat={}{0:F1}}"
                            Foreground="White"
-                           FontFamily="monospace"
                            FontSize="12"
                            Width="36"
                            TextAlignment="Right"/>
