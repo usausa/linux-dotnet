@@ -44,7 +44,7 @@
     <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="Usa.Smart.Avalonia" Version="2.14.0" />
     <PackageReference Include="Usa.Smart.Avalonia.Extensions" Version="2.14.0" />
-    <PackageReference Include="Usa.Smart.Core" Version="2.5.0" />
+    <PackageReference Include="Usa.Smart.Core" Version="2.6.0" />
     <PackageReference Include="Usa.Smart.Mvvm" Version="2.1.0" />
     <PackageReference Include="Usa.Smart.Reactive" Version="2.7.0" />
     <PackageReference Include="Usa.Smart.Resolver" Version="2.8.0" />
