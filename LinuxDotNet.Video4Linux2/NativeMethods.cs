@@ -8,10 +8,9 @@ using System.Runtime.InteropServices;
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE0044
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     //------------------------------------------------------------------------
     // Const
@@ -321,23 +320,23 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int open(string pathname, int flags);
+    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int open(string pathname, int flags);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int close(int fd);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int close(int fd);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int ioctl(int fd, uint request, IntPtr argp);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int ioctl(int fd, uint request, IntPtr argp);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern IntPtr mmap(IntPtr addr, IntPtr length, int prot, int flags, int fd, long offset);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial IntPtr mmap(IntPtr addr, IntPtr length, int prot, int flags, int fd, long offset);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int munmap(IntPtr addr, IntPtr length);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int munmap(IntPtr addr, IntPtr length);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int poll(ref pollfd fds, uint nfds, int timeout);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int poll(ref pollfd fds, uint nfds, int timeout);
 
     //------------------------------------------------------------------------
     // Initialize

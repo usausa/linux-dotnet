@@ -7,18 +7,17 @@ using System.Runtime.InteropServices;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     //------------------------------------------------------------------------
     // Const
     //------------------------------------------------------------------------
 
     public const short POLLIN = 0x0001;
-    public const short POLLPRI = 0x0002;
-    public const short POLLOUT = 0x0004;
+    //public const short POLLPRI = 0x0002;
+    //public const short POLLOUT = 0x0004;
     public const short POLLERR = 0x0008;
     public const short POLLHUP = 0x0010;
     public const short POLLNVAL = 0x0020;
@@ -42,6 +41,6 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int poll(ref pollFd fds, uint nfds, int timeout);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int poll(ref pollFd fds, uint nfds, int timeout);
 }

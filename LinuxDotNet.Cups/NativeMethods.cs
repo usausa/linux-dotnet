@@ -7,10 +7,9 @@ using System.Runtime.InteropServices;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     private const string LibCups = "libcups.so.2";
 
@@ -150,147 +149,147 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IppStatus cupsLastError();
+    [LibraryImport(LibCups)]
+    public static partial IppStatus cupsLastError();
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr cupsLastErrorString();
+    [LibraryImport(LibCups)]
+    public static partial IntPtr cupsLastErrorString();
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr cupsGetDefault();
+    [LibraryImport(LibCups)]
+    public static partial IntPtr cupsGetDefault();
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsGetDests(out IntPtr dests);
+    [LibraryImport(LibCups)]
+    public static partial int cupsGetDests(out IntPtr dests);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void cupsFreeDests(int num_dests, IntPtr dests);
+    [LibraryImport(LibCups)]
+    public static partial void cupsFreeDests(int num_dests, IntPtr dests);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsPrintFile(
-        [MarshalAs(UnmanagedType.LPStr)] string printer,
-        [MarshalAs(UnmanagedType.LPStr)] string filename,
-        [MarshalAs(UnmanagedType.LPStr)] string title,
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsPrintFile(
+        string printer,
+        string filename,
+        string title,
         int num_options,
         IntPtr options);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr httpConnectEncrypt(
-        [MarshalAs(UnmanagedType.LPStr)] string host,
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr httpConnectEncrypt(
+        string host,
         int port,
         int encryption);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsCancelJob(
-        [MarshalAs(UnmanagedType.LPStr)] string printer,
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsCancelJob(
+        string printer,
         int job_id);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void httpClose(IntPtr http);
+    [LibraryImport(LibCups)]
+    public static partial void httpClose(IntPtr http);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsAddOption(
-        [MarshalAs(UnmanagedType.LPStr)] string name,
-        [MarshalAs(UnmanagedType.LPStr)] string value,
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsAddOption(
+        string name,
+        string value,
         int num_options,
         ref IntPtr options);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void cupsFreeOptions(int num_options, IntPtr options);
+    [LibraryImport(LibCups)]
+    public static partial void cupsFreeOptions(int num_options, IntPtr options);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsCreateJob(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsCreateJob(
         IntPtr http,
-        [MarshalAs(UnmanagedType.LPStr)] string printer,
-        [MarshalAs(UnmanagedType.LPStr)] string title,
+        string printer,
+        string title,
         int num_options,
         IntPtr options);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsStartDocument(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsStartDocument(
         IntPtr http,
-        [MarshalAs(UnmanagedType.LPStr)] string printer,
+        string printer,
         int job_id,
-        [MarshalAs(UnmanagedType.LPStr)] string docname,
-        [MarshalAs(UnmanagedType.LPStr)] string format,
+        string docname,
+        string format,
         int last_document);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsWriteRequestData(
+    [LibraryImport(LibCups)]
+    public static partial int cupsWriteRequestData(
         IntPtr http,
         byte[] buffer,
         int length);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsFinishDocument(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsFinishDocument(
         IntPtr http,
-        [MarshalAs(UnmanagedType.LPStr)] string printer);
+        string printer);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int cupsGetJobs(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int cupsGetJobs(
         ref IntPtr jobs,
-        [MarshalAs(UnmanagedType.LPStr)] string name,
+        string name,
         int myjobs,
         int whichjobs);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void cupsFreeJobs(int num_jobs, IntPtr jobs);
+    [LibraryImport(LibCups)]
+    public static partial void cupsFreeJobs(int num_jobs, IntPtr jobs);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippNewRequest(int op);
+    [LibraryImport(LibCups)]
+    public static partial IntPtr ippNewRequest(int op);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void ippDelete(IntPtr ipp);
+    [LibraryImport(LibCups)]
+    public static partial void ippDelete(IntPtr ipp);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippAddString(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr ippAddString(
         IntPtr ipp,
         int group,
         int value_tag,
-        [MarshalAs(UnmanagedType.LPStr)] string name,
-        [MarshalAs(UnmanagedType.LPStr)] string? language,
-        [MarshalAs(UnmanagedType.LPStr)] string value);
+        string name,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string? language,
+        string value);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr cupsDoRequest(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr cupsDoRequest(
         IntPtr http,
         IntPtr request,
-        [MarshalAs(UnmanagedType.LPStr)] string resource);
+        string resource);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippFindAttribute(
+    [LibraryImport(LibCups, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr ippFindAttribute(
         IntPtr ipp,
-        [MarshalAs(UnmanagedType.LPStr)] string name,
+        string name,
         int type);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippGetString(
+    [LibraryImport(LibCups)]
+    public static partial IntPtr ippGetString(
         IntPtr attr,
         int element,
         IntPtr language);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ippGetInteger(IntPtr attr, int element);
+    [LibraryImport(LibCups)]
+    public static partial int ippGetInteger(IntPtr attr, int element);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ippGetBoolean(IntPtr attr, int element);
+    [LibraryImport(LibCups)]
+    public static partial int ippGetBoolean(IntPtr attr, int element);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ippGetCount(IntPtr attr);
+    [LibraryImport(LibCups)]
+    public static partial int ippGetCount(IntPtr attr);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippFirstAttribute(IntPtr ipp);
+    [LibraryImport(LibCups)]
+    public static partial IntPtr ippFirstAttribute(IntPtr ipp);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippNextAttribute(IntPtr ipp);
+    [LibraryImport(LibCups)]
+    public static partial IntPtr ippNextAttribute(IntPtr ipp);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr ippGetName(IntPtr attr);
+    [LibraryImport(LibCups)]
+    public static partial IntPtr ippGetName(IntPtr attr);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ippGetValueTag(IntPtr attr);
+    [LibraryImport(LibCups)]
+    public static partial int ippGetValueTag(IntPtr attr);
 
-    [DllImport(LibCups, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int ippGetResolution(
+    [LibraryImport(LibCups)]
+    public static partial int ippGetResolution(
         IntPtr attr,
         int element,
         out int xres,
