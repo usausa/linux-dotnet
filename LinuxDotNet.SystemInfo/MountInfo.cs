@@ -34,24 +34,21 @@ public static class MountOptionExtensions
 
 public sealed class MountInfo
 {
+#pragma warning disable IDE0028
     // ReSharper disable StringLiteralTypo
     private static readonly HashSet<string> LocalFileSystems = new(StringComparer.OrdinalIgnoreCase)
     {
         "ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "ntfs", "vfat", "fat32", "exfat",
         "f2fs", "jfs", "reiserfs", "ufs", "hfs", "hfsplus", "apfs"
     };
-    // ReSharper restore StringLiteralTypo
 
-    // ReSharper disable StringLiteralTypo
     private static readonly HashSet<string> VirtualFileSystems = new(StringComparer.OrdinalIgnoreCase)
     {
         "sysfs", "proc", "devtmpfs", "devpts", "tmpfs", "securityfs", "cgroup", "cgroup2",
         "pstore", "bpf", "debugfs", "tracefs", "hugetlbfs", "mqueue", "configfs", "fusectl",
         "ramfs", "rpc_pipefs", "overlay", "aufs", "squashfs"
     };
-    // ReSharper restore StringLiteralTypo
 
-    // ReSharper disable StringLiteralTypo
     private static readonly Dictionary<string, MountOption> OptionMap = new(StringComparer.OrdinalIgnoreCase)
     {
         ["ro"] = MountOption.ReadOnly,
@@ -72,6 +69,7 @@ public sealed class MountInfo
         ["defaults"] = MountOption.Defaults
     };
     // ReSharper restore StringLiteralTypo
+#pragma warning restore IDE0028
 
     public string MountPoint { get; }
 
