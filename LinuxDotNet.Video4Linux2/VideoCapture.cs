@@ -8,7 +8,7 @@ using static LinuxDotNet.Video4Linux2.NativeMethods;
 
 // ReSharper disable StructCanBeMadeReadOnly
 #pragma warning disable CA1815
-public readonly unsafe struct FrameBuffer
+public readonly struct FrameBuffer
 {
     private readonly IntPtr buffer;
 
@@ -21,7 +21,18 @@ public readonly unsafe struct FrameBuffer
     public ReadOnlySpan<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => IsEmpty ? [] : new Span<byte>((void*)buffer, length);
+        get
+        {
+            if (IsEmpty)
+            {
+                return [];
+            }
+
+            unsafe
+            {
+                return new Span<byte>((void*)buffer, length);
+            }
+        }
     }
 
     internal FrameBuffer(IntPtr buffer, int length)

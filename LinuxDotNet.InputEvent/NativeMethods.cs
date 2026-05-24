@@ -7,10 +7,9 @@ using System.Runtime.InteropServices;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     //------------------------------------------------------------------------
     // Const
@@ -68,12 +67,12 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern unsafe int ioctl(int fd, uint request, void* argp);
+    [LibraryImport("libc", SetLastError = true)]
+    public static unsafe partial int ioctl(int fd, uint request, void* argp);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int ioctl(int fd, uint request, int arg);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int ioctl(int fd, uint request, int arg);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int poll(ref pollFd fds, uint nfds, int timeout);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int poll(ref pollFd fds, uint nfds, int timeout);
 }

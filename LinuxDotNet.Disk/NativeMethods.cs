@@ -5,10 +5,9 @@ using System.Runtime.InteropServices;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     //------------------------------------------------------------------------
     // Const
@@ -121,17 +120,17 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int open([MarshalAs(UnmanagedType.LPStr)] string pathname, int flags);
+    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int open(string pathname, int flags);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int close(int fd);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int close(int fd);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern unsafe int ioctl(int fd, ulong request, void* argp);
+    [LibraryImport("libc", SetLastError = true)]
+    public static unsafe partial int ioctl(int fd, ulong request, void* argp);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int ioctl(int fd, ulong request, ref nvme_admin_cmd data);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial int ioctl(int fd, ulong request, ref nvme_admin_cmd data);
 
     //------------------------------------------------------------------------
     // Helper
@@ -143,7 +142,6 @@ internal static class NativeMethods
 }
 #pragma warning restore CS8981
 #pragma warning restore CA5392
-#pragma warning restore CA2101
 #pragma warning restore IDE1006
 // ReSharper restore InconsistentNaming
 // ReSharper restore IdentifierTypo

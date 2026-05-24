@@ -7,10 +7,9 @@ using System.Runtime.InteropServices;
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 #pragma warning disable IDE1006
-#pragma warning disable CA2101
 #pragma warning disable CA5392
 #pragma warning disable CS8981
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     //------------------------------------------------------------------------
     // Const
@@ -47,9 +46,9 @@ internal static class NativeMethods
     // Method
     //------------------------------------------------------------------------
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern long sysconf(int name);
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial long sysconf(int name);
 
-    [DllImport("libc", SetLastError = true)]
-    public static extern int statfs64([MarshalAs(UnmanagedType.LPStr)] string path, ref statfs buf);
+    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial int statfs64(string path, ref statfs buf);
 }

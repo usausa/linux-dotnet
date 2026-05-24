@@ -13,7 +13,7 @@ public static class CupsPrinter
     private static string GetLastErrorMessage()
     {
         var errorPtr = cupsLastErrorString();
-        return Marshal.PtrToStringAnsi(errorPtr) ?? "Unknown error";
+        return Marshal.PtrToStringUTF8(errorPtr) ?? "Unknown error";
     }
 
     //--------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ public static class CupsPrinter
         {
             return null;
         }
-        return Marshal.PtrToStringAnsi(printerPtr);
+        return Marshal.PtrToStringUTF8(printerPtr);
     }
 
     public static unsafe IReadOnlyList<PrinterInfo> GetPrinters()
@@ -47,19 +47,19 @@ public static class CupsPrinter
             for (var i = 0; i < num; i++)
             {
                 var dest = (cups_dest_t*)IntPtr.Add(ptr, i * sizeof(cups_dest_t));
-                var printer = Marshal.PtrToStringAnsi(dest->name);
+                var printer = Marshal.PtrToStringUTF8(dest->name);
                 if (!String.IsNullOrEmpty(printer))
                 {
                     var info = new PrinterInfo(
                         printer,
-                        dest->instance != IntPtr.Zero ? Marshal.PtrToStringAnsi(dest->instance) : null,
+                        dest->instance != IntPtr.Zero ? Marshal.PtrToStringUTF8(dest->instance) : null,
                         dest->is_default != 0);
 
                     for (var j = 0; j < dest->num_options; j++)
                     {
                         var option = (cups_option_t*)IntPtr.Add(dest->options, j * sizeof(cups_option_t));
-                        var name = Marshal.PtrToStringAnsi(option->name);
-                        var value = Marshal.PtrToStringAnsi(option->value);
+                        var name = Marshal.PtrToStringUTF8(option->name);
+                        var value = Marshal.PtrToStringUTF8(option->value);
 
                         if ((name is not null) && (value is not null))
                         {
@@ -128,7 +128,7 @@ public static class CupsPrinter
                 var namePtr = ippGetName(attr);
                 if (namePtr != IntPtr.Zero)
                 {
-                    var attrName = Marshal.PtrToStringAnsi(namePtr);
+                    var attrName = Marshal.PtrToStringUTF8(namePtr);
                     if (attrName != null)
                     {
                         var valueTag = ippGetValueTag(attr);
@@ -166,7 +166,7 @@ public static class CupsPrinter
                                 var valuePtr = ippGetString(attr, i, IntPtr.Zero);
                                 if (valuePtr != IntPtr.Zero)
                                 {
-                                    var value = Marshal.PtrToStringAnsi(valuePtr);
+                                    var value = Marshal.PtrToStringUTF8(valuePtr);
                                     if (value != null)
                                     {
                                         values.Add(value);
@@ -278,7 +278,7 @@ public static class CupsPrinter
         }
 
         var valuePtr = ippGetString(attr, 0, IntPtr.Zero);
-        return valuePtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(valuePtr) : null;
+        return valuePtr != IntPtr.Zero ? Marshal.PtrToStringUTF8(valuePtr) : null;
     }
 
     private static int GetAttributeInteger(IntPtr ipp, string name)
@@ -321,7 +321,7 @@ public static class CupsPrinter
                 break;
             }
 
-            var value = Marshal.PtrToStringAnsi(valuePtr);
+            var value = Marshal.PtrToStringUTF8(valuePtr);
             if (value != null)
             {
                 result.Add(value);
@@ -518,9 +518,9 @@ public static class CupsPrinter
 
                 jobs.Add(new PrintJob(
                     job->id,
-                    Marshal.PtrToStringAnsi(job->title) ?? string.Empty,
-                    Marshal.PtrToStringAnsi(job->dest) ?? string.Empty,
-                    Marshal.PtrToStringAnsi(job->user) ?? string.Empty,
+                    Marshal.PtrToStringUTF8(job->title) ?? string.Empty,
+                    Marshal.PtrToStringUTF8(job->dest) ?? string.Empty,
+                    Marshal.PtrToStringUTF8(job->user) ?? string.Empty,
                     DateTimeOffset.FromUnixTimeSeconds(job->creation_time).LocalDateTime,
                     (PrintJobState)job->state));
             }

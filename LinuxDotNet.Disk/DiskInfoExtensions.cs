@@ -1,8 +1,5 @@
 namespace LinuxDotNet.Disk;
 
-using System;
-using System.Text.RegularExpressions;
-
 public static class DiskInfoExtensions
 {
     private const string SysBlockPath = "/sys/block";
@@ -17,10 +14,9 @@ public static class DiskInfoExtensions
         }
 
         var mountPoints = GetMountPoints();
-        var partitionPattern = GetPartitionPattern(disk.DiskType, disk.DeviceName);
 
         var index = 0u;
-        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => x is not null && Regex.IsMatch(x, partitionPattern)).OrderBy(x => x))
+        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => x is not null && IsPartition(disk.DiskType, disk.DeviceName, x)).OrderBy(x => x))
         {
             var deviceName = $"/dev/{name}";
             var sectors = Helper.ReadFileAsUInt64(Path.Combine(blockPath, name!, "size")) ?? 0;
@@ -38,16 +34,19 @@ public static class DiskInfoExtensions
         }
     }
 
-    private static string GetPartitionPattern(DiskType diskType, string deviceName)
+    private static bool IsPartition(DiskType diskType, string deviceName, string name)
     {
-        // NVMe: nvme0n1 -> nvme0n1p\d+
-        if (diskType == DiskType.Nvme)
+        if (!name.StartsWith(deviceName, StringComparison.Ordinal) || (name.Length <= deviceName.Length))
         {
-            return $"^{Regex.Escape(deviceName)}p\\d+$";
+            return false;
         }
 
-        // SATA/SCSI/VirtualIO: sda -> sda\d+, vda -> vda\d+
-        return $"^{Regex.Escape(deviceName)}\\d+$";
+        if (diskType == DiskType.Nvme)
+        {
+            return (name[deviceName.Length] == 'p') && (name.Length > deviceName.Length + 1) && Char.IsAsciiDigit(name[^1]);
+        }
+
+        return Char.IsAsciiDigit(name[^1]);
     }
 
     private static Dictionary<string, (string MountPoint, string FileSystem)?> GetMountPoints()
