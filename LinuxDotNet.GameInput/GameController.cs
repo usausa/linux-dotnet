@@ -217,102 +217,106 @@ public sealed class GameController : IDisposable
     {
         const int messageSize = 8;
         var message = ArrayPool<byte>.Shared.Rent(messageSize);
-
-        var fd = (int)stream.SafeFileHandle.DangerousGetHandle();
-
-        while (!token.IsCancellationRequested)
+        try
         {
-            var pollFd = new pollFd
-            {
-                fd = fd,
-                events = POLLIN
-            };
-            var result = poll(ref pollFd, 1, DevicePollTimeout);
+            var fd = (int)stream.SafeFileHandle.DangerousGetHandle();
 
-            if (result == 0)
+            while (!token.IsCancellationRequested)
             {
-                // Timeout & retry
-                continue;
-            }
-            if (result < 0)
-            {
-                var error = Marshal.GetLastWin32Error();
-                if (error == EINTR)
+                var pollFd = new pollFd
                 {
-                    // Interrupted & retry
+                    fd = fd,
+                    events = POLLIN
+                };
+                var result = poll(ref pollFd, 1, DevicePollTimeout);
+
+                if (result == 0)
+                {
+                    // Timeout & retry
+                    continue;
+                }
+                if (result < 0)
+                {
+                    var error = Marshal.GetLastWin32Error();
+                    if (error == EINTR)
+                    {
+                        // Interrupted & retry
+                        continue;
+                    }
+
+                    throw new IOException($"Pool failed. error=[{error}]");
+                }
+
+                if ((pollFd.revents & POLLERR) != 0)
+                {
+                    throw new IOException("Pool device error.");
+                }
+                if ((pollFd.revents & POLLHUP) != 0)
+                {
+                    throw new IOException("Pool device disconnected.");
+                }
+                if ((pollFd.revents & POLLNVAL) != 0)
+                {
+                    throw new IOException("Pool invalid file descriptor.");
+                }
+
+                if ((pollFd.revents & POLLIN) == 0)
+                {
+                    // No data & retry
                     continue;
                 }
 
-                throw new IOException($"Pool failed. error=[{error}]");
-            }
-
-            if ((pollFd.revents & POLLERR) != 0)
-            {
-                throw new IOException("Pool device error.");
-            }
-            if ((pollFd.revents & POLLHUP) != 0)
-            {
-                throw new IOException("Pool device disconnected.");
-            }
-            if ((pollFd.revents & POLLNVAL) != 0)
-            {
-                throw new IOException("Pool invalid file descriptor.");
-            }
-
-            if ((pollFd.revents & POLLIN) == 0)
-            {
-                // No data & retry
-                continue;
-            }
-
-            var bytesRead = await stream.ReadAsync(message.AsMemory(0, messageSize), token).ConfigureAwait(false);
-            if (bytesRead < messageSize)
-            {
-                throw new IOException("Device disconnected or stream ended unexpectedly.");
-            }
-
-            var address = GetAddress(message);
-            if (HasConfiguration(message))
-            {
-                if (IsButton(message))
+                var bytesRead = await stream.ReadAsync(message.AsMemory(0, messageSize), token).ConfigureAwait(false);
+                if (bytesRead < messageSize)
                 {
-                    buttonInitialized[address] = true;
-                    buttons[address] = IsButtonPressed(message);
+                    throw new IOException("Device disconnected or stream ended unexpectedly.");
                 }
-                if (IsAxis(message))
+
+                var address = GetAddress(message);
+                if (HasConfiguration(message))
                 {
-                    axisInitialized[address] = true;
-                    axis[address] = GetAxisValue(message);
-                }
-            }
-            else
-            {
-                if (IsButton(message))
-                {
-                    var newValue = IsButtonPressed(message);
-                    if (!buttonInitialized[address] || (buttons[address] != newValue))
+                    if (IsButton(message))
                     {
                         buttonInitialized[address] = true;
-                        Volatile.Write(ref buttons[address], newValue);
-
-                        ButtonChanged?.Invoke(address, newValue);
+                        buttons[address] = IsButtonPressed(message);
                     }
-                }
-                if (IsAxis(message))
-                {
-                    var newValue = GetAxisValue(message);
-                    if (!axisInitialized[address] || (axis[address] != newValue))
+                    if (IsAxis(message))
                     {
                         axisInitialized[address] = true;
-                        Volatile.Write(ref axis[address], newValue);
+                        axis[address] = GetAxisValue(message);
+                    }
+                }
+                else
+                {
+                    if (IsButton(message))
+                    {
+                        var newValue = IsButtonPressed(message);
+                        if (!buttonInitialized[address] || (buttons[address] != newValue))
+                        {
+                            buttonInitialized[address] = true;
+                            Volatile.Write(ref buttons[address], newValue);
 
-                        AxisChanged?.Invoke(address, newValue);
+                            ButtonChanged?.Invoke(address, newValue);
+                        }
+                    }
+                    if (IsAxis(message))
+                    {
+                        var newValue = GetAxisValue(message);
+                        if (!axisInitialized[address] || (axis[address] != newValue))
+                        {
+                            axisInitialized[address] = true;
+                            Volatile.Write(ref axis[address], newValue);
+
+                            AxisChanged?.Invoke(address, newValue);
+                        }
                     }
                 }
             }
         }
-
-        ArrayPool<byte>.Shared.Return(message);
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(message);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

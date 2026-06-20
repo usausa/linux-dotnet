@@ -2,6 +2,7 @@ namespace LinuxDotNet.Video4Linux2;
 
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -14,7 +15,9 @@ public readonly struct FrameBuffer
 
     private readonly int length;
 
+#pragma warning disable IDE0032
     public int Length => length;
+#pragma warning restore IDE0032
 
     public bool IsEmpty => buffer == IntPtr.Zero || length == 0;
 
@@ -142,7 +145,7 @@ public sealed class VideoCapture : IDisposable
         for (uint i = 0; i < requestBuffers.count; i++)
         {
             // Query buffer
-            v4l2_buffer buffer;
+            var buffer = default(v4l2_buffer);
             buffer.index = i;
             buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer.memory = V4L2_MEMORY_MMAP;
@@ -155,15 +158,26 @@ public sealed class VideoCapture : IDisposable
             // Memory map
             buffers[i] = mmap(IntPtr.Zero, (int)buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (int)buffer.m.offset);
             bufferLengths[i] = (int)buffer.length;
-
-            // Queue buffer
-            v4l2_buffer buffer2;
-            buffer2.index = i;
-            buffer2.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buffer2.memory = V4L2_MEMORY_MMAP;
-            if (ioctl(fd, VIDIOC_QBUF, (IntPtr)(&buffer2)) < 0)
+            if (buffers[i] == new IntPtr(-1))
             {
                 CloseInternal();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private unsafe bool QueueAllBuffers()
+    {
+        for (var i = 0; i < buffers.Length; i++)
+        {
+            var buffer = default(v4l2_buffer);
+            buffer.index = (uint)i;
+            buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buffer.memory = V4L2_MEMORY_MMAP;
+            if (ioctl(fd, VIDIOC_QBUF, (IntPtr)(&buffer)) < 0)
+            {
                 return false;
             }
         }
@@ -237,6 +251,11 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
+        if (!QueueAllBuffers())
+        {
+            return false;
+        }
+
         // Start streaming
         var type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (ioctl(fd, VIDIOC_STREAMON, (IntPtr)(&type)) < 0)
@@ -260,7 +279,7 @@ public sealed class VideoCapture : IDisposable
             }
 
             // De-queue buffer
-            v4l2_buffer buffer;
+            var buffer = default(v4l2_buffer);
             buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer.memory = V4L2_MEMORY_MMAP;
             if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
@@ -294,6 +313,16 @@ public sealed class VideoCapture : IDisposable
     public unsafe bool StartCapture(int fps = 0)
     {
         if (!IsOpen || IsCapturing)
+        {
+            return false;
+        }
+
+        if (fps > 0)
+        {
+            _ = SetFrameRate(fps);
+        }
+
+        if (!QueueAllBuffers())
         {
             return false;
         }
@@ -342,7 +371,7 @@ public sealed class VideoCapture : IDisposable
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var currentTime = DateTime.Now;
+            var currentTimestamp = Stopwatch.GetTimestamp();
 
             var fds = new pollfd
             {
@@ -355,7 +384,7 @@ public sealed class VideoCapture : IDisposable
             }
 
             // De-queue buffer
-            v4l2_buffer buffer;
+            var buffer = default(v4l2_buffer);
             buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buffer.memory = V4L2_MEMORY_MMAP;
             if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
@@ -378,8 +407,7 @@ public sealed class VideoCapture : IDisposable
 
             if (fps > 0)
             {
-                var nextFrameTime = currentTime + frameInterval;
-                var sleepTime = nextFrameTime - DateTime.Now;
+                var sleepTime = frameInterval - Stopwatch.GetElapsedTime(currentTimestamp);
                 if (sleepTime > TimeSpan.Zero)
                 {
                     Thread.Sleep(sleepTime);

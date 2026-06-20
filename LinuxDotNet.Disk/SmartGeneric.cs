@@ -11,38 +11,53 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
     private const int TableOffset = 2;
     private const int EntrySize = 12;
 
-    private int fd;
+    private readonly SafeFileDescriptor handle;
 
     private byte[] buffer;
 
     private bool use16;
 
+    private bool disposed;
+
     public bool LastUpdate { get; private set; }
 
     public SmartGeneric(string devicePath)
     {
-        fd = open(devicePath, O_RDONLY);
-        buffer = ArrayPool<byte>.Shared.Rent(SmartDataSize);
+        handle = new SafeFileDescriptor(open(devicePath, O_RDONLY));
+        try
+        {
+            buffer = ArrayPool<byte>.Shared.Rent(SmartDataSize);
+        }
+        catch
+        {
+            handle.Dispose();
+            throw;
+        }
     }
 
     public void Dispose()
     {
-        if (fd >= 0)
+        if (disposed)
         {
-            _ = close(fd);
-            fd = -1;
+            return;
         }
+
+        handle.Dispose();
 
         if (buffer.Length > 0)
         {
             ArrayPool<byte>.Shared.Return(buffer);
             buffer = [];
         }
+
+        disposed = true;
     }
 
     public unsafe bool Update()
     {
-        if (fd < 0)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (handle.IsInvalid)
         {
             LastUpdate = false;
             return false;
@@ -54,7 +69,7 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
             {
                 // Try PT12 first
                 buffer.AsSpan().Clear();
-                if (ReadPassThrough12(fd, ptr))
+                if (ReadPassThrough12(handle.Descriptor, ptr))
                 {
                     LastUpdate = true;
                     return true;
@@ -63,7 +78,7 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
 
             // Try PT16 as fallback
             buffer.AsSpan().Clear();
-            if (ReadPassThrough16(fd, ptr))
+            if (ReadPassThrough16(handle.Descriptor, ptr))
             {
                 use16 = true;
                 LastUpdate = true;
@@ -144,6 +159,8 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
 
     public IReadOnlyList<SmartId> GetSupportedIds()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
         var list = new List<SmartId>();
 
         if (buffer.Length == 0)
@@ -166,6 +183,8 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
 
     public SmartAttribute? GetAttribute(SmartId id)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
         if (buffer.Length == 0)
         {
             return null;

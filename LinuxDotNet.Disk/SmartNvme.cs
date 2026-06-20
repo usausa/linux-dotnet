@@ -5,7 +5,9 @@ using static LinuxDotNet.Disk.NativeMethods;
 
 internal sealed class SmartNvme : ISmartNvme, IDisposable
 {
-    private int fd;
+    private readonly SafeFileDescriptor handle;
+
+    private bool disposed;
 
     public bool LastUpdate { get; private set; }
 
@@ -47,21 +49,25 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
 
     public SmartNvme(string devicePath)
     {
-        fd = open(devicePath, O_RDONLY);
+        handle = new SafeFileDescriptor(open(devicePath, O_RDONLY));
     }
 
     public void Dispose()
     {
-        if (fd >= 0)
+        if (disposed)
         {
-            _ = close(fd);
-            fd = -1;
+            return;
         }
+
+        handle.Dispose();
+        disposed = true;
     }
 
     public unsafe bool Update()
     {
-        if (fd < 0)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (handle.IsInvalid)
         {
             LastUpdate = false;
             return false;
@@ -77,7 +83,7 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
             cdw10 = 0x02 | ((uint)((sizeof(nvme_smart_log) / 4) - 1) << 16)
         };
 
-        if (ioctl(fd, NVME_IOCTL_ADMIN_CMD, ref cmd) < 0)
+        if (ioctl(handle.Descriptor, NVME_IOCTL_ADMIN_CMD, ref cmd) < 0)
         {
             LastUpdate = false;
             return false;
@@ -110,6 +116,7 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
         return true;
     }
 
+    // NVMe spec defines these counters as 128-bit; only the low 64 bits are read (sufficient for realistic values).
     private static unsafe ulong Le128ToUInt64(byte* p)
     {
         var v = 0ul;

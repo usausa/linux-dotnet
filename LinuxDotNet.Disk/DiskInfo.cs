@@ -13,87 +13,98 @@ public static partial class DiskInfo
     {
         var list = new List<IDiskInfo>();
 
-        var directories = Directory.GetDirectories(SysBlockPath)
-            .Select(Path.GetFileName)
-            .Where(name => name is not null)
-            .Cast<string>()
-            .ToList();
-
-        var index = 0u;
-        foreach (var deviceName in directories)
+        try
         {
-            if (!IsPhysicalDisk(deviceName))
-            {
-                continue;
-            }
+            var directories = Directory.GetDirectories(SysBlockPath)
+                .Select(Path.GetFileName)
+                .Where(name => name is not null)
+                .Cast<string>()
+                .ToList();
 
-            var major = GetDeviceMajorNumber(deviceName);
-            if (major == -1)
+            var index = 0u;
+            foreach (var deviceName in directories)
             {
-                continue;
-            }
-
-            var devicePath = $"/dev/{deviceName}";
-
-            var info = new DiskInfoGeneric
-            {
-                Index = index++,
-                DeviceName = devicePath,
-                DiskType = GetDiskTypeFromMajor(major),
-                Removable = ReadFileAsBool(Path.Combine(SysBlockPath, deviceName, "removable")) ?? false
-            };
-
-            // Get size information
-            var sectors = ReadFileAsUInt64(Path.Combine(SysBlockPath, deviceName, "size"));
-            var logicalBlockSize = ReadFileAsUInt32(Path.Combine(SysBlockPath, deviceName, "queue", "logical_block_size")) ?? 512;
-            var physicalBlockSize = ReadFileAsUInt32(Path.Combine(SysBlockPath, deviceName, "queue", "physical_block_size")) ?? 512;
-
-            info.TotalSectors = sectors ?? 0;
-            info.LogicalBlockSize = logicalBlockSize;
-            info.PhysicalBlockSize = physicalBlockSize;
-            info.Size = (sectors ?? 0) * logicalBlockSize;
-
-            // Get device-specific information
-            if (major == NVME_MAJOR)
-            {
-                ReadNvmeInfo(deviceName, info);
-                info.SmartType = SmartType.Nvme;
-                info.Smart = new SmartNvme(devicePath);
-                info.Smart.Update();
-            }
-            else if (major == MMC_BLOCK_MAJOR)
-            {
-                ReadMmcInfo(deviceName, info);
-                info.SmartType = SmartType.Unsupported;
-                info.Smart = SmartUnsupported.Default;
-            }
-            else if (major is SCSI_DISK0_MAJOR or IDE0_MAJOR or IDE1_MAJOR)
-            {
-                ReadIdeInfo(deviceName, info);
-                var smart = new SmartGeneric(devicePath);
-                if (smart.Update())
+                if (!IsPhysicalDisk(deviceName))
                 {
-                    info.SmartType = SmartType.Generic;
-                    info.Smart = smart;
+                    continue;
+                }
+
+                var major = GetDeviceMajorNumber(deviceName);
+                if (major == -1)
+                {
+                    continue;
+                }
+
+                var devicePath = $"/dev/{deviceName}";
+
+                var info = new DiskInfoGeneric
+                {
+                    Index = index++,
+                    DeviceName = devicePath,
+                    DiskType = GetDiskTypeFromMajor(major),
+                    Removable = ReadFileAsBool(Path.Combine(SysBlockPath, deviceName, "removable")) ?? false
+                };
+                list.Add(info);
+
+                // Get size information
+                var sectors = ReadFileAsUInt64(Path.Combine(SysBlockPath, deviceName, "size"));
+                var logicalBlockSize = ReadFileAsUInt32(Path.Combine(SysBlockPath, deviceName, "queue", "logical_block_size")) ?? 512;
+                var physicalBlockSize = ReadFileAsUInt32(Path.Combine(SysBlockPath, deviceName, "queue", "physical_block_size")) ?? 512;
+
+                info.TotalSectors = sectors ?? 0;
+                info.LogicalBlockSize = logicalBlockSize;
+                info.PhysicalBlockSize = physicalBlockSize;
+                info.Size = (sectors ?? 0) * logicalBlockSize;
+
+                // Get device-specific information
+                if (major == NVME_MAJOR)
+                {
+                    ReadNvmeInfo(deviceName, info);
+                    info.Smart = new SmartNvme(devicePath);
+                    info.Smart.Update();
+                    info.SmartType = SmartType.Nvme;
+                }
+                else if (major == MMC_BLOCK_MAJOR)
+                {
+                    ReadMmcInfo(deviceName, info);
+                    info.Smart = SmartUnsupported.Default;
+                    info.SmartType = SmartType.Unsupported;
+                }
+                else if (major is SCSI_DISK0_MAJOR or IDE0_MAJOR or IDE1_MAJOR)
+                {
+                    ReadIdeInfo(deviceName, info);
+                    var smart = new SmartGeneric(devicePath);
+                    if (smart.Update())
+                    {
+                        info.Smart = smart;
+                        info.SmartType = SmartType.Generic;
+                    }
+                    else
+                    {
+                        smart.Dispose();
+                        info.Smart = SmartUnsupported.Default;
+                        info.SmartType = SmartType.Unsupported;
+                    }
                 }
                 else
                 {
-                    smart.Dispose();
-                    info.SmartType = SmartType.Unsupported;
+                    ReadIdeInfo(deviceName, info);
                     info.Smart = SmartUnsupported.Default;
+                    info.SmartType = SmartType.Unsupported;
                 }
             }
-            else
+
+            return list;
+        }
+        catch
+        {
+            foreach (var disk in list)
             {
-                ReadIdeInfo(deviceName, info);
-                info.SmartType = SmartType.Unsupported;
-                info.Smart = SmartUnsupported.Default;
+                disk.Dispose();
             }
 
-            list.Add(info);
+            throw;
         }
-
-        return list;
     }
 
     [GeneratedRegex(@"nvme\d+n\d+p\d+")]
