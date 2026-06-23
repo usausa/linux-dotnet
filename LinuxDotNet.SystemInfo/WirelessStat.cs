@@ -65,50 +65,57 @@ public sealed class WirelessStat
             wireless.Live = false;
         }
 
-        var range = (Span<Range>)stackalloc Range[12];
-        using var reader = new StreamReader("/proc/net/wireless");
-        reader.ReadLine();
-        reader.ReadLine();
         var added = false;
-        while (reader.ReadLine() is { } line)
+        try
         {
-            range.Clear();
-            var span = line.AsSpan();
-            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 11)
+            var range = (Span<Range>)stackalloc Range[12];
+            using var reader = new StreamReader("/proc/net/wireless");
+            reader.ReadLine();
+            reader.ReadLine();
+            while (reader.ReadLine() is { } line)
             {
-                continue;
-            }
-
-            var name = span[range[0]].TrimEnd(':');
-            var wireless = default(WirelessStatEntry);
-            foreach (var item in interfaces)
-            {
-                if (item.Interface == name)
+                range.Clear();
+                var span = line.AsSpan();
+                if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 11)
                 {
-                    wireless = item;
-                    break;
+                    continue;
                 }
+
+                var name = span[range[0]].TrimEnd(':');
+                var wireless = default(WirelessStatEntry);
+                foreach (var item in interfaces)
+                {
+                    if (item.Interface == name)
+                    {
+                        wireless = item;
+                        break;
+                    }
+                }
+
+                if (wireless == null)
+                {
+                    wireless = new WirelessStatEntry(name.ToString());
+                    interfaces.Add(wireless);
+                    added = true;
+                }
+
+                wireless.Live = true;
+
+                wireless.Status = Int32.TryParse(span[range[1]], System.Globalization.NumberStyles.HexNumber, null, out var status) ? status : 0;
+                wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), out var qualityLink) ? qualityLink : 0;
+                wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), out var qualityLevel) ? qualityLevel : 0;
+                wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), out var qualityNoise) ? qualityNoise : 0;
+                wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], out var discardedNetworkId) ? discardedNetworkId : 0;
+                wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], out var discardedCrypt) ? discardedCrypt : 0;
+                wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], out var discardedFragment) ? discardedFragment : 0;
+                wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], out var discardedRetry) ? discardedRetry : 0;
+                wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], out var discardedMisc) ? discardedMisc : 0;
+                wireless.MissedBeacon = UInt64.TryParse(span[range[10]], out var missedBeacon) ? missedBeacon : 0;
             }
-
-            if (wireless == null)
-            {
-                wireless = new WirelessStatEntry(name.ToString());
-                interfaces.Add(wireless);
-                added = true;
-            }
-
-            wireless.Live = true;
-
-            wireless.Status = Int32.TryParse(span[range[1]], System.Globalization.NumberStyles.HexNumber, null, out var status) ? status : 0;
-            wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), out var qualityLink) ? qualityLink : 0;
-            wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), out var qualityLevel) ? qualityLevel : 0;
-            wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), out var qualityNoise) ? qualityNoise : 0;
-            wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], out var discardedNetworkId) ? discardedNetworkId : 0;
-            wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], out var discardedCrypt) ? discardedCrypt : 0;
-            wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], out var discardedFragment) ? discardedFragment : 0;
-            wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], out var discardedRetry) ? discardedRetry : 0;
-            wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], out var discardedMisc) ? discardedMisc : 0;
-            wireless.MissedBeacon = UInt64.TryParse(span[range[10]], out var missedBeacon) ? missedBeacon : 0;
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return false;
         }
 
         for (var i = interfaces.Count - 1; i >= 0; i--)
