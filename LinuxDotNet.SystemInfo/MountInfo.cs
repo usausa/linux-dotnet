@@ -73,6 +73,10 @@ public sealed class MountInfo
     // ReSharper restore StringLiteralTypo
 #pragma warning restore IDE0028
 
+#if NET9_0_OR_GREATER
+    private static readonly Dictionary<string, MountOption>.AlternateLookup<ReadOnlySpan<char>> OptionLookup = OptionMap.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
+
     public string MountPoint { get; }
 
     public string FileSystem { get; }
@@ -115,9 +119,6 @@ public sealed class MountInfo
     {
         var list = new List<MountInfo>();
 
-#if NET9_0_OR_GREATER
-        var optionLookup = OptionMap.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
         var range = (Span<Range>)stackalloc Range[6];
         using var reader = new StreamReader("/proc/mounts");
         while (reader.ReadLine() is { } line)
@@ -139,11 +140,7 @@ public sealed class MountInfo
             {
                 var commaIndex = remaining.IndexOf(',');
                 var key = commaIndex >= 0 ? remaining[..commaIndex] : remaining;
-#if NET9_0_OR_GREATER
-                if (optionLookup.TryGetValue(key, out var value))
-#else
-                if (OptionMap.TryGetValue(key.ToString(), out var value))
-#endif
+                if (TryGetOption(key, out var value))
                 {
                     option |= value;
                 }
@@ -170,6 +167,25 @@ public sealed class MountInfo
     //--------------------------------------------------------------------------------
     // Helper
     //--------------------------------------------------------------------------------
+
+    private static bool TryGetOption(ReadOnlySpan<char> key, out MountOption value)
+    {
+#if NET9_0_OR_GREATER
+        return OptionLookup.TryGetValue(key, out value);
+#else
+        foreach (var pair in OptionMap)
+        {
+            if (key.Equals(pair.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                value = pair.Value;
+                return true;
+            }
+        }
+
+        value = MountOption.None;
+        return false;
+#endif
+    }
 
     private static bool IsOctalDigit(char value) => value is >= '0' and <= '7';
 

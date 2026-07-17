@@ -30,12 +30,12 @@ public sealed class CpuCore
 
     public bool Update()
     {
-        if (!FileHelper.TryReadTrimmedText(frequencyPath, out var text))
+        if (!FileHelper.TryReadText(frequencyPath, out var text))
         {
             return false;
         }
 
-        Frequency = UInt64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Frequency = UInt64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -70,12 +70,12 @@ public sealed class CpuPower
 
     public bool Update()
     {
-        if (!FileHelper.TryReadTrimmedText(energyPath, out var text))
+        if (!FileHelper.TryReadText(energyPath, out var text))
         {
             return false;
         }
 
-        Energy = UInt64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Energy = UInt64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 

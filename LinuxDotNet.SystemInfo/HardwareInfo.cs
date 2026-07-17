@@ -159,8 +159,8 @@ public sealed class HardwareInfo
     // ReSharper disable StringLiteralTypo
     private static ulong ReadCpuFrequencyMax()
     {
-        if (FileHelper.TryReadTrimmedText("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", out var value) &&
-            UInt64.TryParse(value, CultureInfo.InvariantCulture, out var khz))
+        if (FileHelper.TryReadText("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", out var value) &&
+            UInt64.TryParse(value.AsSpan().Trim(), CultureInfo.InvariantCulture, out var khz))
         {
             return khz * 1000;
         }

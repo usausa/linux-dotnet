@@ -22,7 +22,15 @@ public sealed class GameController : IDisposable
 
     private static readonly TimeSpan StopWait = TimeSpan.FromSeconds(5);
 
+#if NET9_0_OR_GREATER
+    private readonly Lock sync = new();
+#else
+    private readonly object sync = new();
+#endif
+
     private readonly string deviceFile;
+
+    private bool disposed;
 
     private CancellationTokenSource? cts;
 
@@ -53,20 +61,34 @@ public sealed class GameController : IDisposable
 
     public void Start()
     {
-        if (processingTask is not null)
+        lock (sync)
         {
-            return;
-        }
+            ObjectDisposedException.ThrowIf(disposed, this);
 
-        cts = new CancellationTokenSource();
-        processingTask = Task.Run(() => ProcessAsync(cts.Token), cts.Token);
+            if (processingTask is not null)
+            {
+                return;
+            }
+
+            var source = new CancellationTokenSource();
+            cts = source;
+            processingTask = Task.Run(() => ProcessAsync(source.Token), source.Token);
+        }
     }
 
-    public void Stop()
+    public bool Stop()
+    {
+        lock (sync)
+        {
+            return StopCore();
+        }
+    }
+
+    private bool StopCore()
     {
         if ((cts is null) || (processingTask is null))
         {
-            return;
+            return true;
         }
 
         if (!cts.IsCancellationRequested)
@@ -74,42 +96,65 @@ public sealed class GameController : IDisposable
             cts.Cancel();
         }
 
+        bool stopped;
         try
         {
-            processingTask.Wait(StopWait);
+            stopped = processingTask.Wait(StopWait);
         }
         catch (AggregateException)
         {
+            // Faulted, so the task is no longer running
+            stopped = true;
+        }
+
+        if (!stopped)
+        {
+            return false;
         }
 
         cts.Dispose();
         cts = null;
         processingTask = null;
+
+        return true;
     }
 
     public void Dispose()
     {
-        Stop();
+        lock (sync)
+        {
+            if (disposed)
+            {
+                return;
+            }
 
-        if (buttonInitialized.Length > 0)
-        {
-            ArrayPool<bool>.Shared.Return(buttonInitialized);
-            buttonInitialized = [];
-        }
-        if (axisInitialized.Length > 0)
-        {
-            ArrayPool<bool>.Shared.Return(axisInitialized);
-            axisInitialized = [];
-        }
-        if (buttons.Length > 0)
-        {
-            ArrayPool<bool>.Shared.Return(buttons);
-            buttons = [];
-        }
-        if (axis.Length > 0)
-        {
-            ArrayPool<short>.Shared.Return(axis);
-            axis = [];
+            disposed = true;
+
+            if (!StopCore())
+            {
+                return;
+            }
+
+            if (buttonInitialized.Length > 0)
+            {
+                ArrayPool<bool>.Shared.Return(buttonInitialized);
+                buttonInitialized = [];
+            }
+            if (axisInitialized.Length > 0)
+            {
+                ArrayPool<bool>.Shared.Return(axisInitialized);
+                axisInitialized = [];
+            }
+            if (buttons.Length > 0)
+            {
+                ArrayPool<bool>.Shared.Return(buttons);
+                buttons = [];
+            }
+            if (axis.Length > 0)
+            {
+                ArrayPool<short>.Shared.Return(axis);
+                axis = [];
+            }
         }
     }
 

@@ -73,8 +73,8 @@ public sealed class BatteryDevice
             foreach (var dir in Directory.GetDirectories(PowerSupplyPath))
             {
                 var file = Path.Combine(dir, "type");
-                if (FileHelper.TryReadTrimmedText(file, out var type) &&
-                    type.StartsWith("Battery", StringComparison.OrdinalIgnoreCase))
+                if (FileHelper.TryReadText(file, out var type) &&
+                    type.AsSpan().Trim().StartsWith("Battery", StringComparison.OrdinalIgnoreCase))
                 {
                     return dir;
                 }

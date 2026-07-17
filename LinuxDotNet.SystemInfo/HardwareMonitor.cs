@@ -34,12 +34,12 @@ public sealed class HardwareSensor
 
     public bool Update()
     {
-        if (!FileHelper.TryReadTrimmedText(valuePath, out var text))
+        if (!FileHelper.TryReadText(valuePath, out var text))
         {
             return false;
         }
 
-        Value = Int64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Value = Int64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 

@@ -53,8 +53,8 @@ public sealed class MainsDevice
             foreach (var dir in Directory.GetDirectories(PowerSupplyPath))
             {
                 var file = Path.Combine(dir, "type");
-                if (FileHelper.TryReadTrimmedText(file, out var type) &&
-                    type.StartsWith("Mains", StringComparison.OrdinalIgnoreCase))
+                if (FileHelper.TryReadText(file, out var type) &&
+                    type.AsSpan().Trim().StartsWith("Mains", StringComparison.OrdinalIgnoreCase))
                 {
                     return dir;
                 }

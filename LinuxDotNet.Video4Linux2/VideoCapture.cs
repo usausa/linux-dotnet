@@ -62,7 +62,15 @@ public readonly struct FrameBuffer
 #pragma warning disable CA1806
 public sealed class VideoCapture : IDisposable
 {
+    private const int StopTimeout = 5000;
+
     public event Action<FrameBuffer>? FrameCaptured;
+
+#if NET9_0_OR_GREATER
+    private readonly Lock sync = new();
+#else
+    private readonly object sync = new();
+#endif
 
     private readonly string path;
 
@@ -80,6 +88,7 @@ public sealed class VideoCapture : IDisposable
 
     public int Height { get; private set; }
 
+    // ReSharper disable once InconsistentlySynchronizedField
     public bool IsOpen => fd >= 0;
 
     public bool IsCapturing => captureCts is { IsCancellationRequested: false };
@@ -94,7 +103,15 @@ public sealed class VideoCapture : IDisposable
         Close();
     }
 
-    public unsafe bool Open(int width = 640, int height = 480)
+    public bool Open(int width = 640, int height = 480)
+    {
+        lock (sync)
+        {
+            return OpenCore(width, height);
+        }
+    }
+
+    private unsafe bool OpenCore(int width, int height)
     {
         if (IsOpen)
         {
@@ -185,7 +202,15 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public unsafe bool SetFrameRate(int fps)
+    public bool SetFrameRate(int fps)
+    {
+        lock (sync)
+        {
+            return SetFrameRateCore(fps);
+        }
+    }
+
+    private unsafe bool SetFrameRateCore(int fps)
     {
         if (!IsOpen || (fps <= 0))
         {
@@ -211,15 +236,24 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public void Close()
+    public bool Close()
     {
-        if (!IsOpen)
+        lock (sync)
         {
-            return;
-        }
+            if (!IsOpen)
+            {
+                return true;
+            }
 
-        StopCapture();
-        CloseInternal();
+            if (!StopCaptureCore())
+            {
+                return false;
+            }
+
+            CloseInternal();
+
+            return true;
+        }
     }
 
     private void CloseInternal()
@@ -244,9 +278,17 @@ public sealed class VideoCapture : IDisposable
         Height = 0;
     }
 
-    public unsafe bool Snapshot(IBufferWriter<byte> writer, int timeout = 5000)
+    public bool Snapshot(IBufferWriter<byte> writer, int timeout = 5000)
     {
-        if (!IsOpen || IsCapturing)
+        lock (sync)
+        {
+            return SnapshotCore(writer, timeout);
+        }
+    }
+
+    private unsafe bool SnapshotCore(IBufferWriter<byte> writer, int timeout)
+    {
+        if (!IsOpen || (captureThread is not null))
         {
             return false;
         }
@@ -310,16 +352,24 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public unsafe bool StartCapture(int fps = 0)
+    public bool StartCapture(int fps = 0)
     {
-        if (!IsOpen || IsCapturing)
+        lock (sync)
+        {
+            return StartCaptureCore(fps);
+        }
+    }
+
+    private unsafe bool StartCaptureCore(int fps)
+    {
+        if (!IsOpen || (captureThread is not null))
         {
             return false;
         }
 
         if (fps > 0)
         {
-            _ = SetFrameRate(fps);
+            _ = SetFrameRateCore(fps);
         }
 
         if (!QueueAllBuffers())
@@ -335,8 +385,9 @@ public sealed class VideoCapture : IDisposable
         }
 
         // Start capture loop
-        captureCts = new CancellationTokenSource();
-        captureThread = new Thread(() => CaptureLoop(fps, captureCts.Token))
+        var source = new CancellationTokenSource();
+        captureCts = source;
+        captureThread = new Thread(() => CaptureLoop(fps, source.Token))
         {
             IsBackground = true,
             Name = "V4L2 Capture"
@@ -346,23 +397,37 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public unsafe void StopCapture()
+    public bool StopCapture()
     {
-        if (!IsCapturing)
+        lock (sync)
         {
-            return;
+            return StopCaptureCore();
+        }
+    }
+
+    private unsafe bool StopCaptureCore()
+    {
+        if ((captureCts is null) || (captureThread is null))
+        {
+            return true;
         }
 
-        captureCts?.Cancel();
-        captureThread?.Join();
+        captureCts.Cancel();
+        if (!captureThread.Join(StopTimeout))
+        {
+            return false;
+        }
+
         captureThread = null;
 
-        captureCts?.Dispose();
+        captureCts.Dispose();
         captureCts = null;
 
         // Stop streaming
         var type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         ioctl(fd, VIDIOC_STREAMOFF, (IntPtr)(&type));
+
+        return true;
     }
 
     private unsafe void CaptureLoop(int fps, CancellationToken cancellationToken)
