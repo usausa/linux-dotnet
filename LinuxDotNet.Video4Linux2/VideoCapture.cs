@@ -91,7 +91,7 @@ public sealed class VideoCapture : IDisposable
     // ReSharper disable once InconsistentlySynchronizedField
     public bool IsOpen => fd >= 0;
 
-    public bool IsCapturing => captureCts is { IsCancellationRequested: false };
+    public bool IsCapturing => captureThread is not null;
 
     public VideoCapture(string path)
     {
@@ -288,7 +288,7 @@ public sealed class VideoCapture : IDisposable
 
     private unsafe bool SnapshotCore(IBufferWriter<byte> writer, int timeout)
     {
-        if (!IsOpen || (captureThread is not null))
+        if (!IsOpen || IsCapturing)
         {
             return false;
         }
@@ -362,7 +362,7 @@ public sealed class VideoCapture : IDisposable
 
     private unsafe bool StartCaptureCore(int fps)
     {
-        if (!IsOpen || (captureThread is not null))
+        if (!IsOpen || IsCapturing)
         {
             return false;
         }
