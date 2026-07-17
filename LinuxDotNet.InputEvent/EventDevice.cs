@@ -73,10 +73,13 @@ public sealed unsafe class EventDevice : IDisposable
             var result = ioctl(fd, EVIOCGRAB, 1);
             if (result < 0)
             {
+                var error = Marshal.GetLastWin32Error();
                 stream.Dispose();
                 stream = null;
-                throw new IOException($"Grab failed. error=[{Marshal.GetLastWin32Error()}]");
+                throw new IOException($"Grab failed. error=[{error}]");
             }
+
+            grabbed = true;
         }
 
         return true;
@@ -135,7 +138,7 @@ public sealed unsafe class EventDevice : IDisposable
                 return false;
             }
 
-            throw new IOException($"Pool failed. error=[{Marshal.GetLastWin32Error()}]");
+            throw new IOException($"Pool failed. error=[{error}]");
         }
 
         if ((pollFd.revents & POLLERR) != 0)

@@ -1,5 +1,6 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -33,7 +34,7 @@ public sealed class HardwareSensor
 
     public bool Update()
     {
-        Value = Int64.TryParse(File.ReadAllText(valuePath).AsSpan().Trim(), out var value) ? value : 0;
+        Value = Int64.TryParse(File.ReadAllText(valuePath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 

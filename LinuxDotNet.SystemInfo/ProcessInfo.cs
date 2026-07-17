@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 using static LinuxDotNet.SystemInfo.NativeMethods;
 
 public enum ProcessState
@@ -108,7 +110,7 @@ public sealed record ProcessInfo
         static long ExtractInt64(ReadOnlySpan<char> span)
         {
             var range = (Span<Range>)stackalloc Range[3];
-            return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], out var result) ? result : 0;
+            return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
         }
     }
     // ReSharper restore StringLiteralTypo
@@ -124,7 +126,7 @@ public sealed record ProcessInfo
         foreach (var dir in Directory.EnumerateDirectories("/proc"))
         {
             var name = Path.GetFileName(dir).AsSpan();
-            if (!Int32.TryParse(name, out var pid))
+            if (!Int32.TryParse(name, CultureInfo.InvariantCulture, out var pid))
             {
                 continue;
             }
@@ -198,20 +200,20 @@ public sealed record ProcessInfo
                 _ => ProcessState.Unknown
             };
 
-            result.ParentProcessId = Int32.TryParse(rest[statRange[1]], out var parentProcessId) ? parentProcessId : 0;
-            result.ProcessGroupId = Int32.TryParse(rest[statRange[2]], out var processGroupId) ? processGroupId : 0;
-            result.MinorFaults = UInt64.TryParse(rest[statRange[7]], out var minorFault) ? minorFault : 0;
-            result.MajorFaults = UInt64.TryParse(rest[statRange[9]], out var majorFault) ? majorFault : 0;
-            result.UserTime = UInt64.TryParse(rest[statRange[11]], out var userTime) ? TimeSpan.FromSeconds((double)userTime / ClockTick) : TimeSpan.Zero;
-            result.SystemTime = UInt64.TryParse(rest[statRange[12]], out var systemTime) ? TimeSpan.FromSeconds((double)systemTime / ClockTick) : TimeSpan.Zero;
-            result.Priority = Int32.TryParse(rest[statRange[15]], out var priority) ? priority : 0;
-            result.Nice = Int32.TryParse(rest[statRange[16]], out var nice) ? nice : 0;
-            result.ThreadCount = Int32.TryParse(rest[statRange[17]], out var threadCount) ? threadCount : 0;
-            result.StartTime = UInt64.TryParse(rest[statRange[19]], out var startTimeTicks)
+            result.ParentProcessId = Int32.TryParse(rest[statRange[1]], CultureInfo.InvariantCulture, out var parentProcessId) ? parentProcessId : 0;
+            result.ProcessGroupId = Int32.TryParse(rest[statRange[2]], CultureInfo.InvariantCulture, out var processGroupId) ? processGroupId : 0;
+            result.MinorFaults = UInt64.TryParse(rest[statRange[7]], CultureInfo.InvariantCulture, out var minorFault) ? minorFault : 0;
+            result.MajorFaults = UInt64.TryParse(rest[statRange[9]], CultureInfo.InvariantCulture, out var majorFault) ? majorFault : 0;
+            result.UserTime = UInt64.TryParse(rest[statRange[11]], CultureInfo.InvariantCulture, out var userTime) ? TimeSpan.FromSeconds((double)userTime / ClockTick) : TimeSpan.Zero;
+            result.SystemTime = UInt64.TryParse(rest[statRange[12]], CultureInfo.InvariantCulture, out var systemTime) ? TimeSpan.FromSeconds((double)systemTime / ClockTick) : TimeSpan.Zero;
+            result.Priority = Int32.TryParse(rest[statRange[15]], CultureInfo.InvariantCulture, out var priority) ? priority : 0;
+            result.Nice = Int32.TryParse(rest[statRange[16]], CultureInfo.InvariantCulture, out var nice) ? nice : 0;
+            result.ThreadCount = Int32.TryParse(rest[statRange[17]], CultureInfo.InvariantCulture, out var threadCount) ? threadCount : 0;
+            result.StartTime = UInt64.TryParse(rest[statRange[19]], CultureInfo.InvariantCulture, out var startTimeTicks)
                 ? DateTimeOffset.FromUnixTimeSeconds(BootTime + (long)(startTimeTicks / ClockTick))
                 : DateTimeOffset.MinValue;
-            result.VirtualMemorySize = UInt64.TryParse(rest[statRange[20]], out var virtualSize) ? virtualSize : 0;
-            result.ResidentMemorySize = UInt64.TryParse(rest[statRange[21]], out var rss) ? rss * PageSize : 0;
+            result.VirtualMemorySize = UInt64.TryParse(rest[statRange[20]], CultureInfo.InvariantCulture, out var virtualSize) ? virtualSize : 0;
+            result.ResidentMemorySize = UInt64.TryParse(rest[statRange[21]], CultureInfo.InvariantCulture, out var rss) ? rss * PageSize : 0;
 
             // Status
             var statusPath = Path.Combine(procPath, "status");
@@ -249,6 +251,6 @@ public sealed record ProcessInfo
     private static uint ExtractStatUInt32(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt32.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt32.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

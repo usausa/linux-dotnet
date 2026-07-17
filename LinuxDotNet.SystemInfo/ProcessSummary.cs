@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 public sealed class ProcessSummary
 {
     public DateTime UpdateAt { get; private set; }
@@ -27,7 +29,7 @@ public sealed class ProcessSummary
         var thread = 0;
         foreach (var dir in Directory.EnumerateDirectories("/proc"))
         {
-            if (!Int32.TryParse(Path.GetFileName(dir), out _))
+            if (!Int32.TryParse(Path.GetFileName(dir), CultureInfo.InvariantCulture, out _))
             {
                 continue;
             }
@@ -76,6 +78,6 @@ public sealed class ProcessSummary
     private static int ExtractInt32(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries) > 1) && Int32.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries) > 1) && Int32.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

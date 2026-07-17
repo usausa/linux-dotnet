@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 public sealed class HardwareInfo
 {
     // DMI
@@ -113,7 +115,7 @@ public sealed class HardwareInfo
                     processors++;
                     continue;
                 case "physical id":
-                    if (Int32.TryParse(value, out var physId))
+                    if (Int32.TryParse(value, CultureInfo.InvariantCulture, out var physId))
                     {
                         physicalIds.Add(physId);
                     }
@@ -131,16 +133,16 @@ public sealed class HardwareInfo
                         CpuVendor = value.ToString();
                         break;
                     case "cpu family":
-                        CpuFamily = Int32.TryParse(value, out var family) ? family : 0;
+                        CpuFamily = Int32.TryParse(value, CultureInfo.InvariantCulture, out var family) ? family : 0;
                         break;
                     case "model":
-                        CpuModel = Int32.TryParse(value, out var model) ? model : 0;
+                        CpuModel = Int32.TryParse(value, CultureInfo.InvariantCulture, out var model) ? model : 0;
                         break;
                     case "stepping":
-                        CpuStepping = Int32.TryParse(value, out var stepping) ? stepping : 0;
+                        CpuStepping = Int32.TryParse(value, CultureInfo.InvariantCulture, out var stepping) ? stepping : 0;
                         break;
                     case "cpu cores":
-                        CoresPerSocket = Int32.TryParse(value, out var cores) ? cores : 0;
+                        CoresPerSocket = Int32.TryParse(value, CultureInfo.InvariantCulture, out var cores) ? cores : 0;
                         break;
                 }
             }
@@ -161,7 +163,7 @@ public sealed class HardwareInfo
         if (File.Exists(path))
         {
             var value = File.ReadAllText(path).Trim();
-            if (UInt64.TryParse(value, out var khz))
+            if (UInt64.TryParse(value, CultureInfo.InvariantCulture, out var khz))
             {
                 return khz * 1000;
             }
@@ -181,7 +183,7 @@ public sealed class HardwareInfo
 
         foreach (var indexDir in Directory.GetDirectories(cacheBasePath, "index*"))
         {
-            if (!Int32.TryParse(ReadFile(Path.Combine(indexDir, "level")), out var level))
+            if (!Int32.TryParse(ReadFile(Path.Combine(indexDir, "level")), CultureInfo.InvariantCulture, out var level))
             {
                 continue;
             }
@@ -221,15 +223,15 @@ public sealed class HardwareInfo
         size = size.Trim().ToUpperInvariant();
         if (size.EndsWith('K'))
         {
-            return UInt64.TryParse(size[..^1], out var kb) ? kb : 0;
+            return UInt64.TryParse(size[..^1], CultureInfo.InvariantCulture, out var kb) ? kb : 0;
         }
 
         if (size.EndsWith('M'))
         {
-            return UInt64.TryParse(size[..^1], out var mb) ? mb * 1024 : 0;
+            return UInt64.TryParse(size[..^1], CultureInfo.InvariantCulture, out var mb) ? mb * 1024 : 0;
         }
 
-        return UInt64.TryParse(size, out var bytes) ? bytes / 1024 : 0;
+        return UInt64.TryParse(size, CultureInfo.InvariantCulture, out var bytes) ? bytes / 1024 : 0;
     }
 
     private static ulong ReadMemoryTotal()
@@ -284,6 +286,6 @@ public sealed class HardwareInfo
     private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

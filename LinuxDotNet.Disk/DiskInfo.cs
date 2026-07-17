@@ -1,5 +1,6 @@
 namespace LinuxDotNet.Disk;
 
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 using static LinuxDotNet.Disk.Helper;
@@ -173,7 +174,7 @@ public static partial class DiskInfo
             return -1;
         }
 
-        return Int32.TryParse(span[..index], out var major) ? major : -1;
+        return Int32.TryParse(span[..index], CultureInfo.InvariantCulture, out var major) ? major : -1;
     }
 
     private static DiskType GetDiskTypeFromMajor(int major)

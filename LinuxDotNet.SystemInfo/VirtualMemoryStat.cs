@@ -1,6 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
+using System.Globalization;
 
 public sealed class VirtualMemoryStat
 {
@@ -119,6 +120,6 @@ public sealed class VirtualMemoryStat
     private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

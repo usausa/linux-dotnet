@@ -113,6 +113,9 @@ public sealed class MountInfo
     {
         var list = new List<MountInfo>();
 
+#if NET9_0_OR_GREATER
+        var optionLookup = OptionMap.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
         var range = (Span<Range>)stackalloc Range[6];
         using var reader = new StreamReader("/proc/mounts");
         while (reader.ReadLine() is { } line)
@@ -134,13 +137,13 @@ public sealed class MountInfo
             {
                 var commaIndex = remaining.IndexOf(',');
                 var key = commaIndex >= 0 ? remaining[..commaIndex] : remaining;
-                foreach (var pair in OptionMap)
+#if NET9_0_OR_GREATER
+                if (optionLookup.TryGetValue(key, out var value))
+#else
+                if (OptionMap.TryGetValue(key.ToString(), out var value))
+#endif
                 {
-                    if (key.Equals(pair.Key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        option |= pair.Value;
-                        break;
-                    }
+                    option |= value;
                 }
 
                 if (commaIndex < 0)

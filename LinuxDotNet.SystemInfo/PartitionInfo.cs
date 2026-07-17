@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 public sealed class PartitionInfo
 {
     public string Name { get; init; } = default!;
@@ -29,7 +31,7 @@ public sealed class PartitionInfo
                 continue;
             }
 
-            var deviceClass = Int32.TryParse(span[range[0]], out var major) ? (DeviceClass)major : DeviceClass.Unknown;
+            var deviceClass = Int32.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var major) ? (DeviceClass)major : DeviceClass.Unknown;
             if (!includeAll && !deviceClass.IsPhysicalStorage())
             {
                 continue;
@@ -39,8 +41,8 @@ public sealed class PartitionInfo
             {
                 Name = span[range[3]].ToString(),
                 DeviceClass = deviceClass,
-                No = Int32.TryParse(span[range[1]], out var minor) ? minor : 0,
-                Blocks = UInt64.TryParse(span[range[2]], out var blocks) ? blocks : 0
+                No = Int32.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var minor) ? minor : 0,
+                Blocks = UInt64.TryParse(span[range[2]], CultureInfo.InvariantCulture, out var blocks) ? blocks : 0
             });
         }
 

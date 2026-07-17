@@ -1,5 +1,6 @@
 namespace LinuxDotNet.Video4Linux2;
 
+using System.Globalization;
 using System.Text;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -128,9 +129,19 @@ public sealed class VideoInfo
             yield break;
         }
 
-        foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => x))
+        foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => Int32.TryParse(x!.AsSpan(5), NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : Int32.MaxValue))
         {
-            yield return GetVideoInfo($"/dev/{name}");
+            VideoInfo info;
+            try
+            {
+                info = GetVideoInfo($"/dev/{name}");
+            }
+            catch (FileNotFoundException)
+            {
+                continue;
+            }
+
+            yield return info;
         }
     }
 

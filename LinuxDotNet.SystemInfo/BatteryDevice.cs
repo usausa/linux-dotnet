@@ -1,6 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
+using System.Globalization;
 
 public sealed class BatteryDevice
 {
@@ -105,7 +106,7 @@ public sealed class BatteryDevice
             return 0;
         }
 
-        return Int32.TryParse(value, out var result) ? result : 0;
+        return Int32.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 
     private long ReadFileAsInt64(string name)
@@ -116,6 +117,6 @@ public sealed class BatteryDevice
             return 0;
         }
 
-        return Int64.TryParse(value, out var result) ? result : 0;
+        return Int64.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

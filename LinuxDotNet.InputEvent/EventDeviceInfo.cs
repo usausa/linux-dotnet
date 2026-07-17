@@ -38,19 +38,27 @@ public sealed class EventDeviceInfo
         }
 
         var devices = new List<EventDeviceInfo>();
-        foreach (var name in Directory.GetDirectories(InputDevicePath).Select(Path.GetFileName).Where(static x => x?.StartsWith("event", StringComparison.Ordinal) ?? false).OrderBy(static x => Int32.Parse(x!.AsSpan()[5..], CultureInfo.InvariantCulture)))
+        foreach (var name in Directory.EnumerateDirectories(InputDevicePath).Select(Path.GetFileName))
         {
-            var number = Int32.Parse(name.AsSpan()[5..], CultureInfo.InvariantCulture);
+            if ((name is null) || !name.StartsWith("event", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!Int32.TryParse(name.AsSpan(5), NumberStyles.None, CultureInfo.InvariantCulture, out var number))
+            {
+                continue;
+            }
 
             devices.Add(new EventDeviceInfo(
                 $"/dev/input/{name}",
-                ReadFileValue(Path.Combine(InputDevicePath, name!, "device", "name")),
+                ReadFileValue(Path.Combine(InputDevicePath, name, "device", "name")),
                 number,
-                ReadFileValue(Path.Combine(InputDevicePath, name!, "device", "id", "vendor")),
-                ReadFileValue(Path.Combine(InputDevicePath, name!, "device", "id", "product"))));
+                ReadFileValue(Path.Combine(InputDevicePath, name, "device", "id", "vendor")),
+                ReadFileValue(Path.Combine(InputDevicePath, name, "device", "id", "product"))));
         }
 
-        return devices;
+        return devices.OrderBy(static x => x.Number).ToList();
 
         static string ReadFileValue(string path)
         {

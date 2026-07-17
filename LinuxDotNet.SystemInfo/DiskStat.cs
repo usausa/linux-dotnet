@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 public sealed class DiskStatEntry
 {
     internal bool Live { get; set; }
@@ -74,7 +76,7 @@ public sealed class DiskStat
                 continue;
             }
 
-            var deviceClass = Int32.TryParse(span[range[0]], out var m) ? (DeviceClass)m : DeviceClass.Unknown;
+            var deviceClass = Int32.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var m) ? (DeviceClass)m : DeviceClass.Unknown;
             if (!deviceClass.IsPhysicalStorage())
             {
                 continue;
@@ -100,17 +102,17 @@ public sealed class DiskStat
 
             device.Live = true;
 
-            device.ReadCompleted = UInt64.TryParse(span[range[3]], out var readCompleted) ? readCompleted : 0;
-            device.ReadMerged = UInt64.TryParse(span[range[4]], out var readMerged) ? readMerged : 0;
-            device.ReadSectors = UInt64.TryParse(span[range[5]], out var readSectors) ? readSectors : 0;
-            device.ReadTime = UInt64.TryParse(span[range[6]], out var readTime) ? readTime : 0;
-            device.WriteCompleted = UInt64.TryParse(span[range[7]], out var writeCompleted) ? writeCompleted : 0;
-            device.WriteMerged = UInt64.TryParse(span[range[8]], out var writeMerged) ? writeMerged : 0;
-            device.WriteSectors = UInt64.TryParse(span[range[9]], out var writeSectors) ? writeSectors : 0;
-            device.WriteTime = UInt64.TryParse(span[range[10]], out var writeTime) ? writeTime : 0;
-            device.IosInProgress = UInt64.TryParse(span[range[11]], out var iosInProgress) ? iosInProgress : 0;
-            device.IoTime = UInt64.TryParse(span[range[12]], out var ioTime) ? ioTime : 0;
-            device.WeightIoTime = UInt64.TryParse(span[range[13]], out var weightIoTime) ? weightIoTime : 0;
+            device.ReadCompleted = UInt64.TryParse(span[range[3]], CultureInfo.InvariantCulture, out var readCompleted) ? readCompleted : 0;
+            device.ReadMerged = UInt64.TryParse(span[range[4]], CultureInfo.InvariantCulture, out var readMerged) ? readMerged : 0;
+            device.ReadSectors = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out var readSectors) ? readSectors : 0;
+            device.ReadTime = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out var readTime) ? readTime : 0;
+            device.WriteCompleted = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out var writeCompleted) ? writeCompleted : 0;
+            device.WriteMerged = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out var writeMerged) ? writeMerged : 0;
+            device.WriteSectors = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out var writeSectors) ? writeSectors : 0;
+            device.WriteTime = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out var writeTime) ? writeTime : 0;
+            device.IosInProgress = UInt64.TryParse(span[range[11]], CultureInfo.InvariantCulture, out var iosInProgress) ? iosInProgress : 0;
+            device.IoTime = UInt64.TryParse(span[range[12]], CultureInfo.InvariantCulture, out var ioTime) ? ioTime : 0;
+            device.WeightIoTime = UInt64.TryParse(span[range[13]], CultureInfo.InvariantCulture, out var weightIoTime) ? weightIoTime : 0;
         }
 
         for (var i = devices.Count - 1; i >= 0; i--)

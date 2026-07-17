@@ -1,6 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
+using System.Globalization;
 
 public sealed class CpuStat
 {
@@ -122,16 +123,16 @@ public sealed class SystemStat
 
         var stat = span[range[0]] is "cpu" ? CpuTotal : FindCpu(span[range[0]]);
 
-        stat.User = UInt64.TryParse(span[range[1]], out var value) ? value : 0;
-        stat.Nice = UInt64.TryParse(span[range[2]], out value) ? value : 0;
-        stat.System = UInt64.TryParse(span[range[3]], out value) ? value : 0;
-        stat.Idle = UInt64.TryParse(span[range[4]], out value) ? value : 0;
-        stat.IoWait = UInt64.TryParse(span[range[5]], out value) ? value : 0;
-        stat.Irq = UInt64.TryParse(span[range[6]], out value) ? value : 0;
-        stat.SoftIrq = UInt64.TryParse(span[range[7]], out value) ? value : 0;
-        stat.Steal = UInt64.TryParse(span[range[8]], out value) ? value : 0;
-        stat.Guest = UInt64.TryParse(span[range[9]], out value) ? value : 0;
-        stat.GuestNice = UInt64.TryParse(span[range[10]], out value) ? value : 0;
+        stat.User = UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var value) ? value : 0;
+        stat.Nice = UInt64.TryParse(span[range[2]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.System = UInt64.TryParse(span[range[3]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.Idle = UInt64.TryParse(span[range[4]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.IoWait = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.Irq = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.SoftIrq = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.Steal = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.Guest = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.GuestNice = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out value) ? value : 0;
     }
 
     private CpuStat FindCpu(ReadOnlySpan<char> name)
@@ -156,12 +157,12 @@ public sealed class SystemStat
     private static ulong ExtractUInt64(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 
     private static int ExtractInt32(ReadOnlySpan<char> span)
     {
         var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int32.TryParse(span[range[1]], out var result) ? result : 0;
+        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int32.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

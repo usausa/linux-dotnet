@@ -312,13 +312,13 @@ public static class CupsPrinter
             return result;
         }
 
-        // Max 100
-        for (var i = 0; i < 100; i++)
+        var count = ippGetCount(attr);
+        for (var i = 0; i < count; i++)
         {
             var valuePtr = ippGetString(attr, i, IntPtr.Zero);
             if (valuePtr == IntPtr.Zero)
             {
-                break;
+                continue;
             }
 
             var value = Marshal.PtrToStringUTF8(valuePtr);
@@ -508,9 +508,10 @@ public static class CupsPrinter
     {
         var jobs = new List<PrintJob>();
         var jobsPtr = IntPtr.Zero;
+        var numJobs = 0;
         try
         {
-            var numJobs = cupsGetJobs(ref jobsPtr, printer ?? string.Empty, myJobsOnly ? 1 : 0, -1);
+            numJobs = cupsGetJobs(ref jobsPtr, printer ?? string.Empty, myJobsOnly ? 1 : 0, -1);
             for (var i = 0; i < numJobs; i++)
             {
                 var currentJobPtr = IntPtr.Add(jobsPtr, i * sizeof(cups_job_t));
@@ -531,7 +532,7 @@ public static class CupsPrinter
         {
             if (jobsPtr != IntPtr.Zero)
             {
-                cupsFreeJobs(jobs.Count, jobsPtr);
+                cupsFreeJobs(numJobs, jobsPtr);
             }
         }
     }

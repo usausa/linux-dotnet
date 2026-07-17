@@ -1,5 +1,6 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 public sealed class CpuCore
@@ -29,7 +30,7 @@ public sealed class CpuCore
 
     public bool Update()
     {
-        Frequency = UInt64.TryParse(File.ReadAllText(frequencyPath).AsSpan().Trim(), out var value) ? value : 0;
+        Frequency = UInt64.TryParse(File.ReadAllText(frequencyPath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -64,7 +65,7 @@ public sealed class CpuPower
 
     public bool Update()
     {
-        Energy = UInt64.TryParse(File.ReadAllText(energyPath).AsSpan().Trim(), out var value) ? value : 0;
+        Energy = UInt64.TryParse(File.ReadAllText(energyPath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -72,7 +73,7 @@ public sealed class CpuPower
     }
 }
 
-public sealed class CpuDevice
+public sealed partial class CpuDevice
 {
     public IReadOnlyList<CpuCore> Cores { get; }
 
@@ -92,15 +93,18 @@ public sealed class CpuDevice
     // Factory
     //--------------------------------------------------------------------------------
 
+    [GeneratedRegex(@"^cpu\d+$")]
+    private static partial Regex CpuCoreRegex();
+
     // ReSharper disable StringLiteralTypo
     private static CpuCore[] GetCores()
     {
         var cores = new List<CpuCore>();
 
-        var pattern = new Regex(@"^cpu\d+$");
         foreach (var dir in Directory.GetDirectories("/sys/devices/system/cpu"))
         {
-            if (!pattern.IsMatch(Path.GetFileName(dir)))
+            var name = Path.GetFileName(dir);
+            if (!CpuCoreRegex().IsMatch(name))
             {
                 continue;
             }
@@ -111,12 +115,10 @@ public sealed class CpuDevice
                 continue;
             }
 
-            var name = Path.GetFileName(dir);
-
             cores.Add(new CpuCore(name, path));
         }
 
-        return cores.OrderBy(static x => x.Name).ToArray();
+        return cores.OrderBy(static x => Int32.TryParse(x.Name.AsSpan(3), NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : Int32.MaxValue).ToArray();
     }
     // ReSharper restore StringLiteralTypo
 

@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Globalization;
+
 public sealed class WirelessStatEntry
 {
     internal bool Live { get; set; }
@@ -101,16 +103,16 @@ public sealed class WirelessStat
 
                 wireless.Live = true;
 
-                wireless.Status = Int32.TryParse(span[range[1]], System.Globalization.NumberStyles.HexNumber, null, out var status) ? status : 0;
-                wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), out var qualityLink) ? qualityLink : 0;
-                wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), out var qualityLevel) ? qualityLevel : 0;
-                wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), out var qualityNoise) ? qualityNoise : 0;
-                wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], out var discardedNetworkId) ? discardedNetworkId : 0;
-                wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], out var discardedCrypt) ? discardedCrypt : 0;
-                wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], out var discardedFragment) ? discardedFragment : 0;
-                wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], out var discardedRetry) ? discardedRetry : 0;
-                wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], out var discardedMisc) ? discardedMisc : 0;
-                wireless.MissedBeacon = UInt64.TryParse(span[range[10]], out var missedBeacon) ? missedBeacon : 0;
+                wireless.Status = Int32.TryParse(span[range[1]], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var status) ? status : 0;
+                wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityLink) ? qualityLink : 0;
+                wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityLevel) ? qualityLevel : 0;
+                wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityNoise) ? qualityNoise : 0;
+                wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out var discardedNetworkId) ? discardedNetworkId : 0;
+                wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out var discardedCrypt) ? discardedCrypt : 0;
+                wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out var discardedFragment) ? discardedFragment : 0;
+                wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out var discardedRetry) ? discardedRetry : 0;
+                wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out var discardedMisc) ? discardedMisc : 0;
+                wireless.MissedBeacon = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out var missedBeacon) ? missedBeacon : 0;
             }
         }
         catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
