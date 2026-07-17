@@ -139,7 +139,7 @@ public sealed class StreamCommand : ICommandHandler
     [Option<string>("--printer", "-p", Description = "Printer")]
     public string? Printer { get; set; }
 
-    public ValueTask ExecuteAsync(CommandContext context)
+    public async ValueTask ExecuteAsync(CommandContext context)
     {
         using var image = SampleImage.Create();
         var options = new PrintOptions
@@ -152,9 +152,7 @@ public sealed class StreamCommand : ICommandHandler
             Quality = PrintQuality.Normal
         };
 
-        var jobId = CupsPrinter.PrintStream(image, options);
+        var jobId = await CupsPrinter.PrintStreamAsync(image, options).ConfigureAwait(false);
         Console.WriteLine($"JobId: {jobId}");
-
-        return ValueTask.CompletedTask;
     }
 }

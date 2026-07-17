@@ -6,14 +6,27 @@ internal static class Helper
 {
     public static short KelvinToCelsius(ushort value) => (short)(value > 0 ? value - 273 : Int16.MinValue);
 
+    private static bool TryReadTrimmedText(string path, out string value)
+    {
+        try
+        {
+            value = File.ReadAllText(path).Trim();
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            value = string.Empty;
+            return false;
+        }
+    }
+
     public static string? ReadFile(string path)
     {
-        if (!File.Exists(path))
+        if (!TryReadTrimmedText(path, out var content))
         {
             return null;
         }
 
-        var content = File.ReadAllText(path).Trim();
         return String.IsNullOrWhiteSpace(content) ? null : content;
     }
 

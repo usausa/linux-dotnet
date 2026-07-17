@@ -1,5 +1,7 @@
 namespace LinuxDotNet.SystemInfo;
 
+using System.Text;
+
 [Flags]
 public enum MountOption
 {
@@ -128,9 +130,9 @@ public sealed class MountInfo
                 continue;
             }
 
-            var device = span[range[0]].ToString();
-            var mountPoint = span[range[1]].ToString().Replace("\\040", " ", StringComparison.Ordinal).Replace("\\011", "\t", StringComparison.Ordinal);
-            var fsType = span[range[2]].ToString();
+            var device = DecodeOctalEscape(span[range[0]]);
+            var mountPoint = DecodeOctalEscape(span[range[1]]);
+            var fsType = DecodeOctalEscape(span[range[2]]);
             var option = MountOption.None;
             var remaining = span[range[3]];
             while (!remaining.IsEmpty)
@@ -163,5 +165,48 @@ public sealed class MountInfo
         }
 
         return list;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
+    private static bool IsOctalDigit(char value) => value is >= '0' and <= '7';
+
+    private static string DecodeOctalEscape(ReadOnlySpan<char> value)
+    {
+        var index = value.IndexOf('\\');
+        if (index < 0)
+        {
+            return value.ToString();
+        }
+
+        var builder = new StringBuilder(value.Length);
+        while (true)
+        {
+            builder.Append(value[..index]);
+
+            if ((index + 3 < value.Length) &&
+                IsOctalDigit(value[index + 1]) &&
+                IsOctalDigit(value[index + 2]) &&
+                IsOctalDigit(value[index + 3]))
+            {
+                var code = ((value[index + 1] - '0') * 64) + ((value[index + 2] - '0') * 8) + (value[index + 3] - '0');
+                builder.Append((char)code);
+                value = value[(index + 4)..];
+            }
+            else
+            {
+                builder.Append('\\');
+                value = value[(index + 1)..];
+            }
+
+            index = value.IndexOf('\\');
+            if (index < 0)
+            {
+                builder.Append(value);
+                return builder.ToString();
+            }
+        }
     }
 }

@@ -62,7 +62,14 @@ public sealed class EventDeviceInfo
 
         static string ReadFileValue(string path)
         {
-            return File.Exists(path) ? File.ReadAllText(path).Trim() : string.Empty;
+            try
+            {
+                return File.ReadAllText(path).Trim();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return string.Empty;
+            }
         }
     }
 }

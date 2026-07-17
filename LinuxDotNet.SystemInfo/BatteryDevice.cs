@@ -73,13 +73,10 @@ public sealed class BatteryDevice
             foreach (var dir in Directory.GetDirectories(PowerSupplyPath))
             {
                 var file = Path.Combine(dir, "type");
-                if (File.Exists(file))
+                if (FileHelper.TryReadTrimmedText(file, out var type) &&
+                    type.StartsWith("Battery", StringComparison.OrdinalIgnoreCase))
                 {
-                    var type = File.ReadAllText(file).AsSpan().Trim();
-                    if (type.StartsWith("Battery", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return dir;
-                    }
+                    return dir;
                 }
             }
         }
@@ -89,13 +86,7 @@ public sealed class BatteryDevice
 
     private string ReadFile(string name)
     {
-        var file = Path.Combine(path, name);
-        if (File.Exists(file))
-        {
-            return File.ReadAllText(file).Trim();
-        }
-
-        return string.Empty;
+        return FileHelper.ReadTrimmedText(Path.Combine(path, name));
     }
 
     private int ReadFileAsInt32(string name)

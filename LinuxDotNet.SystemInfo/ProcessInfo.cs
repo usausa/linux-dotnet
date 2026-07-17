@@ -150,7 +150,6 @@ public sealed record ProcessInfo
             return null;
         }
 
-#pragma warning disable CA1031
         try
         {
             var statPath = Path.Combine(procPath, "stat");
@@ -237,11 +236,10 @@ public sealed record ProcessInfo
 
             return result;
         }
-        catch
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return null;
         }
-#pragma warning restore CA1031
     }
 
     //--------------------------------------------------------------------------------

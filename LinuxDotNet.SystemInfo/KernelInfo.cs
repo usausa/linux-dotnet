@@ -123,13 +123,7 @@ public sealed class KernelInfo
 
     private static string ReadProcFile(string file)
     {
-        var path = $"/proc/{file}";
-        if (File.Exists(path))
-        {
-            return File.ReadAllText(path).Trim();
-        }
-
-        return string.Empty;
+        return FileHelper.ReadTrimmedText($"/proc/{file}");
     }
 
     private static long ReadProcFileAsInt64(string file)

@@ -30,7 +30,12 @@ public sealed class CpuCore
 
     public bool Update()
     {
-        Frequency = UInt64.TryParse(File.ReadAllText(frequencyPath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        if (!FileHelper.TryReadTrimmedText(frequencyPath, out var text))
+        {
+            return false;
+        }
+
+        Frequency = UInt64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -65,7 +70,12 @@ public sealed class CpuPower
 
     public bool Update()
     {
-        Energy = UInt64.TryParse(File.ReadAllText(energyPath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        if (!FileHelper.TryReadTrimmedText(energyPath, out var text))
+        {
+            return false;
+        }
+
+        Energy = UInt64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -152,8 +162,7 @@ public sealed partial class CpuDevice
 
     private static void AddCpuPower(List<CpuPower> powers, string path)
     {
-        var name = ReadFile(Path.Combine(path, "name"));
-        if (String.IsNullOrEmpty(name))
+        if (!FileHelper.TryReadTrimmedText(Path.Combine(path, "name"), out var name) || String.IsNullOrEmpty(name))
         {
             return;
         }
@@ -167,16 +176,6 @@ public sealed partial class CpuDevice
         powers.Add(new CpuPower(name, energyPath));
     }
     // ReSharper restore StringLiteralTypo
-
-    private static string ReadFile(string path)
-    {
-        if (File.Exists(path))
-        {
-            return File.ReadAllText(path).Trim();
-        }
-
-        return string.Empty;
-    }
 
     //--------------------------------------------------------------------------------
     // Update

@@ -159,14 +159,10 @@ public sealed class HardwareInfo
     // ReSharper disable StringLiteralTypo
     private static ulong ReadCpuFrequencyMax()
     {
-        var path = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
-        if (File.Exists(path))
+        if (FileHelper.TryReadTrimmedText("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", out var value) &&
+            UInt64.TryParse(value, CultureInfo.InvariantCulture, out var khz))
         {
-            var value = File.ReadAllText(path).Trim();
-            if (UInt64.TryParse(value, CultureInfo.InvariantCulture, out var khz))
-            {
-                return khz * 1000;
-            }
+            return khz * 1000;
         }
 
         return 0;
@@ -183,17 +179,17 @@ public sealed class HardwareInfo
 
         foreach (var indexDir in Directory.GetDirectories(cacheBasePath, "index*"))
         {
-            if (!Int32.TryParse(ReadFile(Path.Combine(indexDir, "level")), CultureInfo.InvariantCulture, out var level))
+            if (!Int32.TryParse(FileHelper.ReadTrimmedText(Path.Combine(indexDir, "level")), CultureInfo.InvariantCulture, out var level))
             {
                 continue;
             }
 
-            var sizeKb = ParseCacheSize(ReadFile(Path.Combine(indexDir, "size")));
+            var sizeKb = ParseCacheSize(FileHelper.ReadTrimmedText(Path.Combine(indexDir, "size")));
 
             switch (level)
             {
                 case 1:
-                    var type = ReadFile(Path.Combine(indexDir, "type"));
+                    var type = FileHelper.ReadTrimmedText(Path.Combine(indexDir, "type"));
                     if (type.Contains("Data", StringComparison.OrdinalIgnoreCase))
                     {
                         L1DCacheSize = sizeKb * 1024;
@@ -255,32 +251,7 @@ public sealed class HardwareInfo
 
     private static string ReadDmiFile(string name)
     {
-        var path = $"/sys/class/dmi/id/{name}";
-#pragma warning disable CA1031
-        try
-        {
-            if (File.Exists(path))
-            {
-                return File.ReadAllText(path).Trim();
-            }
-        }
-        catch
-        {
-            // Ignore
-        }
-#pragma warning restore CA1031
-
-        return string.Empty;
-    }
-
-    private static string ReadFile(string path)
-    {
-        if (File.Exists(path))
-        {
-            return File.ReadAllText(path).Trim();
-        }
-
-        return string.Empty;
+        return FileHelper.ReadTrimmedText($"/sys/class/dmi/id/{name}");
     }
 
     private static ulong ExtractUInt64(ReadOnlySpan<char> span)

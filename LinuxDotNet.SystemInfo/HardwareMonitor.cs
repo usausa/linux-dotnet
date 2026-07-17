@@ -34,7 +34,12 @@ public sealed class HardwareSensor
 
     public bool Update()
     {
-        Value = Int64.TryParse(File.ReadAllText(valuePath).AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        if (!FileHelper.TryReadTrimmedText(valuePath, out var text))
+        {
+            return false;
+        }
+
+        Value = Int64.TryParse(text, CultureInfo.InvariantCulture, out var value) ? value : 0;
 
         UpdateAt = DateTime.Now;
 
@@ -73,8 +78,8 @@ public sealed partial class HardwareMonitor
         {
             var sensors = new List<HardwareSensor>();
 
-            var monitorName = ReadFile(Path.Combine(dir, "name"));
-            var monitorType = ReadFile(Path.Combine(dir, "device/type"));
+            var monitorName = FileHelper.ReadTrimmedText(Path.Combine(dir, "name"));
+            var monitorType = FileHelper.ReadTrimmedText(Path.Combine(dir, "device/type"));
 
             foreach (var file in Directory.GetFiles(dir))
             {
@@ -83,7 +88,7 @@ public sealed partial class HardwareMonitor
                     var filename = Path.GetFileName(file);
                     var sensorType = ExtractSensorType(filename);
                     var labelPath = Path.Combine(dir, filename.Replace("_input", "_label", StringComparison.Ordinal));
-                    var sensorLabel = ReadFile(labelPath);
+                    var sensorLabel = FileHelper.ReadTrimmedText(labelPath);
 
                     sensors.Add(new HardwareSensor(file, sensorType, sensorLabel));
                 }
@@ -98,16 +103,6 @@ public sealed partial class HardwareMonitor
     //--------------------------------------------------------------------------------
     // Helper
     //--------------------------------------------------------------------------------
-
-    private static string ReadFile(string path)
-    {
-        if (File.Exists(path))
-        {
-            return File.ReadAllText(path).Trim();
-        }
-
-        return string.Empty;
-    }
 
     private static string ExtractSensorType(string filename)
     {

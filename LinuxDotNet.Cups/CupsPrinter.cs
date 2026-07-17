@@ -1,5 +1,6 @@
 namespace LinuxDotNet.Cups;
 
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 using static LinuxDotNet.Cups.NativeMethods;
@@ -445,6 +446,88 @@ public static class CupsPrinter
         }
         finally
         {
+            if (optionsPtr != IntPtr.Zero)
+            {
+                cupsFreeOptions(numOptions, optionsPtr);
+            }
+            if (http != IntPtr.Zero)
+            {
+                httpClose(http);
+            }
+        }
+    }
+
+    public static async Task<int> PrintStreamAsync(Stream stream, PrintOptions? options, CancellationToken cancellationToken = default)
+    {
+        options ??= PrintOptions.Default;
+        var printer = options.Printer ?? GetDefaultPrinter();
+        if (String.IsNullOrEmpty(printer))
+        {
+            throw new InvalidOperationException("No printer specified and no default printer found.");
+        }
+
+        var http = IntPtr.Zero;
+        var optionsPtr = IntPtr.Zero;
+        var numOptions = 0;
+        var jobId = 0;
+        var completed = false;
+        var buffer = ArrayPool<byte>.Shared.Rent(8192);
+        try
+        {
+            // Options
+            numOptions = BuildOptions(options, ref optionsPtr);
+
+            http = httpConnectEncrypt("localhost", 631, HTTP_ENCRYPTION_IF_REQUESTED);
+            if (http == IntPtr.Zero)
+            {
+                throw new InvalidOperationException($"Failed to connect cups server. error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Create job
+            jobId = cupsCreateJob(http, printer, options.JobTitle, numOptions, optionsPtr);
+            if (jobId == 0)
+            {
+                throw new InvalidOperationException($"Failed to create job. error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Start document
+            var status = cupsStartDocument(http, printer, jobId, options.JobTitle, options.Format, 1);
+            if (status != HTTP_CONTINUE)
+            {
+                throw new InvalidOperationException($"Failed to start document. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            // Write data
+            int read;
+            while ((read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                status = cupsWriteRequestData(http, buffer, read);
+                if (status != HTTP_CONTINUE)
+                {
+                    throw new InvalidOperationException($"Failed to write request data. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+                }
+            }
+
+            // Finish document
+            status = cupsFinishDocument(http, printer);
+            if (status != 0)
+            {
+                throw new InvalidOperationException($"Failed to finish document. status=[{status}], error=[{cupsLastError()}], message=[{GetLastErrorMessage()}]");
+            }
+
+            completed = true;
+            return jobId;
+        }
+        finally
+        {
+            // A canceled or failed call must not leave a half-sent document queued for printing
+            if (!completed && (jobId != 0))
+            {
+                _ = cupsCancelJob(printer, jobId);
+            }
+
+            ArrayPool<byte>.Shared.Return(buffer);
+
             if (optionsPtr != IntPtr.Zero)
             {
                 cupsFreeOptions(numOptions, optionsPtr);
