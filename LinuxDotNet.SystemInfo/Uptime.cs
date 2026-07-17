@@ -24,11 +24,15 @@ public sealed class Uptime
 
     public bool Update()
     {
-        var span = File.ReadAllText("/proc/uptime").AsSpan();
+        if (!FileHelper.TryReadText("/proc/uptime", out var text))
+        {
+            return false;
+        }
+
+        var span = text.AsSpan();
         var range = (Span<Range>)stackalloc Range[2];
         span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
-        var second = Double.Parse(span[range[0]], CultureInfo.InvariantCulture);
-        Elapsed = TimeSpan.FromSeconds(second);
+        Elapsed = Double.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var second) ? TimeSpan.FromSeconds(second) : TimeSpan.Zero;
 
         UpdateAt = DateTime.Now;
 

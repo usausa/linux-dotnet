@@ -28,7 +28,12 @@ public sealed class FileHandleStat
 
     public bool Update()
     {
-        var span = File.ReadAllText("/proc/sys/fs/file-nr").AsSpan();
+        if (!FileHelper.TryReadText("/proc/sys/fs/file-nr", out var text))
+        {
+            return false;
+        }
+
+        var span = text.AsSpan();
         var range = (Span<Range>)stackalloc Range[4];
         span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries);
         Allocated = ParseUInt64(span[range[0]]);

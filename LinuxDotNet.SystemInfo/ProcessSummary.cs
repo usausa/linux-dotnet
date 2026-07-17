@@ -42,7 +42,6 @@ public sealed class ProcessSummary
                 continue;
             }
 
-#pragma warning disable CA1031
             try
             {
                 using var reader = new StreamReader(statusFilePath);
@@ -56,12 +55,11 @@ public sealed class ProcessSummary
                     }
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Ignore
             }
         }
-#pragma warning restore CA1031
 
         ProcessCount = process;
         ThreadCount = thread;

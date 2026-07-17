@@ -29,7 +29,12 @@ public sealed class LoadAverage
     // ReSharper disable StringLiteralTypo
     public bool Update()
     {
-        var span = File.ReadAllText("/proc/loadavg").AsSpan();
+        if (!FileHelper.TryReadText("/proc/loadavg", out var text))
+        {
+            return false;
+        }
+
+        var span = text.AsSpan();
         var range = (Span<Range>)stackalloc Range[5];
         span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
         Average1 = Double.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var v1) ? v1 : 0;
