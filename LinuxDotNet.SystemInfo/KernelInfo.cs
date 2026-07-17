@@ -59,32 +59,39 @@ public sealed class KernelInfo
             return;
         }
 
-        using var reader = new StreamReader(path);
-        while (reader.ReadLine() is { } line)
+        try
         {
-            var span = line.AsSpan();
-
-            var index = span.IndexOf('=');
-            if (index < 0)
+            using var reader = new StreamReader(path);
+            while (reader.ReadLine() is { } line)
             {
-                continue;
-            }
+                var span = line.AsSpan();
 
-            switch (span[..index])
-            {
-                case "VERSION_ID":
-                    OsProductVersion = ExtractValue(line, index);
-                    break;
-                case "NAME":
-                    OsName = ExtractValue(line, index);
-                    break;
-                case "PRETTY_NAME":
-                    OsPrettyName = ExtractValue(line, index);
-                    break;
-                case "ID":
-                    OsId = ExtractValue(line, index);
-                    break;
+                var index = span.IndexOf('=');
+                if (index < 0)
+                {
+                    continue;
+                }
+
+                switch (span[..index])
+                {
+                    case "VERSION_ID":
+                        OsProductVersion = ExtractValue(line, index);
+                        break;
+                    case "NAME":
+                        OsName = ExtractValue(line, index);
+                        break;
+                    case "PRETTY_NAME":
+                        OsPrettyName = ExtractValue(line, index);
+                        break;
+                    case "ID":
+                        OsId = ExtractValue(line, index);
+                        break;
+                }
             }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Ignore
         }
 
         return;

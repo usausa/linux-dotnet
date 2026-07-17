@@ -8,6 +8,12 @@ internal static class Helper
 
     private static bool TryReadTrimmedText(string path, out string value)
     {
+        if (!File.Exists(path))
+        {
+            value = string.Empty;
+            return false;
+        }
+
         try
         {
             value = File.ReadAllText(path).Trim();

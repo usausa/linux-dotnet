@@ -4,6 +4,12 @@ internal static class FileHelper
 {
     public static bool TryReadText(string path, out string value)
     {
+        if (!File.Exists(path))
+        {
+            value = string.Empty;
+            return false;
+        }
+
         try
         {
             value = File.ReadAllText(path);
