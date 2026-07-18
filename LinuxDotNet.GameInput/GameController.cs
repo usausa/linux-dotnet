@@ -282,7 +282,7 @@ public sealed class GameController : IDisposable
                 }
                 if (result < 0)
                 {
-                    var error = Marshal.GetLastWin32Error();
+                    var error = Marshal.GetLastPInvokeError();
                     if (error == EINTR)
                     {
                         // Interrupted & retry

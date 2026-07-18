@@ -53,13 +53,13 @@ public static class DiskInfoExtensions
     {
         var result = new Dictionary<string, (string MountPoint, string FileSystem)?>(StringComparer.Ordinal);
 
-        var range = (Span<Range>)stackalloc Range[3];
+        var range = (Span<Range>)stackalloc Range[5];
         using var reader = new StreamReader(ProcMountsPath);
         while (reader.ReadLine() is { } line)
         {
             range.Clear();
             var span = line.AsSpan();
-            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 3)
+            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 4)
             {
                 continue;
             }

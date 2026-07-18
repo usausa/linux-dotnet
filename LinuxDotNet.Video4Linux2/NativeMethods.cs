@@ -327,7 +327,7 @@ internal static partial class NativeMethods
     public static partial int close(int fd);
 
     [LibraryImport("libc", SetLastError = true)]
-    public static partial int ioctl(int fd, uint request, IntPtr argp);
+    public static partial int ioctl(int fd, ulong request, IntPtr argp);
 
     [LibraryImport("libc", SetLastError = true)]
     public static partial IntPtr mmap(IntPtr addr, IntPtr length, int prot, int flags, int fd, long offset);

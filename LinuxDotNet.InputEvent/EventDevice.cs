@@ -51,7 +51,7 @@ public sealed unsafe class EventDevice : IDisposable
             var result = ioctl(fd, EVIOCGNAME, ptr);
             if (result >= 0)
             {
-                return Encoding.UTF8.GetString(buff[..result]);
+                return Encoding.UTF8.GetString(buff[..result]).TrimEnd('\0');
             }
         }
 
@@ -73,7 +73,7 @@ public sealed unsafe class EventDevice : IDisposable
             var result = ioctl(fd, EVIOCGRAB, 1);
             if (result < 0)
             {
-                var error = Marshal.GetLastWin32Error();
+                var error = Marshal.GetLastPInvokeError();
                 stream.Dispose();
                 stream = null;
                 throw new IOException($"Grab failed. error=[{error}]");
@@ -130,7 +130,7 @@ public sealed unsafe class EventDevice : IDisposable
 
         if (pollResult < 0)
         {
-            var error = Marshal.GetLastWin32Error();
+            var error = Marshal.GetLastPInvokeError();
             if (error == EINTR)
             {
                 // Interrupted
