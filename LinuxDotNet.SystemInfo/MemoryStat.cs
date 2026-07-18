@@ -78,122 +78,105 @@ public sealed class MemoryStat
 
     public bool Update()
     {
+        var range = (Span<Range>)stackalloc Range[3];
         using var reader = new StreamReader("/proc/meminfo");
         while (reader.ReadLine() is { } line)
         {
+            range.Clear();
             var span = line.AsSpan();
+            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 2)
+            {
+                continue;
+            }
+
+            var value = span[range[1]];
             // ReSharper disable StringLiteralTypo
-            if (span.StartsWith("MemTotal:"))
+            switch (span[range[0]])
             {
-                MemoryTotal = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("MemAvailable:"))
-            {
-                MemoryAvailable = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("MemFree:"))
-            {
-                MemoryFree = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Buffers:"))
-            {
-                Buffers = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Cached:"))
-            {
-                Cached = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("SwapCached:"))
-            {
-                SwapCached = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Active(anon):"))
-            {
-                ActiveAnonymous = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Inactive(anon):"))
-            {
-                InactiveAnonymous = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Active(file):"))
-            {
-                ActiveFile = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Inactive(file):"))
-            {
-                InactiveFile = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Unevictable:"))
-            {
-                Unevictable = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Mlocked:"))
-            {
-                MemoryLocked = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("SwapTotal:"))
-            {
-                SwapTotal = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("SwapFree:"))
-            {
-                SwapFree = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Dirty:"))
-            {
-                Dirty = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Writeback:"))
-            {
-                Writeback = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("AnonPages:"))
-            {
-                AnonymousPages = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Mapped:"))
-            {
-                Mapped = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Shmem:"))
-            {
-                SharedMemory = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("KReclaimable:"))
-            {
-                KernelReclaimable = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Slab:"))
-            {
-                SlabTotal = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("SReclaimable:"))
-            {
-                SlabReclaimable = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("SUnreclaim:"))
-            {
-                SlabUnreclaimable = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("KernelStack:"))
-            {
-                KernelStack = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("PageTables:"))
-            {
-                PageTables = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("CommitLimit:"))
-            {
-                CommitLimit = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("Committed_AS:"))
-            {
-                CommittedAddressSpace = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("HardwareCorrupted:"))
-            {
-                HardwareCorrupted = ExtractUInt64(span);
+                case "MemTotal:":
+                    MemoryTotal = ParseUInt64(value);
+                    break;
+                case "MemAvailable:":
+                    MemoryAvailable = ParseUInt64(value);
+                    break;
+                case "MemFree:":
+                    MemoryFree = ParseUInt64(value);
+                    break;
+                case "Buffers:":
+                    Buffers = ParseUInt64(value);
+                    break;
+                case "Cached:":
+                    Cached = ParseUInt64(value);
+                    break;
+                case "SwapCached:":
+                    SwapCached = ParseUInt64(value);
+                    break;
+                case "Active(anon):":
+                    ActiveAnonymous = ParseUInt64(value);
+                    break;
+                case "Inactive(anon):":
+                    InactiveAnonymous = ParseUInt64(value);
+                    break;
+                case "Active(file):":
+                    ActiveFile = ParseUInt64(value);
+                    break;
+                case "Inactive(file):":
+                    InactiveFile = ParseUInt64(value);
+                    break;
+                case "Unevictable:":
+                    Unevictable = ParseUInt64(value);
+                    break;
+                case "Mlocked:":
+                    MemoryLocked = ParseUInt64(value);
+                    break;
+                case "SwapTotal:":
+                    SwapTotal = ParseUInt64(value);
+                    break;
+                case "SwapFree:":
+                    SwapFree = ParseUInt64(value);
+                    break;
+                case "Dirty:":
+                    Dirty = ParseUInt64(value);
+                    break;
+                case "Writeback:":
+                    Writeback = ParseUInt64(value);
+                    break;
+                case "AnonPages:":
+                    AnonymousPages = ParseUInt64(value);
+                    break;
+                case "Mapped:":
+                    Mapped = ParseUInt64(value);
+                    break;
+                case "Shmem:":
+                    SharedMemory = ParseUInt64(value);
+                    break;
+                case "KReclaimable:":
+                    KernelReclaimable = ParseUInt64(value);
+                    break;
+                case "Slab:":
+                    SlabTotal = ParseUInt64(value);
+                    break;
+                case "SReclaimable:":
+                    SlabReclaimable = ParseUInt64(value);
+                    break;
+                case "SUnreclaim:":
+                    SlabUnreclaimable = ParseUInt64(value);
+                    break;
+                case "KernelStack:":
+                    KernelStack = ParseUInt64(value);
+                    break;
+                case "PageTables:":
+                    PageTables = ParseUInt64(value);
+                    break;
+                case "CommitLimit:":
+                    CommitLimit = ParseUInt64(value);
+                    break;
+                case "Committed_AS:":
+                    CommittedAddressSpace = ParseUInt64(value);
+                    break;
+                case "HardwareCorrupted:":
+                    HardwareCorrupted = ParseUInt64(value);
+                    break;
             }
             // ReSharper restore StringLiteralTypo
         }
@@ -207,9 +190,6 @@ public sealed class MemoryStat
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
-    {
-        var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
-    }
+    private static ulong ParseUInt64(ReadOnlySpan<char> span) =>
+        UInt64.TryParse(span, CultureInfo.InvariantCulture, out var result) ? result : 0;
 }

@@ -57,53 +57,53 @@ public sealed class VirtualMemoryStat
     // ReSharper disable StringLiteralTypo
     public bool Update()
     {
+        var range = (Span<Range>)stackalloc Range[3];
         using var reader = new StreamReader("/proc/vmstat");
         while (reader.ReadLine() is { } line)
         {
+            range.Clear();
             var span = line.AsSpan();
-            if (span.StartsWith("pgpgin"))
+            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 2)
             {
-                PageIn = ExtractUInt64(span);
+                continue;
             }
-            else if (span.StartsWith("pgpgout"))
+
+            var value = span[range[1]];
+            switch (span[range[0]])
             {
-                PageOut = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pswpin"))
-            {
-                SwapIn = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pswpout"))
-            {
-                SwapOut = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgfault"))
-            {
-                PageFaults = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgmajfault"))
-            {
-                MajorPageFaults = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgsteal_kswapd"))
-            {
-                StealKernel = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgsteal_direct"))
-            {
-                StealDirect = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgscan_kswapd"))
-            {
-                ScanKernel = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("pgscan_direct"))
-            {
-                ScanDirect = ExtractUInt64(span);
-            }
-            else if (span.StartsWith("oom_kill"))
-            {
-                OutOfMemoryKiller = ExtractUInt64(span);
+                case "pgpgin":
+                    PageIn = ParseUInt64(value);
+                    break;
+                case "pgpgout":
+                    PageOut = ParseUInt64(value);
+                    break;
+                case "pswpin":
+                    SwapIn = ParseUInt64(value);
+                    break;
+                case "pswpout":
+                    SwapOut = ParseUInt64(value);
+                    break;
+                case "pgfault":
+                    PageFaults = ParseUInt64(value);
+                    break;
+                case "pgmajfault":
+                    MajorPageFaults = ParseUInt64(value);
+                    break;
+                case "pgsteal_kswapd":
+                    StealKernel = ParseUInt64(value);
+                    break;
+                case "pgsteal_direct":
+                    StealDirect = ParseUInt64(value);
+                    break;
+                case "pgscan_kswapd":
+                    ScanKernel = ParseUInt64(value);
+                    break;
+                case "pgscan_direct":
+                    ScanDirect = ParseUInt64(value);
+                    break;
+                case "oom_kill":
+                    OutOfMemoryKiller = ParseUInt64(value);
+                    break;
             }
         }
 
@@ -117,9 +117,6 @@ public sealed class VirtualMemoryStat
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
-    {
-        var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
-    }
+    private static ulong ParseUInt64(ReadOnlySpan<char> span) =>
+        UInt64.TryParse(span, CultureInfo.InvariantCulture, out var result) ? result : 0;
 }

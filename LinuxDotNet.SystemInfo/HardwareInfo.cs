@@ -106,7 +106,7 @@ public sealed class HardwareInfo
                 continue;
             }
 
-            var key = span[..colonIndex].Trim().ToString();
+            var key = span[..colonIndex].Trim();
             var value = span[(colonIndex + 1)..].Trim();
 
             switch (key)

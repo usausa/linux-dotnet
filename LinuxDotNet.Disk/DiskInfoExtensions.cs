@@ -64,12 +64,12 @@ public static class DiskInfoExtensions
                 continue;
             }
 
-            var device = span[range[0]].ToString();
-            if (device.StartsWith("/dev/", StringComparison.Ordinal))
+            var device = span[range[0]];
+            if (device.StartsWith("/dev/"))
             {
                 var mountPoint = span[range[1]].ToString();
                 var fileSystem = span[range[2]].ToString();
-                result[device] = (mountPoint, fileSystem);
+                result[device.ToString()] = (mountPoint, fileSystem);
             }
         }
 
