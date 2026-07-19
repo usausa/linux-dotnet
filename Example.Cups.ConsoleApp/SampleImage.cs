@@ -17,14 +17,14 @@ internal static class SampleImage
         titlePaint.Color = SKColors.Black;
         titlePaint.IsAntialias = true;
         using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 48);
-        canvas.DrawText("CUPS API Test", 50, 50, titleFont, titlePaint);
+        canvas.DrawText("CUPS API Test", 50, 50, SKTextAlign.Left, titleFont, titlePaint);
 
         // DateTime
         using var textPaint = new SKPaint();
         textPaint.Color = SKColors.DarkGray;
         textPaint.IsAntialias = true;
         using var textFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 24);
-        canvas.DrawText($"DateTime: {DateTime.Now:yyyy/MM/dd HH:mm:ss}", 50, 130, textFont, textPaint);
+        canvas.DrawText($"DateTime: {DateTime.Now:yyyy/MM/dd HH:mm:ss}", 50, 130, SKTextAlign.Left, textFont, textPaint);
 
         // Rectangle and Circle
         using var rectPaint = new SKPaint();
