@@ -95,14 +95,25 @@ public sealed record ProcessInfo
     // ReSharper disable StringLiteralTypo
     private static long GetBootTime()
     {
-        using var reader = new StreamReader("/proc/stat");
-        while (reader.ReadLine() is { } line)
+        try
         {
-            var span = line.AsSpan();
-            if (span.StartsWith("btime"))
+            using var reader = new StreamReader("/proc/stat");
+            while (reader.ReadLine() is { } line)
             {
-                return ExtractInt64(span);
+                var span = line.AsSpan();
+                if (span.StartsWith("btime"))
+                {
+                    return ExtractInt64(span);
+                }
             }
+        }
+        catch (IOException)
+        {
+            // Ignore
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Ignore
         }
 
         return 0;
