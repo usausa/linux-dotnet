@@ -53,6 +53,7 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
         disposed = true;
     }
 
+    // ReSharper disable once RedundantUnsafeContext
     public unsafe bool Update()
     {
         ObjectDisposedException.ThrowIf(disposed, this);

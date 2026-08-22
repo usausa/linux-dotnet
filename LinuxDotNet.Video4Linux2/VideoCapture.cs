@@ -31,6 +31,7 @@ public readonly struct FrameBuffer
                 return [];
             }
 
+            // ReSharper disable once RedundantUnsafeContext
             unsafe
             {
                 return new Span<byte>((void*)buffer, length);
