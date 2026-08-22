@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
+// ReSharper disable RedundantUnsafeContext
 #pragma warning disable IDE1006
 #pragma warning disable CA5392
 #pragma warning disable CS8981
