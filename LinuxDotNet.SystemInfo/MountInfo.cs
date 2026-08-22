@@ -36,8 +36,9 @@ public static class MountOptionExtensions
 
 public sealed class MountInfo
 {
-#pragma warning disable IDE0028
     // ReSharper disable StringLiteralTypo
+    // ReSharper disable UseCollectionExpression
+#pragma warning disable IDE0028
     private static readonly HashSet<string> LocalFileSystems = new(StringComparer.OrdinalIgnoreCase)
     {
         "ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "ntfs", "vfat", "fat32", "exfat",
@@ -70,8 +71,9 @@ public sealed class MountInfo
         ["noauto"] = MountOption.NoAuto,
         ["defaults"] = MountOption.Defaults
     };
-    // ReSharper restore StringLiteralTypo
 #pragma warning restore IDE0028
+    // ReSharper restore UseCollectionExpression
+    // ReSharper restore StringLiteralTypo
 
 #if NET9_0_OR_GREATER
     private static readonly Dictionary<string, MountOption>.AlternateLookup<ReadOnlySpan<char>> OptionLookup = OptionMap.GetAlternateLookup<ReadOnlySpan<char>>();
