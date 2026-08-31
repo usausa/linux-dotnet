@@ -3,6 +3,7 @@ namespace Example.Video4Linux2.AvaloniaApp.Components;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable InconsistentNaming
+#pragma warning disable SA1519
 internal static class ImageHelper
 {
     public static unsafe void ConvertYUYV2RGBA(ReadOnlySpan<byte> yuyv, Span<byte> rgba)
@@ -65,4 +66,5 @@ internal static class ImageHelper
         return (byte)value;
     }
 }
+#pragma warning restore SA1519
 // ReSharper restore InconsistentNaming

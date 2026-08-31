@@ -3,6 +3,7 @@ namespace Example.Video4Linux2.ConsoleApp;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable InconsistentNaming
+#pragma warning disable SA1519
 internal static class ImageHelper
 {
     public static unsafe void ConvertYUYV2RGB(ReadOnlySpan<byte> yuyv, Span<byte> rgb)
@@ -109,4 +110,5 @@ internal static class ImageHelper
         return (byte)value;
     }
 }
+#pragma warning restore SA1519
 // ReSharper restore InconsistentNaming

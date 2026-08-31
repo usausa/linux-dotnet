@@ -96,10 +96,7 @@ public sealed class KernelInfo
 
         return;
 
-        static string ExtractValue(ReadOnlySpan<char> span, int index)
-        {
-            return span[(index + 1)..].Trim('"').ToString();
-        }
+        static string ExtractValue(ReadOnlySpan<char> span, int index) => span[(index + 1)..].Trim('"').ToString();
     }
 
     // ReSharper disable StringLiteralTypo

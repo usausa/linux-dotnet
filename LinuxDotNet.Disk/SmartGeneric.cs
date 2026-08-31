@@ -173,7 +173,7 @@ internal sealed class SmartGeneric : ISmartGeneric, IDisposable
         {
             var offset = TableOffset + (i * EntrySize);
             var id = buffer[offset];
-            if (id != 0 && (id != 0xff))
+            if ((id != 0) && (id != 0xff))
             {
                 list.Add((SmartId)id);
             }

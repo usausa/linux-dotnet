@@ -1,6 +1,7 @@
 namespace Example.Video4Linux2.AvaloniaApp.Components;
 
 #pragma warning disable IDE0032
+#pragma warning disable CA1034
 public sealed class BufferManager : IDisposable
 {
     public sealed class BufferSlot
@@ -107,7 +108,7 @@ public sealed class BufferManager : IDisposable
 
     public BufferSlot GetSlot(int index)
     {
-        if (index < 0 || index >= slots.Length)
+        if ((index < 0) || (index >= slots.Length))
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
@@ -140,4 +141,5 @@ public sealed class BufferManager : IDisposable
         }
     }
 }
+#pragma warning restore CA1034
 #pragma warning restore IDE0032

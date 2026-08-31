@@ -39,7 +39,7 @@ internal static partial class NativeMethods
     //------------------------------------------------------------------------
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct sg_io_hdr_t
+    public struct sg_io_hdr_t
     {
         public int interface_id;
         public int dxfer_direction;
@@ -89,7 +89,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public unsafe struct nvme_smart_log
+    public struct nvme_smart_log
     {
         public byte critical_warning;
         public fixed byte temperature[2];
@@ -128,7 +128,7 @@ internal static partial class NativeMethods
     public static partial int close(int fd);
 
     [LibraryImport("libc", SetLastError = true)]
-    public static unsafe partial int ioctl(int fd, ulong request, void* argp);
+    public static partial int ioctl(int fd, ulong request, void* argp);
 
     [LibraryImport("libc", SetLastError = true)]
     public static partial int ioctl(int fd, ulong request, ref nvme_admin_cmd data);

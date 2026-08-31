@@ -64,7 +64,7 @@ public static class DisplayFormatter
             buf[pos++] = '█';
         }
 
-        if (remainder > 0 && fullCells < width)
+        if ((remainder > 0) && (fullCells < width))
         {
             buf[pos++] = partials[remainder - 1];
         }
@@ -668,7 +668,7 @@ public sealed class CpuCommand : ICommandHandler
         var cpu = PlatformProvider.GetCpuDevice();
         var hw = PlatformProvider.GetHardware();
         var maxFreqKHz = hw.CpuFrequencyMax / 1000;
-        if (maxFreqKHz == 0 && cpu.Cores.Count > 0)
+        if ((maxFreqKHz == 0) && (cpu.Cores.Count > 0))
         {
             maxFreqKHz = cpu.Cores.Max(c => c.Frequency);
         }

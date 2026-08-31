@@ -19,9 +19,9 @@ public readonly struct Resolution : IEquatable<Resolution>
 
     public override int GetHashCode() => HashCode.Combine(Width, Height);
 
-    public override bool Equals(object? obj) => obj is Resolution other && Equals(other);
+    public override bool Equals(object? obj) => (obj is Resolution other) && Equals(other);
 
-    public bool Equals(Resolution other) => Width == other.Width && Height == other.Height;
+    public bool Equals(Resolution other) => (Width == other.Width) && (Height == other.Height);
 
     public static bool operator ==(Resolution x, Resolution y) => x.Equals(y);
 
@@ -129,7 +129,7 @@ public sealed class VideoInfo
             yield break;
         }
 
-        foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => Int32.TryParse(x!.AsSpan(5), NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : Int32.MaxValue))
+        foreach (var name in Directory.GetDirectories(sysfsPath).Select(Path.GetFileName).Where(static x => x?.StartsWith("video", StringComparison.Ordinal) ?? false).OrderBy(static x => Int32.TryParse(x.AsSpan(5), NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : Int32.MaxValue))
         {
             VideoInfo info;
             try
@@ -171,7 +171,7 @@ public sealed class VideoInfo
         return formats.OrderBy(static x => x.PixelFormat).ToList();
     }
 
-    private static unsafe List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
+    private static List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
     {
         var resolutions = new List<Resolution>();
 
@@ -231,6 +231,7 @@ public sealed class VideoInfo
     }
 }
 
+#pragma warning disable CA1034
 public static class Extensions
 {
     extension(VideoInfo info)
@@ -244,3 +245,4 @@ public static class Extensions
         public bool IsStreaming => (info.RawCapabilities & V4L2_CAP_STREAMING) != 0;
     }
 }
+#pragma warning restore CA1034

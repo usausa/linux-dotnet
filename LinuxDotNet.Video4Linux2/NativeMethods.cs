@@ -106,7 +106,7 @@ internal static partial class NativeMethods
     //------------------------------------------------------------------------
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_capability
+    public struct v4l2_capability
     {
         public const int DriverSize = 16;
         public const int CardSize = 32;
@@ -138,7 +138,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 8)]
-    public unsafe struct v4l2_format_fmt
+    public struct v4l2_format_fmt
     {
         [FieldOffset(0)]
         public v4l2_pix_format pix;
@@ -159,7 +159,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_requestbuffers
+    public struct v4l2_requestbuffers
     {
         public uint count;
         public uint type;
@@ -181,7 +181,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_buffer
+    public struct v4l2_buffer
     {
         public uint index;
         public uint type;
@@ -214,7 +214,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_fmtdesc
+    public struct v4l2_fmtdesc
     {
         public const int DescriptionSize = 32;
 
@@ -254,7 +254,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_frmsizeenum
+    public struct v4l2_frmsizeenum
     {
         public uint index;
         public uint pixel_format;
@@ -279,7 +279,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_captureparm
+    public struct v4l2_captureparm
     {
         public uint capability;
         public uint capturemode;
@@ -290,7 +290,7 @@ internal static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
-    public unsafe struct v4l2_outputparm
+    public struct v4l2_outputparm
     {
         public uint capability;
         public uint outputmode;
@@ -307,7 +307,7 @@ internal static partial class NativeMethods
         [FieldOffset(0)]
         public v4l2_outputparm output;
         [FieldOffset(0)]
-        public unsafe fixed byte raw_data[200];
+        public fixed byte raw_data[200];
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
@@ -353,7 +353,7 @@ internal static partial class NativeMethods
     private static uint IOWR(char type, uint nr, int size) => IOC(IOC_READ | IOC_WRITE, (byte)type, nr, size);
 
 #pragma warning disable CA1810
-    static unsafe NativeMethods()
+    static NativeMethods()
     {
         VIDIOC_QUERYCAP = IOR('V', 0, sizeof(v4l2_capability));
         VIDIOC_G_FMT = IOWR('V', 4, sizeof(v4l2_format));

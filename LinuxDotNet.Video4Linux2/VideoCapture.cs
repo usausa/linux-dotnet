@@ -19,7 +19,7 @@ public readonly struct FrameBuffer
     public int Length => length;
 #pragma warning restore IDE0032
 
-    public bool IsEmpty => buffer == IntPtr.Zero || length == 0;
+    public bool IsEmpty => (buffer == IntPtr.Zero) || (length == 0);
 
     public ReadOnlySpan<byte> Span
     {
@@ -186,7 +186,7 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    private unsafe bool QueueAllBuffers()
+    private bool QueueAllBuffers()
     {
         for (var i = 0; i < buffers.Length; i++)
         {
@@ -211,7 +211,7 @@ public sealed class VideoCapture : IDisposable
         }
     }
 
-    private unsafe bool SetFrameRateCore(int fps)
+    private bool SetFrameRateCore(int fps)
     {
         if (!IsOpen || (fps <= 0))
         {
@@ -361,7 +361,7 @@ public sealed class VideoCapture : IDisposable
         }
     }
 
-    private unsafe bool StartCaptureCore(int fps)
+    private bool StartCaptureCore(int fps)
     {
         if (!IsOpen || IsCapturing)
         {
@@ -406,7 +406,7 @@ public sealed class VideoCapture : IDisposable
         }
     }
 
-    private unsafe bool StopCaptureCore()
+    private bool StopCaptureCore()
     {
         if ((captureCts is null) || (captureThread is null))
         {
@@ -431,7 +431,7 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    private unsafe void CaptureLoop(int fps, CancellationToken cancellationToken)
+    private void CaptureLoop(int fps, CancellationToken cancellationToken)
     {
         var frameInterval = fps > 0 ? TimeSpan.FromMilliseconds(1000.0 / fps) : TimeSpan.Zero;
 

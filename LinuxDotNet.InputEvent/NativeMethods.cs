@@ -68,7 +68,7 @@ internal static partial class NativeMethods
     //------------------------------------------------------------------------
 
     [LibraryImport("libc", SetLastError = true)]
-    public static unsafe partial int ioctl(int fd, ulong request, void* argp);
+    public static partial int ioctl(int fd, ulong request, void* argp);
 
     [LibraryImport("libc", SetLastError = true)]
     public static partial int ioctl(int fd, ulong request, int arg);

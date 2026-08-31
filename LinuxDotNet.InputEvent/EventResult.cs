@@ -29,13 +29,13 @@ public struct EventResult : IEquatable<EventResult>
     public int Value { get; set; }
 
     public readonly bool Equals(EventResult other) =>
-        Timestamp == other.Timestamp &&
-       Type == other.Type &&
-       Code == other.Code &&
-       Value == other.Value;
+        (Timestamp == other.Timestamp) &&
+        (Type == other.Type) &&
+        (Code == other.Code) &&
+        (Value == other.Value);
 
     public override readonly bool Equals(object? obj) =>
-        obj is EventResult other && Equals(other);
+        (obj is EventResult other) && Equals(other);
 
     public override readonly int GetHashCode() =>
         HashCode.Combine(Timestamp, Type, Code, Value);

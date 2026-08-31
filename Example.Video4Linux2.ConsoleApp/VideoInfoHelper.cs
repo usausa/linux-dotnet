@@ -64,7 +64,7 @@ internal static class VideoInfoHelper
 
         // Device number: lower is better
         var deviceNumber = info.Device.Replace("/dev/video", string.Empty, StringComparison.Ordinal);
-        if (int.TryParse(deviceNumber, out var number))
+        if (Int32.TryParse(deviceNumber, out var number))
         {
             score += 100 - number;
         }

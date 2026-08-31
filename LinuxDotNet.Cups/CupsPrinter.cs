@@ -147,7 +147,7 @@ public static class CupsPrinter
                                 }
                             }
                         }
-                        else if (valueTag == (int)IppTag.IPP_TAG_INTEGER || valueTag == (int)IppTag.IPP_TAG_ENUM)
+                        else if ((valueTag == (int)IppTag.IPP_TAG_INTEGER) || (valueTag == (int)IppTag.IPP_TAG_ENUM))
                         {
                             var count = ippGetCount(attr);
                             for (var i = 0; i < count; i++)
@@ -548,12 +548,12 @@ public static class CupsPrinter
             numOptions = cupsAddOption("copies", $"{options.Copies}", numOptions, ref optionsPtr);
         }
 
-        if (!string.IsNullOrEmpty(options.MediaSize))
+        if (!String.IsNullOrEmpty(options.MediaSize))
         {
             numOptions = cupsAddOption("media", options.MediaSize, numOptions, ref optionsPtr);
         }
 
-        if (!string.IsNullOrEmpty(options.MediaType))
+        if (!String.IsNullOrEmpty(options.MediaType))
         {
             numOptions = cupsAddOption("media-type", options.MediaType, numOptions, ref optionsPtr);
         }
