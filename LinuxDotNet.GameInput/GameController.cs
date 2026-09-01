@@ -12,11 +12,13 @@ public sealed class GameController : IDisposable
 {
     private const int DevicePollTimeout = 100;
 
+#pragma warning disable CA1003
     public event Action<byte, bool>? ButtonChanged;
 
     public event Action<byte, short>? AxisChanged;
 
     public event Action<bool>? ConnectionChanged;
+#pragma warning restore CA1003
 
     private static readonly TimeSpan ReconnectInterval = TimeSpan.FromSeconds(2);
 

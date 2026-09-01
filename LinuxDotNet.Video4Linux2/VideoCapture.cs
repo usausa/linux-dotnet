@@ -65,7 +65,9 @@ public sealed class VideoCapture : IDisposable
 {
     private const int StopTimeout = 5000;
 
+#pragma warning disable CA1003
     public event Action<FrameBuffer>? FrameCaptured;
+#pragma warning restore CA1003
 
 #if NET9_0_OR_GREATER
     private readonly Lock sync = new();

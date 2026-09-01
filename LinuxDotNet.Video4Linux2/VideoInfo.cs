@@ -221,6 +221,7 @@ public sealed class VideoInfo
         };
         // ReSharper restore CommentTypo
 
+        // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var res in commonResolutions)
         {
             if ((res.Width >= stepwise.min_width) && (res.Width <= stepwise.max_width) && (res.Height >= stepwise.min_height) && (res.Height <= stepwise.max_height))
@@ -231,6 +232,7 @@ public sealed class VideoInfo
     }
 }
 
+#pragma warning disable CA1034
 public static class Extensions
 {
     extension(VideoInfo info)
@@ -244,3 +246,4 @@ public static class Extensions
         public bool IsStreaming => (info.RawCapabilities & V4L2_CAP_STREAMING) != 0;
     }
 }
+#pragma warning restore CA1034
