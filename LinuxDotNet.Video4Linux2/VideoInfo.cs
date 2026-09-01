@@ -231,7 +231,6 @@ public sealed class VideoInfo
     }
 }
 
-#pragma warning disable CA1034
 public static class Extensions
 {
     extension(VideoInfo info)
@@ -245,4 +244,3 @@ public static class Extensions
         public bool IsStreaming => (info.RawCapabilities & V4L2_CAP_STREAMING) != 0;
     }
 }
-#pragma warning restore CA1034
