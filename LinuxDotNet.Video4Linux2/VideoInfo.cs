@@ -168,7 +168,9 @@ public sealed class VideoInfo
             index++;
         }
 
+#pragma warning disable IDE0028
         return formats.OrderBy(static x => x.PixelFormat).ToList();
+#pragma warning restore IDE0028
     }
 
     private static List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
@@ -200,7 +202,9 @@ public sealed class VideoInfo
             index++;
         }
 
+#pragma warning disable IDE0028
         return resolutions.OrderBy(static x => x.Width).ThenBy(static x => x.Height).ToList();
+#pragma warning restore IDE0028
     }
 
     private static void AddCommonResolutions(List<Resolution> resolutions, v4l2_frmsize_stepwise stepwise)
