@@ -31,6 +31,7 @@ public static class CommandBuilderExtensions
         commands.AddCommand<AcCommand>();
         commands.AddCommand<BatteryCommand>();
         commands.AddCommand<HwmonCommand>();
+        commands.AddCommand<UsbCommand>();
     }
 }
 
@@ -769,4 +770,32 @@ public sealed class HwmonCommand : ICommandHandler
         "energy" => $"{value / 1_000_000.0:F2} J",
         _ => $"{value}"
     };
+}
+
+//--------------------------------------------------------------------------------
+// USB
+//--------------------------------------------------------------------------------
+[Command("usb", "Get USB devices")]
+public sealed class UsbCommand : ICommandHandler
+{
+    [Option<bool>("--all", "-a", Description = "Include root hubs")]
+    public bool All { get; set; }
+
+    public ValueTask ExecuteAsync(CommandContext context)
+    {
+        foreach (var device in PlatformProvider.GetUsbDevices(All))
+        {
+            var indent = new string(' ', device.IsRootHub ? 0 : (device.Name.Count(static x => x == '.') + 1) * 2);
+            Console.WriteLine($"{indent}{device.Name} {device.VendorId:x4}:{device.ProductId:x4} {device.Manufacturer} {device.Product}");
+            Console.WriteLine($"{indent}  Class={device.DeviceClass} Speed={device.Speed}M Version={device.Version} Release={device.DeviceVersion:x4} MaxPower={device.MaxPower}mA Removable={device.Removable}");
+            Console.WriteLine($"{indent}  Path={device.DevicePath} Parent={device.ParentName} Serial={device.SerialNumber}");
+            foreach (var usbInterface in device.Interfaces)
+            {
+                var files = usbInterface.DeviceFiles.Count > 0 ? String.Join(" ", usbInterface.DeviceFiles) : "-";
+                Console.WriteLine($"{indent}  #{usbInterface.Number} {usbInterface.InterfaceClass} driver={usbInterface.Driver} files={files}");
+            }
+        }
+
+        return ValueTask.CompletedTask;
+    }
 }

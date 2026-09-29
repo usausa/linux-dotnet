@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantUnsafeContext
 #pragma warning disable IDE0044
+#pragma warning disable IDE0051
 #pragma warning disable IDE1006
 #pragma warning disable CA5392
 #pragma warning disable CS8981
@@ -41,8 +42,13 @@ internal static partial class NativeMethods
     public static readonly uint VIDIOC_STREAMOFF;
     public static readonly uint VIDIOC_ENUM_FMT;
     public static readonly uint VIDIOC_ENUM_FRAMESIZES;
+    public static readonly uint VIDIOC_ENUM_FRAMEINTERVALS;
     public static readonly uint VIDIOC_G_PARM;
     public static readonly uint VIDIOC_S_PARM;
+    public static readonly uint VIDIOC_G_CTRL;
+    public static readonly uint VIDIOC_S_CTRL;
+    public static readonly uint VIDIOC_QUERYCTRL;
+    public static readonly uint VIDIOC_QUERYMENU;
 
     // open
     public const int O_RDWR = 2;
@@ -58,6 +64,9 @@ internal static partial class NativeMethods
     public const uint V4L2_MEMORY_MMAP = 1;
     public const uint V4L2_FIELD_NONE = 1;
 
+    // Buffer flag
+    public const uint V4L2_BUF_FLAG_ERROR = 0x00000040;
+
     // PixelFormat
     public const uint V4L2_PIX_FMT_YUYV = 0x56595559;
     public const uint V4L2_PIX_FMT_MJPEG = 0x47504a4d;
@@ -66,6 +75,20 @@ internal static partial class NativeMethods
     public const uint V4L2_FRMSIZE_TYPE_DISCRETE = 1;
     public const uint V4L2_FRMSIZE_TYPE_CONTINUOUS = 2;
     public const uint V4L2_FRMSIZE_TYPE_STEPWISE = 3;
+
+    // Frame interval
+    public const uint V4L2_FRMIVAL_TYPE_DISCRETE = 1;
+    public const uint V4L2_FRMIVAL_TYPE_CONTINUOUS = 2;
+    public const uint V4L2_FRMIVAL_TYPE_STEPWISE = 3;
+
+    // Control
+    public const uint V4L2_CTRL_FLAG_NEXT_CTRL = 0x80000000;
+    public const uint V4L2_CTRL_FLAG_DISABLED = 0x0001;
+    public const uint V4L2_CTRL_FLAG_WRITE_ONLY = 0x0040;
+    public const uint V4L2_CTRL_TYPE_MENU = 3;
+    public const uint V4L2_CTRL_TYPE_BUTTON = 4;
+    public const uint V4L2_CTRL_TYPE_CTRL_CLASS = 6;
+    public const uint V4L2_CTRL_TYPE_INTEGER_MENU = 9;
 
     // Capability
     public const uint V4L2_CAP_VIDEO_CAPTURE = 0x00000001;
@@ -263,6 +286,75 @@ internal static partial class NativeMethods
         public fixed uint reserved[2];
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_frmival_stepwise
+    {
+        public v4l2_fract min;
+        public v4l2_fract max;
+        public v4l2_fract step;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Pack = 8)]
+    public struct v4l2_frmivalenum_union
+    {
+        [FieldOffset(0)]
+        public v4l2_fract discrete;
+        [FieldOffset(0)]
+        public v4l2_frmival_stepwise stepwise;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_frmivalenum
+    {
+        public uint index;
+        public uint pixel_format;
+        public uint width;
+        public uint height;
+        public uint type;
+        public v4l2_frmivalenum_union interval;
+        public fixed uint reserved[2];
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_control
+    {
+        public uint id;
+        public int value;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct v4l2_queryctrl
+    {
+        public const int NameSize = 32;
+
+        public uint id;
+        public uint type;
+        public fixed byte name[NameSize];
+        public int minimum;
+        public int maximum;
+        public int step;
+        public int default_value;
+        public uint flags;
+        public fixed uint reserved[2];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 44)]
+    public struct v4l2_querymenu
+    {
+        public const int NameSize = 32;
+
+        [FieldOffset(0)]
+        public uint id;
+        [FieldOffset(4)]
+        public uint index;
+        [FieldOffset(8)]
+        public fixed byte name[NameSize];
+        [FieldOffset(8)]
+        public long value;
+        [FieldOffset(40)]
+        public uint reserved;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct pollfd
     {
@@ -368,6 +460,11 @@ internal static partial class NativeMethods
         VIDIOC_S_PARM = IOWR('V', 22, sizeof(v4l2_streamparm));
         VIDIOC_ENUM_FMT = IOWR('V', 2, sizeof(v4l2_fmtdesc));
         VIDIOC_ENUM_FRAMESIZES = IOWR('V', 74, sizeof(v4l2_frmsizeenum));
+        VIDIOC_ENUM_FRAMEINTERVALS = IOWR('V', 75, sizeof(v4l2_frmivalenum));
+        VIDIOC_G_CTRL = IOWR('V', 27, sizeof(v4l2_control));
+        VIDIOC_S_CTRL = IOWR('V', 28, sizeof(v4l2_control));
+        VIDIOC_QUERYCTRL = IOWR('V', 36, sizeof(v4l2_queryctrl));
+        VIDIOC_QUERYMENU = IOWR('V', 37, sizeof(v4l2_querymenu));
     }
 #pragma warning restore CA1810
 }

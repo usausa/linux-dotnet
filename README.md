@@ -535,6 +535,22 @@ foreach (var monitor in monitors)
 }
 ```
 
+### USB
+
+```csharp
+foreach (var device in PlatformProvider.GetUsbDevices())
+{
+    Console.WriteLine($"{device.Name} {device.VendorId:x4}:{device.ProductId:x4} {device.Manufacturer} {device.Product}");
+    Console.WriteLine($"  Class: {device.DeviceClass}, Speed: {device.Speed} Mbps, Path: {device.DevicePath}, Parent: {device.ParentName}");
+    foreach (var usbInterface in device.Interfaces)
+    {
+        Console.WriteLine($"  #{usbInterface.Number} {usbInterface.InterfaceClass} {usbInterface.Driver} {String.Join(' ', usbInterface.DeviceFiles)}");
+    }
+}
+```
+
+`DeviceFiles` lists the device nodes created for each interface (`/dev/videoN`, `/dev/input/eventN`, `/dev/input/jsN`, `/dev/hidrawN`, `/dev/ttyUSBN`, `/dev/ttyACMN`, `/dev/usb/lpN`, block devices) and the names of network interfaces and sound cards.
+
 ## Link
 
 * [Prometheus Exporter alternative](https://github.com/usausa/prometheus-exporter-alternative)
@@ -555,6 +571,9 @@ foreach (var device in VideoInfo.GetAllVideo())
     Console.WriteLine($"Name: {device.Name}");
     Console.WriteLine($"Driver: {device.Driver}");
     Console.WriteLine($"Bus: {device.BusInfo}");
+    Console.WriteLine($"USB: {device.UsbPort} {device.UsbVendorId:x4}:{device.UsbProductId:x4}");
+    Console.WriteLine($"ById: {device.ById}");
+    Console.WriteLine($"ByPath: {device.ByPath}");
 
     Console.WriteLine($"Capabilities: 0x{device.RawCapabilities:X8}");
     Console.WriteLine($"  Capture: {device.IsVideoCapture}");
@@ -567,8 +586,16 @@ foreach (var device in VideoInfo.GetAllVideo())
     {
         Console.WriteLine($"  Format: {format.PixelFormat}");
         Console.WriteLine($"    Description: {format.Description}");
-        var resolutions = format.SupportedResolutions.Count > 0 ? $"{String.Join(", ", format.SupportedResolutions)}" : "(Nothing)";
-        Console.WriteLine($"    Resolution: {resolutions}");
+        foreach (var resolution in format.SupportedResolutions)
+        {
+            Console.WriteLine($"    {resolution}: {String.Join(", ", format.GetFrameIntervals(resolution))} fps");
+        }
+    }
+
+    Console.WriteLine($"Controls: {device.Controls.Count}");
+    foreach (var control in device.Controls)
+    {
+        Console.WriteLine($"  {control.Name}: {control.Value} ({control.Minimum}..{control.Maximum})");
     }
 }
 ```
@@ -624,6 +651,54 @@ capture.FrameCaptured += frame =>
 };
 
 capture.StartCapture();
+```
+
+### Capture MJPEG
+
+```csharp
+using var capture = new VideoCapture(device);
+
+if (!capture.Open(1920, 1080, PixelFormat.MJPG))
+{
+    return;
+}
+
+capture.FrameCaptured += frame =>
+{
+    // frame.Span is a JPEG image
+};
+
+capture.StartCapture();
+```
+
+Some UVC cameras send MJPEG frames without the Huffman table (DHT). Use a decoder that supplies the standard table for such frames.
+
+### Frame information
+
+```csharp
+Console.WriteLine($"Format: {capture.PixelFormat} Stride: {capture.BytesPerLine} Size: {capture.ImageSize} FrameRate: {capture.FrameRate}");
+
+capture.FrameCaptured += frame =>
+{
+    // Sequence number, monotonic clock timestamp and error flag of the frame
+    Console.WriteLine($"{frame.Sequence} {frame.Timestamp} {frame.IsError} {frame.Length}");
+};
+```
+
+### Controls
+
+```csharp
+foreach (var control in capture.GetControls())
+{
+    Console.WriteLine($"{control.Name}: {control.Value} ({control.Minimum}..{control.Maximum}, default {control.DefaultValue})");
+    foreach (var item in control.MenuItems)
+    {
+        Console.WriteLine($"  {item.Index}: {item}");
+    }
+}
+
+capture.SetControl(VideoControlId.Brightness, 100);
+var brightness = capture.GetControl(VideoControlId.Brightness);
 ```
 
 ## Image

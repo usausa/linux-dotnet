@@ -21,6 +21,12 @@ public readonly struct FrameBuffer
 
     public bool IsEmpty => (buffer == IntPtr.Zero) || (length == 0);
 
+    public uint Sequence { get; }
+
+    public TimeSpan Timestamp { get; }
+
+    public bool IsError { get; }
+
     public ReadOnlySpan<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,10 +45,13 @@ public readonly struct FrameBuffer
         }
     }
 
-    internal FrameBuffer(IntPtr buffer, int length)
+    internal FrameBuffer(IntPtr buffer, int length, uint sequence, TimeSpan timestamp, bool isError)
     {
         this.buffer = buffer;
         this.length = length;
+        Sequence = sequence;
+        Timestamp = timestamp;
+        IsError = isError;
     }
 
     public byte[] ToArray()
@@ -91,6 +100,14 @@ public sealed class VideoCapture : IDisposable
 
     public int Height { get; private set; }
 
+    public PixelFormat PixelFormat { get; private set; }
+
+    public int BytesPerLine { get; private set; }
+
+    public int ImageSize { get; private set; }
+
+    public double FrameRate { get; private set; }
+
     // ReSharper disable once InconsistentlySynchronizedField
     public bool IsOpen => fd >= 0;
 
@@ -106,15 +123,17 @@ public sealed class VideoCapture : IDisposable
         Close();
     }
 
-    public bool Open(int width = 640, int height = 480)
+    public bool Open(int width = 640, int height = 480) => Open(width, height, PixelFormat.YUYV);
+
+    public bool Open(int width, int height, PixelFormat pixelFormat)
     {
         lock (sync)
         {
-            return OpenCore(width, height);
+            return OpenCore(width, height, pixelFormat);
         }
     }
 
-    private unsafe bool OpenCore(int width, int height)
+    private unsafe bool OpenCore(int width, int height, PixelFormat pixelFormat)
     {
         if (IsOpen)
         {
@@ -132,7 +151,7 @@ public sealed class VideoCapture : IDisposable
         format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         format.fmt.pix.width = (uint)width;
         format.fmt.pix.height = (uint)height;
-        format.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        format.fmt.pix.pixelformat = (uint)pixelFormat;
         format.fmt.pix.field = V4L2_FIELD_NONE;
         format.fmt.pix.bytesperline = 0;
         format.fmt.pix.sizeimage = 0;
@@ -142,8 +161,17 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
+        if (format.fmt.pix.pixelformat != (uint)pixelFormat)
+        {
+            CloseInternal();
+            return false;
+        }
+
         Width = (int)format.fmt.pix.width;
         Height = (int)format.fmt.pix.height;
+        PixelFormat = pixelFormat;
+        BytesPerLine = (int)format.fmt.pix.bytesperline;
+        ImageSize = (int)format.fmt.pix.sizeimage;
 
         // Request buffers
         v4l2_requestbuffers requestBuffers;
@@ -183,6 +211,15 @@ public sealed class VideoCapture : IDisposable
                 CloseInternal();
                 return false;
             }
+        }
+
+        // Frame rate
+        v4l2_streamparm parm = default;
+        parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        if (ioctl(fd, VIDIOC_G_PARM, (IntPtr)(&parm)) >= 0)
+        {
+            var timePerFrame = parm.parm.capture.timeperframe;
+            FrameRate = timePerFrame.numerator == 0 ? 0 : (double)timePerFrame.denominator / timePerFrame.numerator;
         }
 
         return true;
@@ -236,7 +273,34 @@ public sealed class VideoCapture : IDisposable
             return false;
         }
 
+        var timePerFrame = parm.parm.capture.timeperframe;
+        FrameRate = timePerFrame.numerator == 0 ? 0 : (double)timePerFrame.denominator / timePerFrame.numerator;
+
         return true;
+    }
+
+    public IReadOnlyList<VideoControl> GetControls()
+    {
+        lock (sync)
+        {
+            return IsOpen ? VideoControl.Query(fd) : [];
+        }
+    }
+
+    public int? GetControl(int id)
+    {
+        lock (sync)
+        {
+            return IsOpen ? VideoControl.GetValue(fd, id) : null;
+        }
+    }
+
+    public bool SetControl(int id, int value)
+    {
+        lock (sync)
+        {
+            return IsOpen && VideoControl.SetValue(fd, id, value);
+        }
     }
 
     public bool Close()
@@ -279,6 +343,9 @@ public sealed class VideoCapture : IDisposable
 
         Width = 0;
         Height = 0;
+        BytesPerLine = 0;
+        ImageSize = 0;
+        FrameRate = 0;
     }
 
     public bool Snapshot(IBufferWriter<byte> writer, int timeout = 5000)
@@ -463,7 +530,12 @@ public sealed class VideoCapture : IDisposable
             if (buffer.index < buffers.Length)
             {
                 var handler = FrameCaptured;
-                handler?.Invoke(new FrameBuffer(buffers[buffer.index], (int)buffer.bytesused));
+                handler?.Invoke(new FrameBuffer(
+                    buffers[buffer.index],
+                    (int)buffer.bytesused,
+                    buffer.sequence,
+                    TimeSpan.FromTicks((buffer.tv_sec * TimeSpan.TicksPerSecond) + (buffer.tv_usec * TimeSpan.TicksPerMicrosecond)),
+                    (buffer.flags & V4L2_BUF_FLAG_ERROR) != 0));
             }
 
             // Re-queue buffer

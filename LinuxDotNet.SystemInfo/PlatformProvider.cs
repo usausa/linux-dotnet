@@ -88,4 +88,10 @@ public static class PlatformProvider
     //--------------------------------------------------------------------------------
 
     public static IReadOnlyList<HardwareMonitor> GetHardwareMonitors() => HardwareMonitor.GetMonitors();
+
+    //--------------------------------------------------------------------------------
+    // USB
+    //--------------------------------------------------------------------------------
+
+    public static IReadOnlyList<UsbDevice> GetUsbDevices(bool includeRootHub = false) => UsbDevice.GetDevices(includeRootHub);
 }
