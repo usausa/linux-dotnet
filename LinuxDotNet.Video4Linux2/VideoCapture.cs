@@ -2,7 +2,6 @@ namespace LinuxDotNet.Video4Linux2;
 
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
@@ -422,24 +421,19 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    public bool StartCapture(int fps = 0)
+    public bool StartCapture()
     {
         lock (sync)
         {
-            return StartCaptureCore(fps);
+            return StartCaptureCore();
         }
     }
 
-    private bool StartCaptureCore(int fps)
+    private bool StartCaptureCore()
     {
         if (!IsOpen || IsCapturing)
         {
             return false;
-        }
-
-        if (fps > 0)
-        {
-            _ = SetFrameRateCore(fps);
         }
 
         if (!QueueAllBuffers())
@@ -457,7 +451,7 @@ public sealed class VideoCapture : IDisposable
         // Start capture loop
         var source = new CancellationTokenSource();
         captureCts = source;
-        captureThread = new Thread(() => CaptureLoop(fps, source.Token))
+        captureThread = new Thread(() => CaptureLoop(source.Token))
         {
             IsBackground = true,
             Name = "V4L2 Capture"
@@ -500,14 +494,10 @@ public sealed class VideoCapture : IDisposable
         return true;
     }
 
-    private void CaptureLoop(int fps, CancellationToken cancellationToken)
+    private void CaptureLoop(CancellationToken cancellationToken)
     {
-        var frameInterval = fps > 0 ? TimeSpan.FromMilliseconds(1000.0 / fps) : TimeSpan.Zero;
-
         while (!cancellationToken.IsCancellationRequested)
         {
-            var currentTimestamp = Stopwatch.GetTimestamp();
-
             var fds = new pollfd
             {
                 fd = fd,
@@ -544,15 +534,6 @@ public sealed class VideoCapture : IDisposable
             requeueBuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             requeueBuffer.memory = V4L2_MEMORY_MMAP;
             ioctl(fd, VIDIOC_QBUF, (IntPtr)(&requeueBuffer));
-
-            if (fps > 0)
-            {
-                var sleepTime = frameInterval - Stopwatch.GetElapsedTime(currentTimestamp);
-                if (sleepTime > TimeSpan.Zero)
-                {
-                    Thread.Sleep(sleepTime);
-                }
-            }
         }
     }
 }

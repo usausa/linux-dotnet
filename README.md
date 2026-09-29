@@ -671,7 +671,8 @@ capture.FrameCaptured += frame =>
 capture.StartCapture();
 ```
 
-Some UVC cameras send MJPEG frames without the Huffman table (DHT). Use a decoder that supplies the standard table for such frames.
+Some UVC cameras send MJPEG frames without the Huffman table (DHT).  
+Use a decoder that supplies the standard table for such frames.
 
 ### Frame information
 
@@ -684,6 +685,20 @@ capture.FrameCaptured += frame =>
     Console.WriteLine($"{frame.Sequence} {frame.Timestamp} {frame.IsError} {frame.Length}");
 };
 ```
+
+### Frame rate
+
+```csharp
+if (capture.SetFrameRate(15))
+{
+    Console.WriteLine($"FrameRate: {capture.FrameRate}");
+}
+
+capture.StartCapture();
+```
+
+`FrameRate` holds the rate the driver accepted, which can differ from the requested one.  
+`FrameCaptured` receives every frame the device sends; skip frames in the handler to process at a lower rate.
 
 ### Controls
 

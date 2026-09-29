@@ -200,7 +200,7 @@ public sealed class CaptureCommand : ICommandHandler
             }
         };
 
-        capture.StartCapture(Fps);
+        capture.StartCapture();
 
         Console.ReadLine();
 
