@@ -1,5 +1,7 @@
 namespace LinuxDotNet.Disk;
 
+using System.Runtime.InteropServices;
+
 using static LinuxDotNet.Disk.Helper;
 using static LinuxDotNet.Disk.NativeMethods;
 
@@ -7,9 +9,13 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
 {
     private readonly SafeFileDescriptor handle;
 
+    private readonly int openError;
+
     private bool disposed;
 
     public bool LastUpdate { get; private set; }
+
+    public int LastError { get; private set; }
 
     public byte CriticalWarning { get; private set; }
 
@@ -49,7 +55,9 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
 
     public SmartNvme(string devicePath)
     {
-        handle = new SafeFileDescriptor(open(devicePath, O_RDONLY));
+        var fd = open(devicePath, O_RDONLY);
+        openError = fd < 0 ? Marshal.GetLastPInvokeError() : 0;
+        handle = new SafeFileDescriptor(fd);
     }
 
     public void Dispose()
@@ -69,6 +77,7 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
 
         if (handle.IsInvalid)
         {
+            LastError = openError;
             LastUpdate = false;
             return false;
         }
@@ -83,8 +92,10 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
             cdw10 = 0x02 | ((uint)((sizeof(nvme_smart_log) / 4) - 1) << 16)
         };
 
-        if (ioctl(handle.Descriptor, NVME_IOCTL_ADMIN_CMD, ref cmd) < 0)
+        var result = ioctl(handle.Descriptor, NVME_IOCTL_ADMIN_CMD, ref cmd);
+        if (result != 0)
         {
+            LastError = result < 0 ? Marshal.GetLastPInvokeError() : EIO;
             LastUpdate = false;
             return false;
         }
@@ -112,6 +123,7 @@ internal sealed class SmartNvme : ISmartNvme, IDisposable
             TemperatureSensors[i] = KelvinToCelsius(smartLog.temp_sensor[i]);
         }
 
+        LastError = 0;
         LastUpdate = true;
         return true;
     }

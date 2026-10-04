@@ -16,9 +16,14 @@ internal static partial class NativeMethods
 
     public const int O_RDONLY = 0;
 
+    public const int EPERM = 1;
+    public const int EIO = 5;
+    public const int EACCES = 13;
+
     public const ulong SG_IO = 0x2285;
     public const ulong NVME_IOCTL_ADMIN_CMD = 0xC0484E41;
 
+    public const int SG_DXFER_NONE = -1;
     public const int SG_DXFER_FROM_DEV = -3;
 
     public const uint SG_INFO_OK_MASK = 0x1;

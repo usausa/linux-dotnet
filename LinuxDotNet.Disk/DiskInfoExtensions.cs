@@ -7,7 +7,8 @@ public static class DiskInfoExtensions
 
     public static IEnumerable<PartitionInfo> GetPartitions(this IDiskInfo disk)
     {
-        var blockPath = Path.Combine(SysBlockPath, disk.DeviceName);
+        var diskName = Path.GetFileName(disk.DeviceName);
+        var blockPath = Path.Combine(SysBlockPath, diskName);
         if (!Directory.Exists(blockPath))
         {
             yield break;
@@ -16,7 +17,7 @@ public static class DiskInfoExtensions
         var mountPoints = GetMountPoints();
 
         var index = 0u;
-        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => (x is not null) && IsPartition(disk.DiskType, disk.DeviceName, x)).OrderBy(x => x))
+        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => (x is not null) && IsPartition(disk.DiskType, diskName, x)).OrderBy(x => x))
         {
             var deviceName = $"/dev/{name}";
             var sectors = Helper.ReadFileAsUInt64(Path.Combine(blockPath, name!, "size")) ?? 0;

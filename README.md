@@ -61,11 +61,11 @@ var jobId = CupsPrinter.PrintStream(image, options);
 
 # ⚡LinuxDotNet.Disk
 
-SMART infotmation.
+SMART information.
 
 ## Usage
 
-### List printers
+### Disk information
 
 ```csharp
 var disks = DiskInfo.GetInformation();
@@ -103,7 +103,7 @@ foreach (var disk in disks)
 
 static void PrintNvmeSmart(ISmartNvme smart)
 {
-    Console.WriteLine($"  SMART (NVMe): Update=[{smart.LastUpdate}]");
+    Console.WriteLine($"  SMART (NVMe): Update=[{smart.LastUpdate}] Error=[{smart.LastError}]");
     Console.WriteLine($"    CriticalWarning:          {smart.CriticalWarning}");
     Console.WriteLine($"    Temperature:              {smart.Temperature}C");
     Console.WriteLine($"    AvailableSpare:           {smart.AvailableSpare}%");
@@ -118,16 +118,16 @@ static void PrintNvmeSmart(ISmartNvme smart)
 
 static void PrintGenericSmart(ISmartGeneric smart)
 {
-    Console.WriteLine($"  SMART (Generic): Update=[{smart.LastUpdate}]");
-    Console.WriteLine("    ID   FLAG   CUR  WOR  RAW");
-    Console.WriteLine("    ---  ----   ---  ---  --------");
+    Console.WriteLine($"  SMART (Generic): Update=[{smart.LastUpdate}] Error=[{smart.LastError}] Assessment=[{smart.Assessment}]");
+    Console.WriteLine("    ID   FLAG   CUR  WOR  THR  RAW");
+    Console.WriteLine("    ---  ----   ---  ---  ---  --------");
 
     foreach (var id in smart.GetSupportedIds())
     {
         var attr = smart.GetAttribute(id);
         if (attr.HasValue)
         {
-            Console.WriteLine($"    {(byte)id,3}  0x{attr.Value.Flags:X4} {attr.Value.CurrentValue,3}  {attr.Value.WorstValue,3}  {attr.Value.RawValue}");
+            Console.WriteLine($"    {(byte)id,3}  0x{attr.Value.Flags:X4} {attr.Value.CurrentValue,3}  {attr.Value.WorstValue,3}  {attr.Value.Threshold,3}  {attr.Value.RawValue}");
         }
     }
 }

@@ -75,7 +75,7 @@ public static partial class DiskInfo
                 {
                     ReadIdeInfo(deviceName, info);
                     var smart = new SmartGeneric(devicePath);
-                    if (smart.Update())
+                    if (smart.Update() || (smart.LastError is EPERM or EACCES))
                     {
                         info.Smart = smart;
                         info.SmartType = SmartType.Generic;
