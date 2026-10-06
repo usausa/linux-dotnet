@@ -86,7 +86,7 @@ public sealed class DiskStat
             var device = default(DiskStatEntry);
             foreach (var item in devices)
             {
-                if (item.Name == name)
+                if (item.Name.AsSpan().Equals(name, StringComparison.Ordinal))
                 {
                     device = item;
                     break;

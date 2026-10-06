@@ -93,7 +93,7 @@ public sealed class NetworkStat
                 var network = default(NetworkStatEntry);
                 foreach (var item in interfaces)
                 {
-                    if (item.Interface == name)
+                    if (item.Interface.AsSpan().Equals(name, StringComparison.Ordinal))
                     {
                         network = item;
                         break;

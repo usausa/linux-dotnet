@@ -87,7 +87,7 @@ public sealed class WirelessStat
                 var wireless = default(WirelessStatEntry);
                 foreach (var item in interfaces)
                 {
-                    if (item.Interface == name)
+                    if (item.Interface.AsSpan().Equals(name, StringComparison.Ordinal))
                     {
                         wireless = item;
                         break;
