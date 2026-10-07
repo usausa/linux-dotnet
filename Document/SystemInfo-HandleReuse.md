@@ -595,10 +595,10 @@ diff ~/handle-reuse/dump-before2.txt ~/handle-reuse/dump-after.txt
 
 ## 📊 Phase 4: 性能比較（変更後）
 
-- [ ] P-1 Phase 1-3 と同じ条件でベンチマークを実行し、`Document/HandleReuse/results/benchmark-after-<env>.md` に保存した
+- [x] P-1 Phase 1-3 と同じ条件でベンチマークを実行し、`Document/HandleReuse/results/benchmark-after-<env>.md` に保存した
 - [x] P-2 Phase 1-4 と同じ条件で strace を計測した（after 側のバイナリで）
-- [ ] P-3 結果記録の「性能比較」表に記入した
-- [ ] P-4 判定基準（下記）を確認し、満たさない項目があれば原因を調べて記録した
+- [x] P-3 結果記録の「性能比較」表に記入した
+- [x] P-4 判定基準（下記）を確認し、満たさない項目があれば原因を調べて記録した
 
 | 判定基準 | 内容 |
 |---|---|
@@ -839,23 +839,23 @@ x64 VM（`benchmark-before-x64vm.md`。BenchmarkDotNet は `--inProcess` で実�
 
 | クラス | before | after | 改善率 |
 |---|---|---|---|
-| SystemStat | 24.7 µs / 10,368 B | | |
-| MemoryStat | 28.6 µs / 12,248 B | | |
-| VirtualMemoryStat | 49.2 µs / 20,289 B | | |
-| LoadAverage | 16.1 µs / 7,920 B | | |
-| Uptime | 15.9 µs / 7,912 B | | |
-| FileHandleStat | 16.9 µs / 7,920 B | | |
-| DiskStat | 24.8 µs / 9,192 B | | |
-| NetworkStat | 53.0 µs / 11,193 B | | |
-| TcpStat / Tcp6Stat | 450 µs / 9,874 B、449 µs / 9,826 B | | |
-| WirelessStat | 19.1 µs / 1,224 B（`/proc/net/wireless` がなく、毎回例外になって false） | | |
-| ProcessSummary | 4.55 ms / 1,917,110 B（プロセス約 170） | | |
-| CpuDevice | 4.9 ns / 0 B（N/A。コアの周波数ファイルも RAPL もない） | | |
-| BatteryDevice | 2.2 ns / 0 B（N/A） | | |
-| MainsDevice | 0.6 ns / 0 B（N/A） | | |
-| HardwareMonitors | 0.6 ns / 0 B（N/A。センサーがない） | | |
-| FileSystemUsage | 1.62 µs / 0 B | | |
-| **All** | **6.15 ms / 2,025,159 B** | | |
+| SystemStat | 24.7 µs / 10,368 B | 10.6 µs / 0 B | −57.2% |
+| MemoryStat | 28.6 µs / 12,248 B | 11.3 µs / 0 B | −60.7% |
+| VirtualMemoryStat | 49.2 µs / 20,289 B | 30.8 µs / 0 B | −37.4% |
+| LoadAverage | 16.1 µs / 7,920 B | 2.90 µs / 0 B | −82.0% |
+| Uptime | 15.9 µs / 7,912 B | 2.84 µs / 0 B | −82.1% |
+| FileHandleStat | 16.9 µs / 7,920 B | 3.03 µs / 0 B | −82.0% |
+| DiskStat | 24.8 µs / 9,192 B | 12.1 µs / 0 B | −51.1% |
+| NetworkStat | 53.0 µs / 11,193 B | 24.1 µs / 0 B | −54.6% |
+| TcpStat / Tcp6Stat | 450 µs / 9,874 B、449 µs / 9,826 B | 288 µs / 2 B、286 µs / 2 B（定常状態では 0 B。下記） | −36.0%、−36.4% |
+| WirelessStat | 19.1 µs / 1,224 B（`/proc/net/wireless` がなく、毎回例外になって false） | 18.0 µs / 736 B（同じ） | −5.9% |
+| ProcessSummary | 4.55 ms / 1,917,110 B（プロセス約 170） | 3.40 ms / 20,664 B（プロセス約 172） | −25.2%（割り当ては −98.9%） |
+| CpuDevice | 4.9 ns / 0 B（N/A。コアの周波数ファイルも RAPL もない） | 2.2 ns / 0 B（N/A） | N/A |
+| BatteryDevice | 2.2 ns / 0 B（N/A） | 2.2 ns / 0 B（N/A） | N/A |
+| MainsDevice | 0.6 ns / 0 B（N/A） | 0.4 ns / 0 B（N/A） | N/A |
+| HardwareMonitors | 0.6 ns / 0 B（N/A。センサーがない） | 0.6 ns / 0 B（N/A） | N/A |
+| FileSystemUsage | 1.62 µs / 0 B | 1.72 µs / 0 B | +6.5%（計測のばらつき。下記） |
+| **All** | **6.15 ms / 2,025,159 B** | **4.27 ms / 21,545 B** | **−30.5%（割り当ては −98.9%）** |
 
 ### syscall 数（1反復あたり）
 
@@ -1014,3 +1014,21 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
   - 最初は fd 数が戻らなかった。これは、最初に Console に書いたときに .NET が開く fd（標準出力の複製とシグナル用のパイプ）と、初めて読み込むアセンブリのために開く実行ファイルの fd が、数に入っていたため。Console を先に使い、1 回目を出力なしで実行してから数える形にした。
 - **C-6**: 実施しない（2026-10-07 ユーザー指示。net8.0 での確認は不要）。
 - **C-7**: VM では、ファイルがないケースだけ確かめられた。`/proc/net/wireless` がなくても、電源のファイルがなくても、例外にならずに `Update()` が false を返した。権限不足のケース（一般ユーザーで `energy_uj` を読む）は VM にファイルがないので、実機で確かめる。
+
+#### Phase 4 の判定（x64 VM、2026-10-07）
+
+| 判定基準 | 結果 |
+|---|---|
+| 悪化なし（+5% 以内） | 満たす。最初の計測では `FileSystemUsage` が +6.5%（1.62 → 1.72 µs）だったが、before と after を交互に 2 回ずつ測り直すと、before 1.735 / 1.616 µs、after 1.628 / 1.642 µs で、差は計測のばらつきの範囲だった。このクラスは None で、変更は Dispose 後の確認 1 行だけ。`HardwareMonitors` の +4.8% は、VM ではセンサーがなく何もしない呼び出し（1 ns 未満）の差 |
+| 割り当て（Hold は 0 B） | 満たす。BenchmarkDotNet では `TcpStat` と `Tcp6Stat` が 2 B と出たが、モニターに追加した `alloccheck`（ウォームアップの後、`Update()` 2,000 回の `GC.GetAllocatedBytesForCurrentThread()` の差）では、Hold のクラスはすべて 0 バイトだった。OneShot の `ProcessSummary` は 1,917,110 B → 20,664 B（−98.9%） |
+| ◎クラス（30% 以上改善） | VM では判定できない（N/A）。`HardwareMonitors`、`CpuDevice`、`BatteryDevice` の対象のファイルが VM にないため。実機で計測する |
+| syscall（Hold は openat と close が 0 回） | 満たす（§syscall 数の x64 VM の表） |
+
+- **全体**: 1 回のスクレイプに相当する All は、6.15 ms → 4.27 ms（−30.5%）、割り当ては 2,025,159 B → 21,545 B（−98.9%）。
+- **Hold の /proc のクラス**: −37〜−82%。値が 1 つだけの小さなファイル（`LoadAverage`、`Uptime`、`FileHandleStat`）ほど改善の割合が大きい（open と close と string の生成がなくなるため）。
+- **`TcpStat`（−36%）**: 残りの約 290 µs はカーネルが `/proc/net/tcp` を作る時間。接続が 6 件でも、カーネルは TCP のハッシュ表全体をたどるため。
+- **`ProcessSummary`（−25%）**: プロセスごとに開いて閉じる（OneShot）ので、効果は小さい。1 プロセスあたり openat、fstat、flock 2 回、pread 2 回、close がかかる。
+- **`WirelessStat`**: `/proc/net/wireless` がない環境では、今も `Update()` のたびに `File.OpenHandle` の中で `FileNotFoundException` が発生して捕捉される（約 18 µs、736〜984 B）。指示書どおりの動作（開けないファイルは毎回開き直す）で、判定の対象外と決めたもの。
+- **後で検討する課題**
+  - 開けないファイルを毎回開き直すときに、例外のコストがかかる（`WirelessStat` など）。たとえば、開く前に存在を確かめれば、例外を避けられる。
+  - `ProcessSummary` の 1 プロセスあたりの syscall。open、pread、close を直接呼べば、flock と fstat と SafeFileHandle の割り当てがなくなる。§4.6 の `/proc/<pid>/stat` を読む方式もある。
