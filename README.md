@@ -255,16 +255,16 @@ Console.WriteLine($"OsName:                 {kernel.OsName}");
 Console.WriteLine($"OsPrettyName:           {kernel.OsPrettyName}");
 Console.WriteLine($"OsId:                   {kernel.OsId}");
 Console.WriteLine($"BootTime:               {kernel.BootTime}");
-Console.WriteLine($"MaxProcessCount:        {kernel.MaxProcessCount}");
-Console.WriteLine($"MaxFileCount:           {kernel.MaxFileCount}");
-Console.WriteLine($"MaxFileCountPerProcess: {kernel.MaxFileCountPerProcess}");
+Console.WriteLine($"MaxProcesses:           {kernel.MaxProcesses}");
+Console.WriteLine($"MaxFiles:               {kernel.MaxFiles}");
+Console.WriteLine($"MaxFilesPerProcess:     {kernel.MaxFilesPerProcess}");
 ```
 
 ### Uptime
 
 ```csharp
 using var uptime = PlatformProvider.GetUptime();
-Console.WriteLine($"Uptime: {uptime.Uptime}");
+Console.WriteLine($"Uptime: {uptime.Elapsed}");
 ```
 
 ### Stat
@@ -274,19 +274,19 @@ using var stat = PlatformProvider.GetSystemStat();
 Console.WriteLine($"Interrupt:      {stat.Interrupt}");
 Console.WriteLine($"ContextSwitch:  {stat.ContextSwitch}");
 Console.WriteLine($"SoftIrq:        {stat.SoftIrq}");
-Console.WriteLine($"ProcessRunning: {stat.ProcessRunning}");
-Console.WriteLine($"ProcessBlocked: {stat.ProcessBlocked}");
+Console.WriteLine($"RunnableTasks:  {stat.RunnableTasks}");
+Console.WriteLine($"BlockedTasks:   {stat.BlockedTasks}");
 
-Console.WriteLine($"User:           {stat.CpuCores.Sum(static x => x.User)}");
-Console.WriteLine($"Nice:           {stat.CpuCores.Sum(static x => x.Nice)}");
-Console.WriteLine($"System:         {stat.CpuCores.Sum(static x => x.System)}");
-Console.WriteLine($"Idle:           {stat.CpuCores.Sum(static x => x.Idle)}");
-Console.WriteLine($"IoWait:         {stat.CpuCores.Sum(static x => x.IoWait)}");
-Console.WriteLine($"Irq:            {stat.CpuCores.Sum(static x => x.Irq)}");
-Console.WriteLine($"SoftIrq:        {stat.CpuCores.Sum(static x => x.SoftIrq)}");
-Console.WriteLine($"Steal:          {stat.CpuCores.Sum(static x => x.Steal)}");
-Console.WriteLine($"Guest:          {stat.CpuCores.Sum(static x => x.Guest)}");
-Console.WriteLine($"GuestNice:      {stat.CpuCores.Sum(static x => x.GuestNice)}");
+Console.WriteLine($"User:           {stat.CpuTotal.User}");
+Console.WriteLine($"Nice:           {stat.CpuTotal.Nice}");
+Console.WriteLine($"System:         {stat.CpuTotal.System}");
+Console.WriteLine($"Idle:           {stat.CpuTotal.Idle}");
+Console.WriteLine($"IoWait:         {stat.CpuTotal.IoWait}");
+Console.WriteLine($"Irq:            {stat.CpuTotal.Irq}");
+Console.WriteLine($"SoftIrq:        {stat.CpuTotal.SoftIrq}");
+Console.WriteLine($"Steal:          {stat.CpuTotal.Steal}");
+Console.WriteLine($"Guest:          {stat.CpuTotal.Guest}");
+Console.WriteLine($"GuestNice:      {stat.CpuTotal.GuestNice}");
 ```
 
 ### LoadAverage
@@ -316,8 +316,8 @@ Console.WriteLine($"PageIn:            {vm.PageIn}");
 Console.WriteLine($"PageOut:           {vm.PageOut}");
 Console.WriteLine($"SwapIn:            {vm.SwapIn}");
 Console.WriteLine($"SwapOut:           {vm.SwapOut}");
-Console.WriteLine($"PageFault:         {vm.PageFault}");
-Console.WriteLine($"MajorPageFault:    {vm.MajorPageFault}");
+Console.WriteLine($"PageFaults:        {vm.PageFaults}");
+Console.WriteLine($"MajorPageFaults:   {vm.MajorPageFaults}");
 Console.WriteLine($"OutOfMemoryKiller: {vm.OutOfMemoryKiller}");
 ```
 
@@ -343,7 +343,7 @@ foreach (var partition in partitions)
 ### Mount
 
 ```csharp
-var mounts = PlatformProvider.GetMounts(IncludeVirtual);
+var mounts = PlatformProvider.GetMounts();
 foreach (var mount in mounts)
 {
     Console.WriteLine($"Device:        {mount.DeviceName}");
