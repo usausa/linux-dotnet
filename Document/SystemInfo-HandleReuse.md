@@ -589,7 +589,7 @@ diff ~/handle-reuse/dump-before2.txt ~/handle-reuse/dump-after.txt
 - [x] C-4 `loop --iterations 10 --interval 1000 --verbose` で値が更新され続けることを確認した
 - [x] C-5 Dispose の挙動を確認した（2回呼んでも例外にならない。Dispose 後の Update で `ObjectDisposedException` になる。終了時に fd 数が開始時に戻る）
 - [ ] C-6 net8.0 でも C-2 と C-4 を実施した（`-f net8.0` で publish する） → 実施しない（2026-10-07 ユーザー指示で、net8.0 での確認は不要）
-- [ ] C-7 存在しないパスや権限不足のケースでも例外にならず、`Update()` が false を返すことを確認した（例: `energy_uj` を一般ユーザーで読む、`/proc/net/wireless` がない環境）
+- [x] C-7 存在しないパスや権限不足のケースでも例外にならず、`Update()` が false を返すことを確認した（例: `energy_uj` を一般ユーザーで読む、`/proc/net/wireless` がない環境） → 確認した（§判定・メモ「Phase 3 の結果（x64 実機と Raspberry Pi）」。作成時に開けなかった一覧の要素は、一覧に入らない）
 
 ---
 
@@ -613,7 +613,7 @@ diff ~/handle-reuse/dump-before2.txt ~/handle-reuse/dump-after.txt
 
 after のモニターを `loop --interval 1000 --verbose --log` で動かしながら実施します。
 
-- [ ] H-1 **CPU offline/online**（x64 と Pi の両方。cpu1 で行う）
+- [x] H-1 **CPU offline/online**（x64 と Pi の両方。cpu1 で行う） → x64 で実施した。Pi は CPU を offline にできないカーネルなので N/A
   - offline の間は `CpuCore.Update()` が false を返し、例外にならないこと
   - online に戻した後、**再オープンによって値の取得が再開** すること
   - fd 数が増え続けないこと
@@ -636,7 +636,7 @@ sudo ip link add hr-dummy0 type dummy && sudo ip link set hr-dummy0 up
 sudo ip link del hr-dummy0
 ```
 
-- [ ] H-3 （x64 のみ・任意）**hwmon ドライバの再ロード**
+- [x] H-3 （x64 のみ・任意）**hwmon ドライバの再ロード** → x64 で実施した
 
 ```bash
 sudo modprobe -r coretemp && sudo modprobe coretemp
@@ -644,8 +644,8 @@ sudo modprobe -r coretemp && sudo modprobe coretemp
 
   - 例外が出ず、fd がリークしないことを確認する
   - ⚠️ `hwmonN` の番号が変わった場合、同じパスで開き直すと **別のセンサーにつながる、または失敗する** ことがあります（既知の制約。§⚠️ 参照）。実際にどうなったかを記録してください
-- [ ] H-4 （ノート PC のみ・任意）AC アダプタの抜き差しで、`MainsDevice.Online` と `BatteryDevice.Status` が切り替わる
-- [ ] H-5 （任意）USB ストレージの抜き差しで、`DiskStat` にデバイスが追加・削除される
+- [ ] H-4 （ノート PC のみ・任意）AC アダプタの抜き差しで、`MainsDevice.Online` と `BatteryDevice.Status` が切り替わる → 実施しない（x64 PC のバッテリーが劣化していて、AC を抜くと電源が落ちるおそれがあるため）
+- [ ] H-5 （任意）USB ストレージの抜き差しで、`DiskStat` にデバイスが追加・削除される → 未実施（手作業が要る）
 - [x] H-6 **24時間連続稼働**（Pi を推奨）
 
 ```bash
@@ -696,21 +696,21 @@ nohup dotnet ~/handle-reuse/after/monitor/WorkSystemInfoMonitor.dll loop --itera
 
 | 項目 | x64 | x64 VM | Raspberry Pi |
 |---|---|---|---|
-| 機種 / CPU | FUJITSU FARQ23001（ホスト名 q739）/ Intel Core i5-8365U | Hyper-V の VM（ホスト名 vm-monitor）/ AMD Ryzen 7 5700G | |
-| コア数 | 4コア8スレッド（nproc 8）、メモリ 3.5 GiB | 2 vCPU（nproc 2）、メモリ 3.1 GiB | |
-| OS / カーネル | Ubuntu 24.04.5 LTS / 7.0.0-34-generic | Rocky Linux 10.2 / 6.12.0-211.34.1.el10_2.x86_64 | |
-| .NET SDK / Runtime | SDK 10.0.401 / Microsoft.NETCore.App 8.0.31 と 10.0.12（`~/.dotnet` に dotnet-install.sh で追加。§判定・メモ） | VM には入れていない。Windows で publish した self-contained の単一ファイル（ランタイム 10.0.12 を含む）を実行する（§判定・メモ） | |
+| 機種 / CPU | FUJITSU FARQ23001（ホスト名 q739）/ Intel Core i5-8365U | Hyper-V の VM（ホスト名 vm-monitor）/ AMD Ryzen 7 5700G | Raspberry Pi 4 Model B Rev 1.5（ホスト名 pi4b）/ Broadcom BCM2711（Cortex-A72、最大 1.8 GHz） |
+| コア数 | 4コア8スレッド（nproc 8）、メモリ 3.5 GiB | 2 vCPU（nproc 2）、メモリ 3.1 GiB | 4 コア（nproc 4）、メモリ 3.7 GiB |
+| OS / カーネル | Ubuntu 24.04.5 LTS / 7.0.0-34-generic | Rocky Linux 10.2 / 6.12.0-211.34.1.el10_2.x86_64 | Debian GNU/Linux 12（bookworm）/ 6.6.51+rpt-rpi-v8（aarch64） |
+| .NET SDK / Runtime | SDK 10.0.401 / Microsoft.NETCore.App 8.0.31 と 10.0.12（`~/.dotnet` に dotnet-install.sh で追加。§判定・メモ） | VM には入れていない。Windows で publish した self-contained の単一ファイル（ランタイム 10.0.12 を含む）を実行する（§判定・メモ） | Pi には入れていない。Windows で linux-arm64 向けに publish した self-contained のバイナリ（ランタイム 10.0.12 を含む）を実行する（x64 VM と同じ方法。§判定・メモ） |
 
 ### Phase 0 の結論
 
 | 項目 | x64 | Raspberry Pi |
 |---|---|---|
-| L0-1 ハンドルを保持したまま読み直せるか | 読み直せる（値が動くファイルはすべて `changed`） | |
-| L0-2 sysfs で `singleRead` を使えるか | 使える（2026-10-07 ユーザー確認済み）。1回の読み込みの中では、64 バイトの1回目の pread で全体が返り、次の pread は 0（34 ファイル × 200 回で例外なし）。スクリプトの `multi-chunk` 表示は、2回の読み込みの間に値の桁数が変わったための見かけ上のもの | |
-| L0-2b /proc の大きなファイルは multi-chunk か | `/proc/net/tcp6`（10,966 バイト）は 3 チャンクに分かれた。`/proc/stat`（4,586 バイト）は 64KB バッファなら 1 回。ループして読む必要がある | |
-| L0-3 `RandomAccess` は使えるか（net8/net10） | net8.0（8.0.31）と net10.0（10.0.12）の両方で使える。例外なし（`NotSupportedException` も出ない）。`GetLength` は procfs 0、sysfs 4096 | |
-| L0-4 online 後の古い fd の挙動 | offline の間は、古い fd も新しく開いた fd も読むと EBUSY（Errno 16）。`cpu1/cpufreq` のリンクは offline の間も残る。online に戻すと、古い fd のままで値が読める（再オープンしなくても回復する） | |
-| 採用方式の決定 | 方式は採用できる。`KernelFile` は `File.OpenHandle` と `RandomAccess.Read` で作る（pread の P/Invoke は不要）。sysfs の単一値ファイルは `bufferSize: 64` と `singleRead: true`。/proc は EOF までループして読む。D6 の再オープンは指示書どおり入れる（このマシンの CPU hotplug では必須ではないが、害はない） | |
+| L0-1 ハンドルを保持したまま読み直せるか | 読み直せる（値が動くファイルはすべて `changed`） | 読み直せる（`/proc/stat`、`/proc/meminfo`、`/proc/vmstat`、`/proc/uptime`、`/proc/net/tcp`、`/proc/net/wireless`、hwmon の温度が `changed`） |
+| L0-2 sysfs で `singleRead` を使えるか | 使える（2026-10-07 ユーザー確認済み）。1回の読み込みの中では、64 バイトの1回目の pread で全体が返り、次の pread は 0（34 ファイル × 200 回で例外なし）。スクリプトの `multi-chunk` 表示は、2回の読み込みの間に値の桁数が変わったための見かけ上のもの | 使える。cpufreq の 4 ファイルと hwmon の温度 1 ファイルで、200 回とも 64 バイトの 1 回目の pread で全体が返り、次の pread は 0。電源（power_supply）と RAPL はない |
+| L0-2b /proc の大きなファイルは multi-chunk か | `/proc/net/tcp6`（10,966 バイト）は 3 チャンクに分かれた。`/proc/stat`（4,586 バイト）は 64KB バッファなら 1 回。ループして読む必要がある | どれも 1 チャンク（最大は `/proc/vmstat` の 2,581 バイト）。ループして読む実装のままでよい |
+| L0-3 `RandomAccess` は使えるか（net8/net10） | net8.0（8.0.31）と net10.0（10.0.12）の両方で使える。例外なし（`NotSupportedException` も出ない）。`GetLength` は procfs 0、sysfs 4096 | net10.0（10.0.12、Arm64）で使える。例外なし。`GetLength` は procfs 0、sysfs 4096。net8.0 は確認しない（2026-10-07 ユーザー指示） |
+| L0-4 online 後の古い fd の挙動 | offline の間は、古い fd も新しく開いた fd も読むと EBUSY（Errno 16）。`cpu1/cpufreq` のリンクは offline の間も残る。online に戻すと、古い fd のままで値が読める（再オープンしなくても回復する） | N/A。このカーネルは `CONFIG_HOTPLUG_CPU` が無効で（CPU の起動方式は spin-table）、`cpu1/online` がない。CPU を offline にできない（H-1 も N/A） |
+| 採用方式の決定 | 方式は採用できる。`KernelFile` は `File.OpenHandle` と `RandomAccess.Read` で作る（pread の P/Invoke は不要）。sysfs の単一値ファイルは `bufferSize: 64` と `singleRead: true`。/proc は EOF までループして読む。D6 の再オープンは指示書どおり入れる（このマシンの CPU hotplug では必須ではないが、害はない） | x64 と同じ方式で問題ない（変更は不要） |
 
 #### Phase 0 の出力（x64）
 
@@ -814,27 +814,98 @@ NetworkStat: update=True entries 2 -> 2, same instances 2
 WirelessStat: update=True entries 1 -> 1, same instances 1
 ```
 
+#### Phase 0 の出力（Raspberry Pi）
+
+L0-1 / L0-2（`pread_check.py`、指示書のスクリプトのまま）:
+
+```text
+OK   /proc/stat: changed, first=476, total=476, single-ok, chunks=[476, 0]
+OK   /proc/meminfo: changed, first=1149, total=1149, single-ok, chunks=[1149, 0]
+OK   /proc/vmstat: changed, first=2581, total=2581, single-ok, chunks=[2581, 0]
+OK   /proc/loadavg: same, first=25, total=25, single-ok, chunks=[25, 0]
+OK   /proc/uptime: changed, first=15, total=15, single-ok, chunks=[15, 0]
+OK   /proc/diskstats: same, first=1515, total=1515, single-ok, chunks=[1515, 0]
+OK   /proc/net/dev: same, first=569, total=569, single-ok, chunks=[569, 0]
+OK   /proc/net/tcp: changed, first=750, total=750, single-ok, chunks=[750, 0]
+OK   /proc/net/tcp6: same, first=497, total=497, single-ok, chunks=[497, 0]
+OK   /proc/net/wireless: changed, first=239, total=239, single-ok, chunks=[239, 0]
+OK   /proc/sys/fs/file-nr: same, first=27, total=27, single-ok, chunks=[27, 0]
+OK   /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: same, first=7, total=7, single-ok, chunks=[7, 0]
+OK   /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq: same, first=7, total=7, single-ok, chunks=[7, 0]
+OK   /sys/class/hwmon/hwmon0/temp1_input: changed, first=6, total=6, single-ok, chunks=[6, 0]
+```
+
+L0-2 の補足（`l02_single_check.py`。1 回の読み込みの中で、64 バイトの 1 回目の pread で全体が返り、次の pread が 0 になるか）:
+
+```text
+OK   /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: 200 reads, lengths=[8], not-single=0
+OK   /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq: 200 reads, lengths=[8], not-single=0
+OK   /sys/devices/system/cpu/cpu2/cpufreq/scaling_cur_freq: 200 reads, lengths=[8], not-single=0
+OK   /sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq: 200 reads, lengths=[8], not-single=0
+OK   /sys/class/hwmon/hwmon0/temp1_input: 200 reads, lengths=[6], not-single=0
+```
+
+L0-3（net10.0、`WorkSystemInfoMonitor poc` の抜粋）:
+
+```text
+Framework: .NET 10.0.12
+OS: Debian GNU/Linux 12 (bookworm)
+Architecture: Arm64
+Repeat: count=5, interval=1000ms
+Target: /proc/uptime
+Target: /sys/class/hwmon/hwmon0/temp1_input
+Open /proc/uptime: OK
+Length /proc/uptime: 0
+Open /sys/class/hwmon/hwmon0/temp1_input: OK
+Length /sys/class/hwmon/hwmon0/temp1_input: 4096
+#1 /proc/uptime: 15 bytes: "884.78 3496.79"
+#1 /sys/class/hwmon/hwmon0/temp1_input: 6 bytes: "49660"
+#2 /proc/uptime: 15 bytes: "885.78 3500.79"
+#2 /sys/class/hwmon/hwmon0/temp1_input: 6 bytes: "51608"
+#5 /proc/uptime: 15 bytes: "888.78 3512.79"
+#5 /sys/class/hwmon/hwmon0/temp1_input: 6 bytes: "49660"
+```
+
+L0-4: `cpu1/online` がないので実施できない。offline にしようとした書き込みは失敗し、CPU は 0-3 のまま変わっていない。
+
+```text
+$ ls /sys/devices/system/cpu/cpu1/
+cache  cpu_capacity  cpufreq  of_node  power  regs  subsystem  topology  uevent
+$ cat /proc/device-tree/cpus/cpu@1/enable-method
+spin-table
+$ grep HOTPLUG_CPU /boot/config-6.6.51+rpt-rpi-v8
+# CONFIG_HOTPLUG_CPU is not set
+```
+
+既存バグ修正の確認（`WorkSystemInfoMonitor fixcheck`、変更前のモニター。修正後の caf5d5e の状態）:
+
+```text
+DiskStat: update=True entries 3 -> 3, same instances 3
+NetworkStat: update=True entries 3 -> 3, same instances 3
+WirelessStat: update=True entries 1 -> 1, same instances 1
+```
+
 ### 性能比較（Mean / Allocated）
 
 | クラス | before x64 | after x64 | 改善率 | before Pi | after Pi | 改善率 |
 |---|---|---|---|---|---|---|
-| SystemStat | | | | | | |
-| MemoryStat | | | | | | |
-| VirtualMemoryStat | | | | | | |
-| LoadAverage | | | | | | |
-| Uptime | | | | | | |
-| FileHandleStat | | | | | | |
-| DiskStat | | | | | | |
-| NetworkStat | | | | | | |
-| TcpStat / Tcp6Stat | | | | | | |
-| WirelessStat | | | | | | |
-| ProcessSummary | | | | | | |
-| CpuDevice | | | | | | |
-| BatteryDevice | | | | | | |
-| MainsDevice | | | | | | |
-| HardwareMonitors | | | | | | |
-| FileSystemUsage | | | | | | |
-| **All** | | | | | | |
+| SystemStat | 27.9 µs / 17,185 B | 15.5 µs / 0 B | −44.3% | 55.5 µs / 8,905 B | 26.3 µs / 0 B | −52.6% |
+| MemoryStat | 17.1 µs / 12,249 B | 7.29 µs / 0 B | −57.2% | 54.9 µs / 10,913 B | 14.2 µs / 0 B | −74.2% |
+| VirtualMemoryStat | 35.1 µs / 20,010 B | 22.0 µs / 0 B | −37.3% | 74.5 µs / 15,794 B | 28.6 µs / 0 B | −61.7% |
+| LoadAverage | 8.41 µs / 7,921 B | 1.54 µs / 0 B | −81.7% | 30.6 µs / 7,921 B | 3.89 µs / 0 B | −87.3% |
+| Uptime | 8.45 µs / 7,793 B | 1.71 µs / 0 B | −79.8% | 30.6 µs / 7,793 B | 3.57 µs / 0 B | −88.3% |
+| FileHandleStat | 8.94 µs / 7,921 B | 2.12 µs / 0 B | −76.3% | 34.2 µs / 7,921 B | 4.67 µs / 0 B | −86.3% |
+| DiskStat | 38.1 µs / 11,225 B | 22.0 µs / 0 B | −42.2% | 141.5 µs / 11,306 B | 87.6 µs / 1 B（定常状態では 0 B） | −38.1% |
+| NetworkStat | 19.0 µs / 8,921 B | 5.96 µs / 0 B | −68.7% | 56.9 µs / 8,897 B | 15.4 µs / 0 B | −72.9% |
+| TcpStat / Tcp6Stat | 203.7 µs / 9,554 B、201.0 µs / 9,074 B | 188.0 µs / 1 B、188.7 µs / 1 B（定常状態では 0 B） | −7.7%、−6.1% | 360.9 µs / 9,235 B、352.9 µs / 8,699 B | 318.1 µs / 2 B、312.2 µs / 2 B（定常状態では 0 B） | −11.9%、−11.5% |
+| WirelessStat | 922.0 µs / 8,190 B | 880.1 µs / 5 B（定常状態では 0 B） | −4.6% | 2.01 ms / 8,186 B | 1.82 ms / 9 B（定常状態では 0 B） | −9.5% |
+| ProcessSummary | 3.65 ms / 2,931,415 B | 116.0 µs / 209 B | −96.8% | 9.35 ms / 1,758,620 B | 249.4 µs / 210 B | −97.3% |
+| CpuDevice | 152.8 µs / 66,798 B | 6.39 µs / 0 B | −95.8% | 161.9 µs / 31,140 B | 8.85 µs / 0 B | −94.5% |
+| BatteryDevice | 77.3 µs / 47,468 B | 4.73 µs / 0 B | −93.9% | 5.0 ns / 0 B（N/A。電源がない） | 3.3 ns / 0 B（N/A） | N/A |
+| MainsDevice | 150.4 µs / 7,882 B | 125.0 µs / 1 B（定常状態では 0 B） | −16.9% | 2.2 ns / 0 B（N/A。電源がない） | 0.6 ns / 0 B（N/A） | N/A |
+| HardwareMonitors | 2.46 ms / 85,539 B | 1.53 ms / 10 B（定常状態では 0 B） | −37.9% | 42.9 µs / 7,777 B | 2.83 µs / 0 B | −93.4% |
+| FileSystemUsage | 630.3 ns / 0 B | 635.3 ns / 0 B | +0.8% | 1.93 µs / 0 B | 1.88 µs / 0 B | −2.4% |
+| **All** | **9.74 ms / 3,259,305 B** | **5.46 ms / 245 B** | **−43.9%** | **12.93 ms / 1,893,055 B** | **3.12 ms / 226 B** | **−75.9%** |
 
 x64 VM（`benchmark-before-x64vm.md`。BenchmarkDotNet は `--inProcess` で実行。§判定・メモ「x64 VM での実施」）:
 
@@ -864,11 +935,29 @@ x64 VM（`benchmark-before-x64vm.md`。BenchmarkDotNet は `--inProcess` で実�
 
 | syscall | before x64 | after x64 | before Pi | after Pi |
 |---|---|---|---|---|
-| openat | | | | |
-| close | | | | |
-| read | | | | |
-| pread64 | | | | |
-| newfstatat / statx | | | | |
+| openat | 298.1（うち失敗 4.0。一般ユーザーで読めない RAPL） | 1.0（失敗 0） | 189.4 | 1.0 |
+| close | 294.1 | 1.0 | 189.4 | 1.0 |
+| read | 1.04 | 0.002 | 0.93 | 0.001 |
+| pread64 | 843.3 | 50.0 | 417.0 | 29.0 |
+| newfstatat / statx | 0（x86_64 では stat 系の多くが別の syscall。下記） | 0 | 191.4（arm64 では fstat、stat、lstat もこれになる） | 11.0 |
+
+x64 と Raspberry Pi（`strace -f -c`、(1000 回 − 0 回) ÷ 1000。before と after を続けて計測した。プロセスは x64 が 254〜260 個、Pi が 170〜176 個。x64 は一般ユーザーで実行）。参考の syscall:
+
+| syscall | before x64 | after x64 | before Pi | after Pi |
+|---|---|---|---|---|
+| flock | 584.2 | 0 | 375.0 | 0 |
+| lseek | 0 | 0 | 0 | 0 |
+| stat / lstat / fstat（x86_64 だけ。補足の計測） | 4.0 / 289.9 / 291.9 | 4.0 / 4.0 / 1.0 | ― | ― |
+
+- **Hold のクラスは、x64 と Pi のどちらも、1 反復あたりの openat と close が 0 回**（判定基準を満たす）。残っている 1.0 回は、`ProcessSummary` が `/proc` を列挙する分だけ（`strace -f -e trace=openat,close`、(100 回 − 0 回) ÷ 100）。
+- x64 の before の openat の失敗 4.0 回は、一般ユーザーでは読めない RAPL の `energy_uj`（4 個）を毎回開こうとした分。after は、作成時に開けなかった要素を一覧に入れないので 0 回。
+- pread64 は、保持しているハンドルを読む分。/proc のファイルは、データと終わりの確認で 2 回。sysfs の単一値ファイルは `singleRead` で 1 回。
+  - x64: /proc の 12 ハンドルで 24 回、sysfs の 26 ファイル（cpufreq 8、hwmon 11、バッテリー 6、AC 1）で 26 回。合計 50 回。
+  - Pi: /proc の 12 ハンドルで 24 回、sysfs の 5 ファイル（cpufreq 4、温度 1）で 5 回。合計 29 回。
+- **stat 系の syscall（補足）**: x86_64 では `fstat`、`stat`、`lstat` は `newfstatat` とは別の syscall で、指示書の strace の対象に入っていない。arm64 ではこれらもすべて `newfstatat` になるので、Pi だけ表に出る。そこで x64 と x64 VM では、stat 系を別に数えた（x64 VM は before が stat 5.0 / lstat 177.0 / fstat 181.2、最終（2710f57）が 4.0 / 4.0 / 1.0）。
+  - before の fstat は、`File.OpenHandle` が開くたびに呼ぶ分。lstat は、before の `ProcessSummary` が pid ごとに呼んでいた `File.Exists` の分。
+  - after に残る stat 4 回、lstat 4 回、fstat 1 回（Pi の newfstatat 11 回）は、`ProcessSummary` が `/proc` を列挙する分。`/proc` のシンボリックリンク（`self`、`thread-self`、`net`、`mounts`。Pi はさらに `device-tree`）について、.NET の列挙が lstat と stat で先がディレクトリかを調べる。fstat は、glibc の `opendir` がディレクトリを開いたときに呼ぶ。
+- 1000 回の loop の失敗数は、x64 の before が `CpuPower` の 4 個でそれぞれ 1000（RAPL を読めない）、after は 0。Pi は before と after のどちらも `BatteryDevice` と `MainsDevice` がそれぞれ 1000（電源がない）。fd 数は、x64 が 55 → 55、Pi が 57 → 57。
 
 x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続けて計測し、どちらもプロセスは 172〜173 個）:
 
@@ -902,11 +991,11 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
 
 | 項目 | 結果 | 備考 |
 |---|---|---|
-| H-1 CPU offline/online | x64 VM では実施しない | VM には cpufreq がなく、`CpuCore` を確認できないため（§判定・メモ「x64 VM での実施」）。実機で行う |
+| H-1 CPU offline/online | x64: 満たす。Pi: N/A（CPU を offline にできないカーネル）。x64 VM では実施しない | x64 実機: loop（1 秒間隔、30 回）の 7〜16 回目の間、cpu1 を offline にした。その間は `CpuCore:cpu1` だけが更新されず、例外は出なかった。online に戻した後の 17 回目から再開した。fd 数は 94 のまま（終了時は 56 → 56）。終了後、cpu1 が online に戻っていることを確認した。Pi は `cpu1/online` がない（§Phase 0 の出力（Raspberry Pi））。VM は cpufreq がないので行わない |
 | H-2 ネットワーク IF | x64 VM: 問題なし | loop（1 秒間隔、25 回）の途中で `hr-dummy0` を追加し、8 秒後に削除した。6〜13 回目だけ `NetworkStat` に `hr-dummy0` が現れ（インターフェースの数は 11 → 12 → 11）、削除後は消えた。例外も `NetworkStat` の失敗もなく、fd 数は 66 のまま（終了時も 56 → 56） |
-| H-3 hwmon 再ロード | x64 VM では実施できない | VM に hwmon がないため。実機で行う（任意の項目） |
-| H-4 AC アダプタ | x64 VM では実施できない | VM に電源（power_supply）がないため。ノート PC の実機で行う（任意の項目） |
-| H-5 USB ストレージ | x64 VM では実施しない | 任意の項目。VM には USB ストレージをつなげない |
+| H-3 hwmon 再ロード | x64: 満たす。x64 VM と Pi では実施しない | x64 実機: loop（1 秒間隔、30 回）の途中で `coretemp` を外し、8 秒後に読み込み直した。外している間（8 回）は coretemp の 5 センサーが更新されず、例外は出なかった。fd 数は 94 → 89（読めなくなったハンドルを閉じた分）。読み込み直すと hwmon の番号は同じ `hwmon4` で、同じパスで開き直して再開し、fd 数も 94 に戻った（終了時は 56 → 56）。番号が変わるケース（既知の制約）は起きなかった。外している間は、開き直しのたびに例外が起きるので、1 回あたり約 4 KB の割り当てがあった。VM には hwmon がない。Pi は任意の対象外（x64 のみの項目） |
+| H-4 AC アダプタ | 実施しない（任意） | x64 PC はバッテリーが劣化していて（満充電容量 168 mAh、設計の約 5%）、AC を抜くと電源が落ちるおそれがあるため。AC を挿したままでも残量は 5% から増えない。Pi と VM には電源（power_supply）がない |
+| H-5 USB ストレージ | 未実施（任意） | USB ストレージの抜き差しは手作業が要る。x64 VM には USB ストレージをつなげない |
 | H-6 24時間（fd / RSS / 失敗数） | x64 VM: 満たす（2026-10-07 13:17〜16:01、9,730 回） | ユーザーの指示で、24 時間ではなく 2 時間以上で十分とした（2 時間 43 分で SIGTERM で止めた）。fd 数は 66 で一定（終了時は 56 → 56）。RSS は最初の 10 分で 49.7 → 59.3 MB、その後 2 時間半は 59.3 → 59.45 MB でほぼ横ばい。失敗は VM にファイルがない `WirelessStat`、`BatteryDevice`、`MainsDevice` だけ（N/A）で、ほかは 0。Pi での実施は未定 |
 
 ### 判定・メモ
@@ -1135,3 +1224,82 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
   - 1 回の読み込みは、データを読む pread と、終わりを確かめる pread（0 バイト）の 2 回になる。
   - `/proc/vmstat`（4,122 バイト）は 3 回。procfs（seq_file）は、1 回の読み込みで 1 ページ（4 KB）分までの行しか返さないため。
 - loop（1000 回）の 1 回あたりの割り当ては 208 B。失敗は VM にファイルがない `WirelessStat`、`BatteryDevice`、`MainsDevice` だけ。fd 数は 55 → 55。
+
+#### 実機（x64 と Raspberry Pi）での実施（2026-10-07 19:10〜）
+
+- ユーザーが x64 PC（192.168.100.141）と Raspberry Pi（192.168.100.114、ユーザー pi）の電源を入れた。どちらも kiosk の鍵でログインできた。
+- **方法**: x64 VM と同じく、Windows で self-contained で publish したバイナリを送って実行した。ベンチマークは `--inProcess` で実行した。
+  - x64: VM で使ったものと同じバイナリ（before は caf5d5e の状態、after は最終の 2710f57）。x64 PC の `~/.dotnet` の SDK は、VM と条件をそろえるために使わなかった。
+  - Pi: linux-arm64 向けに publish した（警告 0）。before は、2deef2a のライブラリに今のツールを入れてビルドした。ツールは変更前と変更後のどちらのライブラリでもビルドでき、ベンチマークのケースは Phase 1 から変えていない。Pi に .NET は入れていない。
+  - 転送した実行ファイルは実行ビットが落ちるので、`chmod +x` した。
+- **x64 PC の状態**
+  - AC 電源で動かした。
+  - バッテリーは劣化していて（満充電容量 168 mAh、設計の約 5%）、残量は 5% のまま増えない。
+  - CPU は負荷をかけると 3.4 GHz まで上がり、性能の制限はかかっていない。BenchmarkDotNet の「Max: 0.40GHz」は、アイドルのときに読んだ値。
+  - プロセスは約 255〜265 個。
+- **Pi の状態**: ondemand ガバナー（600〜1,800 MHz）、温度は 50〜55℃。`vcgencmd get_throttled` は 0x0（電圧の低下やスロットリングはない）。Wi-Fi でつないでいる。プロセスは約 170〜176 個。
+
+#### Phase 1 の結果（x64 実機と Raspberry Pi、2026-10-07）
+
+- B-1、B-2: 変更前のモニターで dump を取った（x64 は 988 行、Pi は 420 行）。
+- B-3: `benchmark-before-x64.md`、`benchmark-before-rpi.md`。x64 は 10 分、Pi は 6 分で終わった。
+- B-4: §syscall 数の x64 と Raspberry Pi の表。
+- B-5: x64 は `/proc/net/tcp` 750 バイト、`/proc/net/tcp6` 676 バイト、`/proc/stat` 4,628 バイト。Pi は 750、497、520 バイト。
+
+#### Phase 3 の結果（x64 実機と Raspberry Pi、2026-10-07）
+
+- **C-1**: 変更後（最終の 2710f57）のモニターを、それぞれ `~/handle-reuse/final/monitor` に置いた。
+- **C-2（dump の diff）**: 変更前と変更後の dump を続けて取った。
+  - x64: 変更前 987 項目、変更後 975 項目。片方にしかないのは `CpuDevice.Powers` の 4 要素（12 項目）だけ。
+    - 一般ユーザーは RAPL の `energy_uj` を読めない（root だけが読める）。
+    - 変更前は、4 要素が値 0 のまま一覧に入り、`UpdateAt` も更新されなかった。
+    - 変更後は、作成時に開けなかった要素を一覧に入れない（§検討事項の結論の「開けないファイルの扱い（D5 の補足）」）。
+    - root で実行すると、変更後も 4 要素が入り、値も取れる（987 項目で、片方にしかない項目はない）。
+  - Pi: どちらも 419 項目で、片方にしかない項目はない。
+  - 値が違ったのは、どちらも変わって当然の項目だけ（`UpdateAt`、メモリや空き容量の現在値、温度、周波数、`Uptime`）。カウンタ（CPU の tick、`ContextSwitch`、`Forks`、`Interrupt`、`SoftIrq`、`PageFaults`）は、すべて「後 ≥ 前」だった。
+- **C-3（OS のツールとの突き合わせ）**: 変更後の dump の直後に、OS のファイルとコマンドで値を取った。
+  - 一致した: メモリの合計、Buffers、Swap、`/proc/loadavg`、`file-nr`、Pi の wlan0 のバイト数、ディスクの読み書きの回数、TCP の件数、無線の品質、温度、`FileSystemUsage("/")` の合計サイズ。
+    - 温度: x64 は coretemp の 5 つ、pch、iwlwifi。Pi は cpu_thermal で、`vcgencmd measure_temp` とも合う。
+    - x64 のバッテリー（容量、電荷、電圧、電流、状態）と AC も一致した。
+  - 取った時刻のずれの分だけ違った: 空きメモリ、CPU の時間、`ctxt`、`processes`、`pgfault`、空き容量、プロセス数とスレッド数。
+  - CPU の周波数は刻々と変わるので、範囲だけ確かめた（x64 は 400 MHz〜3.5 GHz、Pi は 1.8 GHz）。
+- **C-4（loop --iterations 10 --interval 1000 --verbose）**: 値は毎回更新された。1 回の割り当ては 208 B。
+  - x64: 失敗 0。fd 数は 55 → 55。
+  - Pi: 失敗は、電源（power_supply）がない `BatteryDevice` と `MainsDevice` だけ。fd 数は 57 → 57。
+- **C-5（Dispose）**: `disposecheck` で確かめた。
+  - すべてのオブジェクトと子（`CpuCore`、`HardwareSensor`。root では `CpuPower` も）で、`Dispose()` を 2 回呼んでも例外にならなかった。Dispose 後の `Update()` は `ObjectDisposedException` になった。
+  - すべて Dispose した後、fd 数は作成前に戻った。
+  - x64: 22 個と子 19 個（root では子 23 個）。fd は 41 → 79 → 41。
+  - Pi: 18 個と子 5 個。fd は 43 → 60 → 43。
+  - VM では確かめられなかった子（`CpuCore`、`CpuPower`、`HardwareSensor`）も、ここで確かめた。
+- **C-7**: どのケースも例外にならなかった。
+  - 権限不足（x64 の一般ユーザーで RAPL の `energy_uj`）: その要素が一覧に入らない（C-2）。
+  - ファイルがない（Pi の電源）: `BatteryDevice` と `MainsDevice` の `Update()` が false を返す（C-4）。
+  - ファイルがない（x64 VM の `/proc/net/wireless`）: §Phase 3 の結果（x64 VM）のとおり。
+
+#### Phase 4 の判定（x64 実機と Raspberry Pi、2026-10-07）
+
+| 判定基準 | 結果 |
+|---|---|
+| 悪化なし（+5% 以内） | 満たす。悪化したのは x64 の `FileSystemUsage` の +0.8% だけ（None のクラスで、誤差の範囲）。ほかはすべて改善した |
+| 割り当て（Hold は 0 B） | 満たす。BenchmarkDotNet では 1〜10 B と出たクラスがある（`TcpStat`、`Tcp6Stat`、`WirelessStat`、`MainsDevice`、`HardwareMonitors`、`DiskStat`）。`alloccheck`（ウォームアップの後、`Update()` 2,000 回）では、Hold のクラスはすべて 0 B。`ProcessSummary`（列挙の分）は、x64 が 2,931,415 B → 209 B、Pi が 1,758,620 B → 210 B |
+| ◎クラス（30% 以上改善） | 満たす。x64 は `HardwareMonitors` −37.9%、`CpuDevice` −95.8%、`BatteryDevice` −93.9%。Pi は `HardwareMonitors` −93.4%、`CpuDevice` −94.5%（`BatteryDevice` は電源がないので N/A） |
+| syscall（Hold は openat と close が 0 回） | 満たす（§syscall 数の x64 と Raspberry Pi の表） |
+
+- **全体**: All は、x64 が 9.74 ms → 5.46 ms（−43.9%）、Pi が 12.93 ms → 3.12 ms（−75.9%）。割り当ては、x64 が 3,259,305 B → 245 B、Pi が 1,893,055 B → 226 B。
+- **改善が小さいクラス**: カーネルやドライバーが値を作る時間が大半で、ハンドルの保持では減らせない。
+  - `MainsDevice`（○、x64 −16.9%）: `/sys/class/power_supply/AC/online` は、読むたびに ACPI のメソッドを実行する。保持したハンドルでも、1 回約 124 µs かかる。
+  - `HardwareMonitors`（x64 の after 1.53 ms）: 大半は iwlwifi の温度（`hwmon5/temp1_input`）。
+    - 読むたびにファームウェアに問い合わせるので、モニターの中では 1 回平均 1.5 ms（最大 5.3 ms）かかった（strace で計測）。続けて読むと約 90 µs。
+    - coretemp は 1 回約 5 µs、ほかのセンサーは 1 µs 以下。
+  - `WirelessStat`（x64 −4.6%、Pi −9.5%）: `/proc/net/wireless` を作るときに、無線のドライバーが統計を取る時間（x64 は約 0.9 ms、Pi は約 1.8 ms）。
+  - `TcpStat`（x64 −7.7%、Pi −11.9%）: VM と同じく、カーネルが `/proc/net/tcp` を作る時間。
+- **alloccheck の補足**: `HardwareSensors` の 80 B（Pi）と 240 B（x64）は、ツールが `IReadOnlyList` を `foreach` するときの列挙子の分で、ライブラリの割り当てではない。BenchmarkDotNet のケースは配列を回すので、この分は入らない。
+- **後で検討する課題**: `ProcessSummary` の `/proc` の列挙では、シンボリックリンク（4〜5 個）の先を調べるために、.NET が lstat と stat を呼ぶ（§syscall 数の補足）。getdents64 などで名前だけを読めばなくせる。1 回あたり 10 回ほどで、影響は小さい。
+
+#### Phase 5 の結果（x64 実機と Raspberry Pi、2026-10-07）
+
+- **H-1（x64）**: §ホットプラグ・長時間稼働の表。cpu0 は offline にしていない。cpu1 は、終わった後に online に戻っていることを確かめた。
+- **H-1（Pi）**: N/A。カーネル（6.6.51+rpt-rpi-v8）で `CONFIG_HOTPLUG_CPU` が無効で、CPU を offline にできない。offline にしようとした書き込みは失敗しただけで、CPU は 0-3 のまま変わっていない。
+- **H-3（x64）**: §ホットプラグ・長時間稼働の表。終わった後、`coretemp` が読み込まれていることを確かめた。
+- **H-4、H-5**: §ホットプラグ・長時間稼働の表。
