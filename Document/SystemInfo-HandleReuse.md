@@ -571,8 +571,8 @@ grep -n -E "StreamReader|ReadAllText|FileHelper\." LinuxDotNet.SystemInfo/*.cs
 dotnet publish __Sandbox/WorkSystemInfoMonitor -c Release -f net10.0 -o ~/handle-reuse/after/monitor
 ```
 
-- [ ] C-1 変更後のモニターを `~/handle-reuse/after/monitor` に publish した
-- [ ] C-2 変更前と変更後の `dump` を続けて取り、diff した
+- [x] C-1 変更後のモニターを `~/handle-reuse/after/monitor` に publish した
+- [x] C-2 変更前と変更後の `dump` を続けて取り、diff した
 
 ```bash
 dotnet ~/handle-reuse/before/monitor/WorkSystemInfoMonitor.dll dump > ~/handle-reuse/dump-before2.txt && dotnet ~/handle-reuse/after/monitor/WorkSystemInfoMonitor.dll dump > ~/handle-reuse/dump-after.txt
@@ -585,10 +585,10 @@ diff ~/handle-reuse/dump-before2.txt ~/handle-reuse/dump-after.txt
   - 判定基準
     - 静的な値（名前、件数、MemTotal、デバイス一覧など）は **完全に一致** すること
     - カウンタ類は after ≥ before で、差が妥当な範囲であること
-- [ ] C-3 OS のツールの値と突き合わせた（`cat /proc/meminfo`、`cat /proc/loadavg`、`cat /sys/class/hwmon/*/temp*_input`、`ss -s`、`cat /proc/net/dev` など）
-- [ ] C-4 `loop --iterations 10 --interval 1000 --verbose` で値が更新され続けることを確認した
-- [ ] C-5 Dispose の挙動を確認した（2回呼んでも例外にならない。Dispose 後の Update で `ObjectDisposedException` になる。終了時に fd 数が開始時に戻る）
-- [ ] C-6 net8.0 でも C-2 と C-4 を実施した（`-f net8.0` で publish する）
+- [x] C-3 OS のツールの値と突き合わせた（`cat /proc/meminfo`、`cat /proc/loadavg`、`cat /sys/class/hwmon/*/temp*_input`、`ss -s`、`cat /proc/net/dev` など）
+- [x] C-4 `loop --iterations 10 --interval 1000 --verbose` で値が更新され続けることを確認した
+- [x] C-5 Dispose の挙動を確認した（2回呼んでも例外にならない。Dispose 後の Update で `ObjectDisposedException` になる。終了時に fd 数が開始時に戻る）
+- [ ] C-6 net8.0 でも C-2 と C-4 を実施した（`-f net8.0` で publish する） → 実施しない（2026-10-07 ユーザー指示で、net8.0 での確認は不要）
 - [ ] C-7 存在しないパスや権限不足のケースでも例外にならず、`Update()` が false を返すことを確認した（例: `energy_uj` を一般ユーザーで読む、`/proc/net/wireless` がない環境）
 
 ---
@@ -596,7 +596,7 @@ diff ~/handle-reuse/dump-before2.txt ~/handle-reuse/dump-after.txt
 ## 📊 Phase 4: 性能比較（変更後）
 
 - [ ] P-1 Phase 1-3 と同じ条件でベンチマークを実行し、`Document/HandleReuse/results/benchmark-after-<env>.md` に保存した
-- [ ] P-2 Phase 1-4 と同じ条件で strace を計測した（after 側のバイナリで）
+- [x] P-2 Phase 1-4 と同じ条件で strace を計測した（after 側のバイナリで）
 - [ ] P-3 結果記録の「性能比較」表に記入した
 - [ ] P-4 判定基準（下記）を確認し、満たさない項目があれば原因を調べて記録した
 
@@ -867,20 +867,32 @@ x64 VM（`benchmark-before-x64vm.md`。BenchmarkDotNet は `--inProcess` で実�
 | pread64 | | | | |
 | newfstatat / statx | | | | |
 
-x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000）:
+x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続けて計測し、どちらもプロセスは 172〜173 個）:
 
 | syscall | before | after |
 |---|---|---|
-| openat | 182.1（うち失敗 1.0。`/proc/net/wireless`） | |
-| close | 181.1 | |
-| read | 0.25 | |
-| pread64 | 535.5 | |
-| newfstatat / statx | 0 | |
-| lseek（参考） | 0.48 | |
+| openat | 184.3（うち失敗 1.0。`/proc/net/wireless`） | 173.5（うち失敗 1.0。`/proc/net/wireless`） |
+| close | 183.3 | 172.5 |
+| read | 0.25 | 0.01 |
+| pread64 | 543.0 | 364.0 |
+| newfstatat / statx | 0 | 0 |
+| lseek（参考） | 0.49 | 0.004 |
+| flock（参考） | 364.0 | 343.0 |
 
-- before の openat と close の大半は `ProcessSummary`（プロセスごとに `/proc/<pid>/status` を開く。VM のプロセスは約 170）。
-- 生の値（0 回 / 1000 回）: openat 333 / 182,406（失敗 51 / 1,051）、close 269 / 181,348、read 81 / 329、pread64 579 / 536,095、lseek 8 / 492、newfstatat 6 / 6。
-- 1000 回の loop の失敗数: `WirelessStat`、`BatteryDevice`、`MainsDevice` がそれぞれ 1000（VM にファイルがないため）。ほかは 0。fd 数は 55 → 55。
+開いたパスごとの 1 反復あたりの openat（`strace -f -e trace=openat,close`、(100 回 − 0 回) ÷ 100）:
+
+| パス | before | after |
+|---|---|---|
+| `/proc/<pid>/status`（`ProcessSummary`、OneShot） | 172 | 172 |
+| `/proc`（`ProcessSummary` の pid の列挙） | 1 | 1 |
+| `/proc/net/wireless`（ファイルがなく失敗する。判定の対象外） | 1 | 1 |
+| `/proc/stat`、`/proc/meminfo`、`/proc/vmstat`、`/proc/loadavg`、`/proc/uptime`、`/proc/sys/fs/file-nr`、`/proc/diskstats`、`/proc/net/dev`、`/proc/net/tcp`、`/proc/net/tcp6`（Hold） | 各 1（`/proc/meminfo` は 1.24） | 0 |
+
+- **Hold のクラスは、1 反復あたりの openat と close が 0 回**（判定基準を満たす）。残っている openat は、`ProcessSummary`（OneShot）の分と、ファイルがない `/proc/net/wireless` を開き直そうとする分（判定の対象外と決めたもの）だけ。
+- before の `/proc/meminfo` が 1.24 回なのは、GC がメモリの負荷を調べるために読む分（0.24 回）が入っているため。after は割り当てが減って GC が少ないので、この分がない。
+- **flock**: .NET はファイルを開くと `flock(LOCK_SH|LOCK_NB)` を取り、閉じるときに解除する（`FileShare.ReadWrite` でも取る。1 回開くと 2 回）。Hold のクラスでは開くときだけなので、1 反復あたりは 0 になる。残りの 343 回は `ProcessSummary` の分（172 個 × 2）。
+- B-4 で最初に測った before の値（プロセス約 170 個）: openat 182.1（失敗 1.0）、close 181.1、read 0.25、pread64 535.5、newfstatat 0、lseek 0.48。その後プロセスが増えたので、比較には上の続けて測った値を使う。
+- 1000 回の loop の失敗数は、before と after のどちらも `WirelessStat`、`BatteryDevice`、`MainsDevice` がそれぞれ 1000（VM にファイルがないため）。ほかは 0。fd 数は 55 → 55。
 
 ### ホットプラグ・長時間稼働
 
@@ -976,3 +988,29 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000）:
   - .NET は Unix で読み取り用に開くとき、`FileShare.ReadWrite` でも `flock(LOCK_SH|LOCK_NB)` を取る。`FileShare.None` なら `LOCK_EX` になる。
   - 影響は開くときだけで、読み直しのたびに起きるわけではない（以前の実装も同じ）。Phase 4 の strace で確かめる。
 - **README の既存の誤り（今回は直していない。後で検討）**: SystemInfo の使用例に、存在しないメンバー名が残っている（`uptime.Uptime`、`stat.ProcessRunning`、`stat.ProcessBlocked`、`kernel.MaxProcessCount`、`vm.PageFault`、`vm.MajorPageFault` など）。
+
+#### Phase 3 の結果（x64 VM、2026-10-07）
+
+- **C-1**: 変更後のモニターを、Windows で self-contained の単一ファイルとして publish し、VM の `~/handle-reuse/after/monitor` に置いた。
+- **C-2（dump の diff）**: 変更前と変更後の dump を続けて取った。
+  - 項目はどちらも 490 個で、片方にしかない項目はない。
+  - 値が違ったのは 55 項目で、どれも変わって当然のものだった（`UpdateAt`、メモリや空き容量の現在値、`Uptime`、カウンタ）。
+  - 名前、件数、`MemTotal`、デバイスとインターフェースの一覧などの静的な値は、完全に一致した。
+  - 値が変わったカウンタ 23 個（CPU の tick、`ContextSwitch`、`Interrupt`、`Forks`、`SoftIrq`、ネットワークのバイト数とパケット数、`PageFaults`）は、すべて「後 ≥ 前」だった。
+- **C-3（OS のツールとの突き合わせ）**: 変更後の dump の直後に、OS のファイルとコマンドで値を取った。
+  - `/proc/meminfo`（MemTotal、MemAvailable、MemFree、Buffers、Swap）、`/proc/loadavg`、`/proc/sys/fs/file-nr` は完全に一致した。
+  - `/proc/stat`（cpu の行、ctxt、processes、procs_running）、`/proc/vmstat`、`/proc/diskstats`（sda）、`/proc/net/dev`（eth0）、`/proc/uptime` は、取った時刻のずれの分だけ違い、それ以外は一致した。
+  - TCP の件数は `/proc/net/tcp` と `/proc/net/tcp6` の行数（6 と 5、ESTABLISHED 1）と一致した。
+  - プロセス数とスレッド数は `ls /proc` と `ps -eLf` に近い値だった（200 と 202、389 と 384。プロセスは常に増減している）。
+  - `FileSystemUsage("/")` は `df -B1 /` と `stat -f /` と一致した。
+- **C-4（loop --iterations 10 --interval 1000 --verbose）**
+  - 値は毎回更新された（eth0 の RxBytes と TxBytes が増え続けた）。
+  - 失敗は、VM にファイルがない `WirelessStat`、`BatteryDevice`、`MainsDevice` だけ。
+  - 1 回の割り当ては約 25 KB（before の loop は約 2 MB）。fd 数は 55 → 55。
+- **C-5（Dispose）**: モニターに `disposecheck` コマンドを追加して確かめた（ツールなのでコミットしない）。
+  - 16 個のオブジェクトすべてで、`Dispose()` を 2 回呼んでも例外にならず、Dispose 後の `Update()` は `ObjectDisposedException` になった。
+  - VM には CPU のコア（cpufreq）、RAPL、hwmon がないので、子（`CpuCore`、`CpuPower`、`HardwareSensor`）の確認は実機で行う。
+  - fd 数は、作成前 39 → 作成後 49 → すべて Dispose した後 39 で、元に戻った。ライブラリが開いた 10 個（`/proc/stat` から `/proc/net/tcp6` まで）は、すべて閉じた。
+  - 最初は fd 数が戻らなかった。これは、最初に Console に書いたときに .NET が開く fd（標準出力の複製とシグナル用のパイプ）と、初めて読み込むアセンブリのために開く実行ファイルの fd が、数に入っていたため。Console を先に使い、1 回目を出力なしで実行してから数える形にした。
+- **C-6**: 実施しない（2026-10-07 ユーザー指示。net8.0 での確認は不要）。
+- **C-7**: VM では、ファイルがないケースだけ確かめられた。`/proc/net/wireless` がなくても、電源のファイルがなくても、例外にならずに `Update()` が false を返した。権限不足のケース（一般ユーザーで `energy_uj` を読む）は VM にファイルがないので、実機で確かめる。
