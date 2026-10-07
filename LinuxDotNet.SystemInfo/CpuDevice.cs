@@ -90,7 +90,6 @@ public sealed class CpuPower
     // Update
     //--------------------------------------------------------------------------------
 
-    // energy_uj may be readable only by root, then this returns false
     public bool Update()
     {
         ObjectDisposedException.ThrowIf(closed, this);
@@ -189,7 +188,17 @@ public sealed partial class CpuDevice : IDisposable
                 continue;
             }
 
-            cores.Add(new CpuCore(name, new KernelFile(path, bufferSize: 64, singleRead: true)));
+            // A core whose scaling_cur_freq could not be opened is not added. A core that is offline is added: its file can be
+            // opened (the read fails with EBUSY), and it is read again when the core comes online
+            var file = new KernelFile(path, bufferSize: 64, singleRead: true);
+            var core = new CpuCore(name, file);
+            if (!file.Opened)
+            {
+                file.Dispose();
+                continue;
+            }
+
+            cores.Add(core);
         }
 
 #pragma warning disable IDE0028
@@ -242,8 +251,17 @@ public sealed partial class CpuDevice : IDisposable
             return;
         }
 
-        // The power is created even when energy_uj is not readable (only by root on some systems)
-        powers.Add(new CpuPower(name, new KernelFile(energyPath, bufferSize: 64, singleRead: true)));
+        // A power whose energy_uj could not be opened is not added (energy_uj is readable only by root on some systems, so
+        // Powers is empty for other users)
+        var file = new KernelFile(energyPath, bufferSize: 64, singleRead: true);
+        var power = new CpuPower(name, file);
+        if (!file.Opened)
+        {
+            file.Dispose();
+            return;
+        }
+
+        powers.Add(power);
     }
     // ReSharper restore StringLiteralTypo
 

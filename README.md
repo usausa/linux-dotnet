@@ -485,6 +485,8 @@ if (cpu.Powers.Count > 0)
 }
 ```
 
+A core or a power whose file cannot be opened at creation is not listed. `energy_uj` is readable only by root on many systems, so `Powers` is empty for other users.
+
 ### Mains
 
 ```csharp
@@ -540,6 +542,8 @@ foreach (var monitor in monitors)
     monitor.Dispose();
 }
 ```
+
+A sensor whose input file cannot be opened at creation is not listed. A file that could not be opened at creation is not opened again by Update; get the objects again to see a device that appeared later.
 
 ### USB
 
