@@ -674,7 +674,7 @@ nohup dotnet ~/handle-reuse/after/monitor/WorkSystemInfoMonitor.dll loop --itera
 - [x] Phase 0〜5 のチェックがすべて完了している（任意の項目は、実施できなかったなら理由を記録してあればよい） → 残っているのは、ユーザーの指示で行わない C-6 と、任意の H-4、H-5（理由を記録した）
 - [x] x64 と Raspberry Pi の両方で結果記録が埋まっている（x64 VM の結果も別に記録した）
 - [x] 判定基準を満たさない項目について、原因と対応方針が書かれている → x64 と Pi では、満たさない項目はない。改善が小さいクラスの原因は §判定・メモ「Phase 4 の判定（x64 実機と Raspberry Pi）」に書いた
-- [ ] ユーザーに結果を報告した（要約: 改善率、Allocated、syscall 数、問題点）
+- [x] ユーザーに結果を報告した（要約: 改善率、Allocated、syscall 数、問題点）
 
 ---
 
