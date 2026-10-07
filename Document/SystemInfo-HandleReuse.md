@@ -150,13 +150,13 @@ public sealed class MemoryStat : IDisposable
 
 規則:
 
-- [ ] コンストラクタは `private` にする。`PlatformProvider.GetXxx()` からは `Xxx.Create()` を呼ぶ
-- [ ] **ファクトリはオープン失敗で例外を投げない**。常に null でないインスタンスを返し、失敗は `Update()` の戻り値 `false` で表す
+- [x] コンストラクタは `private` にする。`PlatformProvider.GetXxx()` からは `Xxx.Create()` を呼ぶ
+- [x] **ファクトリはオープン失敗で例外を投げない**。常に null でないインスタンスを返し、失敗は `Update()` の戻り値 `false` で表す
   - 今の `SystemStat` などは、ファイルがないと例外になる。この挙動を変更する
-- [ ] `Dispose()` は何度呼んでもよい（冪等）。Dispose 後に `Update()` を呼んだら `ObjectDisposedException` を投げる
-- [ ] ファイナライザは実装しない（`SafeFileHandle` 側が持っている）
-- [ ] 保持するリソースがないクラス（None/OneShot）も同じ形にする。`Dispose()` では `disposed = true` だけを行う
-- [ ] スナップショット型（§3 の対象外の行）は `IDisposable` にしない。ファクトリ化だけ行う
+- [x] `Dispose()` は何度呼んでもよい（冪等）。Dispose 後に `Update()` を呼んだら `ObjectDisposedException` を投げる
+- [x] ファイナライザは実装しない（`SafeFileHandle` 側が持っている）
+- [x] 保持するリソースがないクラス（None/OneShot）も同じ形にする。`Dispose()` では `disposed = true` だけを行う
+- [x] スナップショット型（§3 の対象外の行）は `IDisposable` にしない。ファクトリ化だけ行う
 
 ### 4.2 共通ヘルパー `KernelFile`（新規 `KernelFile.cs`）
 
@@ -304,7 +304,7 @@ internal sealed class KernelFile : IDisposable
 
 接続数が多いと `/proc/net/tcp` は数 MB になり、`KernelFile` のバッファがその大きさのまま残ります。
 
-- [ ] Phase 1 の計測で、実環境のサイズ（`wc -c /proc/net/tcp*`）を記録する
+- [x] Phase 1 の計測で、実環境のサイズ（`wc -c /proc/net/tcp*`）を記録する
 - 1MB を超えるケースが現実的にあり得る場合は、`TcpStat` だけ **固定 64KB バッファのチャンク処理**（最後の不完全な行をバッファの先頭へ詰め直す）にしてよいです。その場合は結果記録にその旨を書いてください。
 
 ### 4.6 `ProcessSummary`（OneShot）
