@@ -626,7 +626,7 @@ sudo sh -c 'echo 0 > /sys/devices/system/cpu/cpu1/online'
 sudo sh -c 'echo 1 > /sys/devices/system/cpu/cpu1/online'
 ```
 
-- [ ] H-2 **ネットワーク IF の追加と削除**（`NetworkStat` の回帰確認）
+- [x] H-2 **ネットワーク IF の追加と削除**（`NetworkStat` の回帰確認）
 
 ```bash
 sudo ip link add hr-dummy0 type dummy && sudo ip link set hr-dummy0 up
@@ -646,7 +646,7 @@ sudo modprobe -r coretemp && sudo modprobe coretemp
   - ⚠️ `hwmonN` の番号が変わった場合、同じパスで開き直すと **別のセンサーにつながる、または失敗する** ことがあります（既知の制約。§⚠️ 参照）。実際にどうなったかを記録してください
 - [ ] H-4 （ノート PC のみ・任意）AC アダプタの抜き差しで、`MainsDevice.Online` と `BatteryDevice.Status` が切り替わる
 - [ ] H-5 （任意）USB ストレージの抜き差しで、`DiskStat` にデバイスが追加・削除される
-- [ ] H-6 **24時間連続稼働**（Pi を推奨）
+- [x] H-6 **24時間連続稼働**（Pi を推奨）
 
 ```bash
 nohup dotnet ~/handle-reuse/after/monitor/WorkSystemInfoMonitor.dll loop --iterations 86400 --interval 1000 --log ~/handle-reuse/longrun.csv > ~/handle-reuse/longrun.out 2>&1 &
@@ -898,12 +898,12 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
 
 | 項目 | 結果 | 備考 |
 |---|---|---|
-| H-1 CPU offline/online | | |
-| H-2 ネットワーク IF | | |
-| H-3 hwmon 再ロード | | |
-| H-4 AC アダプタ | | |
-| H-5 USB ストレージ | | |
-| H-6 24時間（fd / RSS / 失敗数） | | |
+| H-1 CPU offline/online | x64 VM では実施しない | VM には cpufreq がなく、`CpuCore` を確認できないため（§判定・メモ「x64 VM での実施」）。実機で行う |
+| H-2 ネットワーク IF | x64 VM: 問題なし | loop（1 秒間隔、25 回）の途中で `hr-dummy0` を追加し、8 秒後に削除した。6〜13 回目だけ `NetworkStat` に `hr-dummy0` が現れ（インターフェースの数は 11 → 12 → 11）、削除後は消えた。例外も `NetworkStat` の失敗もなく、fd 数は 66 のまま（終了時も 56 → 56） |
+| H-3 hwmon 再ロード | x64 VM では実施できない | VM に hwmon がないため。実機で行う（任意の項目） |
+| H-4 AC アダプタ | x64 VM では実施できない | VM に電源（power_supply）がないため。ノート PC の実機で行う（任意の項目） |
+| H-5 USB ストレージ | x64 VM では実施しない | 任意の項目。VM には USB ストレージをつなげない |
+| H-6 24時間（fd / RSS / 失敗数） | x64 VM: 満たす（2026-10-07 13:17〜16:01、9,730 回） | ユーザーの指示で、24 時間ではなく 2 時間以上で十分とした（2 時間 43 分で SIGTERM で止めた）。fd 数は 66 で一定（終了時は 56 → 56）。RSS は最初の 10 分で 49.7 → 59.3 MB、その後 2 時間半は 59.3 → 59.45 MB でほぼ横ばい。失敗は VM にファイルがない `WirelessStat`、`BatteryDevice`、`MainsDevice` だけ（N/A）で、ほかは 0。Pi での実施は未定 |
 
 ### 判定・メモ
 
@@ -987,7 +987,11 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
 - **§4.2 の flock の説明は不正確**
   - .NET は Unix で読み取り用に開くとき、`FileShare.ReadWrite` でも `flock(LOCK_SH|LOCK_NB)` を取る。`FileShare.None` なら `LOCK_EX` になる。
   - 影響は開くときだけで、読み直しのたびに起きるわけではない（以前の実装も同じ）。Phase 4 の strace で確かめる。
-- **README の既存の誤り（今回は直していない。後で検討）**: SystemInfo の使用例に、存在しないメンバー名が残っている（`uptime.Uptime`、`stat.ProcessRunning`、`stat.ProcessBlocked`、`kernel.MaxProcessCount`、`vm.PageFault`、`vm.MajorPageFault` など）。
+- **README の既存の誤り（2026-10-07 ユーザーの指示で修正した。コミット 1682608）**
+  - SystemInfo の使用例を、それぞれメソッドに入れてコンパイルして調べた。
+  - 存在しないメンバーは `KernelInfo.MaxProcessCount`、`MaxFileCount`、`MaxFileCountPerProcess`、`Uptime.Uptime`、`SystemStat.ProcessRunning`、`ProcessBlocked`、`VirtualMemoryStat.PageFault`、`MajorPageFault` だった。
+  - ほかに、`ulong` の値を `Enumerable.Sum` で合計していた（`ulong` のオーバーロードはないのでコンパイルできない。`CpuTotal` を使う形にした）。また、未定義の `IncludeVirtual` を渡していた。
+  - 直した後は、すべての例がコンパイルできる。
 
 #### Phase 3 の結果（x64 VM、2026-10-07）
 
@@ -1032,3 +1036,38 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
 - **後で検討する課題**
   - 開けないファイルを毎回開き直すときに、例外のコストがかかる（`WirelessStat` など）。たとえば、開く前に存在を確かめれば、例外を避けられる。
   - `ProcessSummary` の 1 プロセスあたりの syscall。open、pread、close を直接呼べば、flock と fstat と SafeFileHandle の割り当てがなくなる。§4.6 の `/proc/<pid>/stat` を読む方式もある。
+
+#### 検討事項の結論（2026-10-07 ユーザー決定）
+
+**ProcessSummary を「pid の数 ＋ /proc/loadavg」にした（コミット 741f4a8。§4.6 の OneShot から変更）**
+
+- **他のツールの調べ方**（サブエージェントによる調査。出典は各プロジェクトのソース）
+  - 全 pid の `stat`（20 番目のフィールド）を合計する: procps-ng（top、ps）、htop、btop、Telegraf、node_exporter の processes collector。node_exporter は、この collector を重いので既定で無効にしている。
+  - 全 pid の `status`（`Threads:`）を合計する: psutil（glances）、collectd。以前のライブラリと同じ方式。
+  - `/proc/loadavg` の 4 番目のフィールド（`/` の後ろ）を使う: sysstat の `sar -q`（`plist-sz`）、Netdata の `system.active_processes`。
+- **カーネルの値の意味**
+  - `/proc/loadavg` の 4 番目のフィールドの分母は `nr_threads` で、pid が 0 でないすべてのタスク（カーネルスレッドと、まだ回収されていないゾンビを含む）の数。全 pid の `Threads:` の合計と同じ意味になる。
+  - `sysinfo().procs` も同じ値だが、16 ビットなので 65,536 を超えると一周する。
+- **VM での計測**（プロセス 175 個）
+
+| 方式 | 時間 | 割り当て | プロセス数 / スレッド数 |
+|---|---|---|---|
+| 全 pid の status（以前の方式） | 3,265 µs | 21.4 KB | 175 / 370 |
+| 全 pid の stat（`File.OpenHandle`） | 2,324 µs | 20.8 KB | 175 / 370 |
+| 全 pid の stat（`openat` を直接呼ぶ。flock なし） | 1,884 µs | 216 B | 175 / 370 |
+| pid の数 ＋ `/proc/loadavg` | 151 µs | 280 B | 175 / 370 |
+
+- **変更後**: `ProcessCount` は `/proc` の数字のディレクトリの数（プロセスごとには開かない）。`ThreadCount` は、保持した `/proc/loadavg` の 4 番目のフィールドの分母。
+  - VM の確認: `ProcessCount` は `ls /proc` と一致した（178）。`ThreadCount` は 373 で、モニター自身が動いている間の値なので、そのスレッド（9）を含む。モニターが終わった後に OS のコマンドで見ると 364。
+  - `alloccheck`: 1 回 209 µs、208 B（以前は 3,265 µs、21.4 KB）。
+- **注意**: pid 名前空間が別のコンテナの中や、`hidepid` の環境では、`ProcessCount` は見えるプロセスだけ、`ThreadCount` はシステム全体の値になり、範囲が食い違う。ホストでサービスとして動かす使い方なら問題ない。
+
+**開けないファイルの扱い（D5 の補足）**
+
+- **計測（VM）**: ないファイルを開くと、`File.OpenHandle` の例外で 18.2 µs と 984 B かかる。`File.Exists` で調べれば 5.0 µs、P/Invoke の `open` なら 5.4 µs で、どちらも割り当ては 0。
+- **ユーザーの決定**
+  - 必ず存在する概念（`PlatformProvider` が返す 1 つのオブジェクト）は、今までどおり常にインスタンスを返す。
+  - 一覧の要素は、作成時に失敗したものを含めない。
+  - 作成時に開けなかったファイルは、後の `Update()` で開き直さない。後から現れたものを使うには、利用側がオブジェクトを作り直す。
+  - 一度開けたファイルは、D6 のとおり開き直しを続ける（ホットプラグ）。
+- 実装は別のコミットで行う。
