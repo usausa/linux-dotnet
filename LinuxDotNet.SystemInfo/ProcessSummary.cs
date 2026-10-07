@@ -81,10 +81,10 @@ public sealed class ProcessSummary : IDisposable
             // The pid directories are only counted (nothing is opened for each process)
             var processes = new FileSystemEnumerable<bool>(
                 ProcPath,
-                static (ref FileSystemEntry entry) => true,
+                static (ref _) => true,
                 ProcessDirectoryOptions)
             {
-                ShouldIncludePredicate = static (ref FileSystemEntry entry) => IsProcessId(entry.FileName) && entry.IsDirectory
+                ShouldIncludePredicate = static (ref entry) => IsProcessId(entry.FileName) && entry.IsDirectory
             };
 
             process = processes.Count();
