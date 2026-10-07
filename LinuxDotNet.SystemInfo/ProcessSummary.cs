@@ -3,10 +3,12 @@ namespace LinuxDotNet.SystemInfo;
 using System.Globalization;
 using System.IO.Enumeration;
 
-using Microsoft.Win32.SafeHandles;
-
 using static LinuxDotNet.SystemInfo.KernelFileParser;
 
+// ProcessCount is the number of processes visible in /proc (the pid directories, counted without opening anything per process).
+// ThreadCount is the number of threads (tasks, including kernel threads) that currently exist on the whole system, taken from
+// /proc/loadavg. In a container with its own pid namespace, or with the hidepid mount option, ProcessCount counts only the
+// visible processes while ThreadCount is for the whole system.
 public sealed class ProcessSummary : IDisposable
 {
     private const string ProcPath = "/proc";
@@ -14,8 +16,7 @@ public sealed class ProcessSummary : IDisposable
     // Same as Directory.EnumerateDirectories (no attribute is skipped)
     private static readonly EnumerationOptions ProcessDirectoryOptions = new() { AttributesToSkip = 0 };
 
-    // Buffer for /proc/<pid>/status, reused for every process and grown when it is full
-    private byte[] buffer = new byte[4096];
+    private readonly KernelFile file;
 
     private bool disposed;
 
@@ -29,20 +30,27 @@ public sealed class ProcessSummary : IDisposable
     // Constructor
     //--------------------------------------------------------------------------------
 
-    private ProcessSummary()
+    private ProcessSummary(KernelFile file)
     {
+        this.file = file;
     }
 
     internal static ProcessSummary Create()
     {
-        var instance = new ProcessSummary();
+        var instance = new ProcessSummary(new KernelFile("/proc/loadavg"));
         instance.Update();
         return instance;
     }
 
     public void Dispose()
     {
+        if (disposed)
+        {
+            return;
+        }
+
         disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -53,24 +61,33 @@ public sealed class ProcessSummary : IDisposable
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        var process = 0;
-        var thread = 0;
+        if (!file.Read())
+        {
+            return false;
+        }
+
+        // The 4th field is running/total (e.g. 0.22 0.08 0.19 1/382 964112), and the total is the number of threads
+        var line = TrimEnd(file.Content);
+        _ = NextToken(ref line);
+        _ = NextToken(ref line);
+        _ = NextToken(ref line);
+        var tasks = NextToken(ref line);
+        var separator = tasks.IndexOf((byte)'/');
+        var thread = (separator >= 0) ? ParseInt32(tasks[(separator + 1)..]) : 0;
+
+        int process;
         try
         {
-            // The pid directories, with the pid parsed from the name
-            var processIds = new FileSystemEnumerable<int>(
+            // The pid directories are only counted (nothing is opened for each process)
+            var processes = new FileSystemEnumerable<bool>(
                 ProcPath,
-                static (ref FileSystemEntry entry) => TryParseProcessId(entry.FileName, out var id) ? id : 0,
+                static (ref FileSystemEntry entry) => true,
                 ProcessDirectoryOptions)
             {
-                ShouldIncludePredicate = static (ref FileSystemEntry entry) => TryParseProcessId(entry.FileName, out _) && entry.IsDirectory
+                ShouldIncludePredicate = static (ref FileSystemEntry entry) => IsProcessId(entry.FileName) && entry.IsDirectory
             };
 
-            foreach (var pid in processIds)
-            {
-                process++;
-                thread += ReadThreadCount(pid);
-            }
+            process = processes.Count();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -90,55 +107,6 @@ public sealed class ProcessSummary : IDisposable
     //--------------------------------------------------------------------------------
 
     // All digits
-    private static bool TryParseProcessId(ReadOnlySpan<char> name, out int pid) =>
-        Int32.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out pid);
-
-    // Threads in /proc/<pid>/status (0 when the process has exited)
-    private int ReadThreadCount(int pid)
-    {
-        var path = String.Create(CultureInfo.InvariantCulture, $"/proc/{pid}/status");
-        int length;
-        try
-        {
-            using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            length = ReadAll(handle);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return 0;
-        }
-
-        var remaining = new ReadOnlySpan<byte>(buffer, 0, length);
-        while (TryReadLine(ref remaining, out var line))
-        {
-            if (line.StartsWith("Threads:"u8))
-            {
-                var value = line["Threads:"u8.Length..];
-                return ParseInt32(NextToken(ref value));
-            }
-        }
-
-        return 0;
-    }
-
-    // Reads the whole file from the start into the buffer (grown when it is full) and returns the length
-    private int ReadAll(SafeFileHandle handle)
-    {
-        var total = 0;
-        while (true)
-        {
-            if (total == buffer.Length)
-            {
-                Array.Resize(ref buffer, buffer.Length * 2);
-            }
-
-            var read = RandomAccess.Read(handle, buffer.AsSpan(total), total);
-            if (read == 0)
-            {
-                return total;
-            }
-
-            total += read;
-        }
-    }
+    private static bool IsProcessId(ReadOnlySpan<char> name) =>
+        Int32.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out _);
 }
