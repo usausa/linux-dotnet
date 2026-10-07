@@ -858,6 +858,8 @@ x64 VM（`benchmark-before-x64vm.md`。BenchmarkDotNet は `--inProcess` で実�
 | FileSystemUsage | 1.62 µs / 0 B | 1.72 µs / 0 B | +6.5%（計測のばらつき。下記） |
 | **All** | **6.15 ms / 2,025,159 B** | **4.27 ms / 21,545 B** | **−30.5%（割り当ては −98.9%）** |
 
+- 最終（2710f57）の値は、§判定・メモ「最終の計測」に記録した（All は 878 µs / 212 B で、before から −85.7%）。
+
 ### syscall 数（1反復あたり）
 
 | syscall | before x64 | after x64 | before Pi | after Pi |
@@ -894,6 +896,7 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
 - **flock**: .NET はファイルを開くと `flock(LOCK_SH|LOCK_NB)` を取り、閉じるときに解除する（`FileShare.ReadWrite` でも取る。1 回開くと 2 回）。Hold のクラスでは開くときだけなので、1 反復あたりは 0 になる。残りの 343 回は `ProcessSummary` の分（172 個 × 2）。
 - B-4 で最初に測った before の値（プロセス約 170 個）: openat 182.1（失敗 1.0）、close 181.1、read 0.25、pread64 535.5、newfstatat 0、lseek 0.48。その後プロセスが増えたので、比較には上の続けて測った値を使う。
 - 1000 回の loop の失敗数は、before と after のどちらも `WirelessStat`、`BatteryDevice`、`MainsDevice` がそれぞれ 1000（VM にファイルがないため）。ほかは 0。fd 数は 55 → 55。
+- 最終（2710f57）では、1 反復あたりの openat と close は 1.0 回（`ProcessSummary` が `/proc` を列挙する分）、flock は 0 回になった（§判定・メモ「最終の計測」）。
 
 ### ホットプラグ・長時間稼働
 
@@ -1084,3 +1087,51 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000。before と after を続�
   - strace で見ると、`/proc/net/wireless` を開こうとするのは作成時の 1 回だけで、反復を 0 回でも 100 回でも同じ。1 反復あたりの openat は 1.0 回まで下がった（`ProcessSummary` が `/proc` を列挙する分だけ）。失敗する openat は、反復しても増えない。
   - loop の 1 回あたりの割り当ては 208 B（H-6 のときは 21.5 KB）。dump の項目は 491 行で、変更前と同じ構成。
   - VM にはコア（cpufreq）、RAPL、hwmon がないので、一覧から外れる動きは実機で確かめる。
+
+#### 最終の計測（x64 VM、2026-10-07 16:34〜16:58、2710f57）
+
+ここまでの変更（ハンドルの保持、`ProcessSummary` の変更、作成時に開けなかったファイルを開き直さない変更、一覧の要素の扱い）をすべて含む。Phase 1 と Phase 4 と同じ方法（Windows で self-contained で publish し、ベンチマークは `--inProcess`）で計測した。プロセスは 171〜173 個。
+
+**ベンチマーク**（`Document/HandleReuse/results/benchmark-final-x64vm.md`）
+
+| クラス | before | 最終 | 改善率 |
+|---|---|---|---|
+| SystemStat | 24.7 µs / 10,368 B | 9.87 µs / 0 B | −60.1% |
+| MemoryStat | 28.6 µs / 12,248 B | 10.6 µs / 0 B | −63.0% |
+| VirtualMemoryStat | 49.2 µs / 20,289 B | 31.2 µs / 0 B | −36.7% |
+| LoadAverage | 16.1 µs / 7,920 B | 2.90 µs / 0 B | −82.0% |
+| Uptime | 15.9 µs / 7,912 B | 2.72 µs / 0 B | −82.9% |
+| FileHandleStat | 16.9 µs / 7,920 B | 2.90 µs / 0 B | −82.8% |
+| DiskStat | 24.8 µs / 9,192 B | 12.2 µs / 0 B | −51.1% |
+| NetworkStat | 53.0 µs / 11,193 B | 23.8 µs / 0 B | −55.1% |
+| TcpStat / Tcp6Stat | 450 µs / 9,874 B、449 µs / 9,826 B | 286 µs / 2 B、283 µs / 2 B（定常状態では 0 B） | −36.4%、−37.1% |
+| WirelessStat | 19.1 µs / 1,224 B（`/proc/net/wireless` がなく、毎回例外になって false） | 2.6 ns / 0 B（作成時に開けなかったので、開き直さずに false） | −100.0% |
+| ProcessSummary | 4.55 ms / 1,917,110 B（プロセス約 170） | 142 µs / 209 B（プロセス約 172） | −96.9%（割り当ては −99.99%） |
+| CpuDevice | 4.9 ns / 0 B（N/A） | 1.6 ns / 0 B（N/A） | N/A |
+| BatteryDevice | 2.2 ns / 0 B（N/A） | 2.2 ns / 0 B（N/A） | N/A |
+| MainsDevice | 0.6 ns / 0 B（N/A） | 0.3 ns / 0 B（N/A） | N/A |
+| HardwareMonitors | 0.6 ns / 0 B（N/A） | 0.7 ns / 0 B（N/A） | N/A |
+| FileSystemUsage | 1.62 µs / 0 B | 1.62 µs / 0 B | +0.1% |
+| **All** | **6.15 ms / 2,025,159 B** | **878 µs / 212 B** | **−85.7%（割り当ては −99.99%）** |
+
+- **悪化なし（+5% 以内）**: 満たす。`FileSystemUsage` は +0.1%（Phase 4 の +6.5% は計測のばらつきだった）。`HardwareMonitors` の +7.7% は、VM ではセンサーがなく何もしない呼び出し（1 ns 未満）の差で、N/A。
+- **Phase 4 の after からの変化**: `ProcessSummary` は 3.40 ms → 142 µs（−95.8%）、`WirelessStat` は 18.0 µs → 2.6 ns、All は 4.27 ms → 878 µs（−79.4%）。ほかのクラスは Phase 4 から実装がほぼ変わっておらず、差は ±7% 以内（計測のばらつき）。
+- **割り当て**: Hold のクラスは 0 B（`TcpStat` と `Tcp6Stat` の 2 B は、Phase 4 と同じく `alloccheck` では 0 B）。残りは、`ProcessSummary` が `/proc` を列挙する分の 209 B だけ。
+
+**syscall 数**（1 反復あたり。`strace -f -c`、(1000 回 − 0 回) ÷ 1000。プロセスは 173 個）
+
+| syscall | before | Phase 4 の after | 最終 |
+|---|---|---|---|
+| openat | 184.3（うち失敗 1.0） | 173.5（うち失敗 1.0） | 1.0（失敗 0） |
+| close | 183.3 | 172.5 | 1.0 |
+| read | 0.25 | 0.01 | 0 |
+| pread64 | 543.0 | 364.0 | 23.0 |
+| newfstatat / statx | 0 | 0 | 0 |
+| lseek（参考） | 0.49 | 0.004 | 0 |
+| flock（参考） | 364.0 | 343.0 | 0 |
+
+- 反復ごとに開くのは、`ProcessSummary` が列挙する `/proc` だけ（`strace -f -e trace=openat,close`、(100 回 − 0 回) ÷ 100 で 1.0 回）。保持しているファイルは 0 回。`/proc/net/wireless` は作成時に 1 回だけ開こうとして失敗し、反復しても増えない。
+- pread64 の 23 回は、保持している 11 個のハンドル（Hold の 10 ファイルと、`ProcessSummary` の `/proc/loadavg`）を読む分。
+  - 1 回の読み込みは、データを読む pread と、終わりを確かめる pread（0 バイト）の 2 回になる。
+  - `/proc/vmstat`（4,122 バイト）は 3 回。procfs（seq_file）は、1 回の読み込みで 1 ページ（4 KB）分までの行しか返さないため。
+- loop（1000 回）の 1 回あたりの割り当ては 208 B。失敗は VM にファイルがない `WirelessStat`、`BatteryDevice`、`MainsDevice` だけ。fd 数は 55 → 55。
