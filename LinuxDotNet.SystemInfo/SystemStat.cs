@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
-using System.Globalization;
+using System.Text;
+
+using static LinuxDotNet.SystemInfo.KernelFileParser;
 
 public sealed class CpuStat
 {
+    // Name in /proc/stat (cpu, cpu0, ...) to find the entry without creating a string
+    internal byte[] RawName { get; }
+
     public string Name { get; }
 
     public ulong User { get; internal set; }
@@ -27,19 +32,29 @@ public sealed class CpuStat
 
     public ulong GuestNice { get; internal set; }
 
-    internal CpuStat(string name)
+    internal CpuStat(ReadOnlySpan<byte> rawName)
+        : this(Encoding.UTF8.GetString(rawName), rawName)
+    {
+    }
+
+    internal CpuStat(string name, ReadOnlySpan<byte> rawName)
     {
         Name = name;
+        RawName = rawName.ToArray();
     }
 }
 
-public sealed class SystemStat
+public sealed class SystemStat : IDisposable
 {
+    private readonly KernelFile file;
+
     private readonly List<CpuStat> cpuCores = [];
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; private set; }
 
-    public CpuStat CpuTotal { get; } = new("total");
+    public CpuStat CpuTotal { get; } = new("total", "cpu"u8);
 
     public IReadOnlyList<CpuStat> CpuCores => cpuCores;
 
@@ -63,9 +78,27 @@ public sealed class SystemStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal SystemStat()
+    private SystemStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static SystemStat Create()
+    {
+        var instance = new SystemStat(new KernelFile("/proc/stat"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -75,38 +108,48 @@ public sealed class SystemStat
     // ReSharper disable StringLiteralTypo
     public bool Update()
     {
-        using var reader = new StreamReader("/proc/stat");
-        while (reader.ReadLine() is { } line)
-        {
-            var span = line.AsSpan();
+        ObjectDisposedException.ThrowIf(disposed, this);
 
-            if (span.StartsWith("cpu"))
+        if (!file.Read())
+        {
+            return false;
+        }
+
+        var remaining = file.Content;
+        while (TryReadLine(ref remaining, out var line))
+        {
+            var key = NextToken(ref line);
+            if (key.SequenceEqual("cpu"u8))
             {
-                UpdateCpuValue(span);
+                UpdateCpuValue(CpuTotal, line);
             }
-            else if (span.StartsWith("intr"))
+            else if (key.StartsWith("cpu"u8))
             {
-                Interrupt = ExtractUInt64(span);
+                UpdateCpuValue(FindCpu(key), line);
             }
-            else if (span.StartsWith("ctxt"))
+            else if (key.SequenceEqual("intr"u8))
             {
-                ContextSwitch = ExtractUInt64(span);
+                Interrupt = ParseUInt64(NextToken(ref line));
             }
-            else if (span.StartsWith("processes"))
+            else if (key.SequenceEqual("ctxt"u8))
             {
-                Forks = ExtractUInt64(span);
+                ContextSwitch = ParseUInt64(NextToken(ref line));
             }
-            else if (span.StartsWith("procs_running"))
+            else if (key.SequenceEqual("processes"u8))
             {
-                RunnableTasks = ExtractInt32(span);
+                Forks = ParseUInt64(NextToken(ref line));
             }
-            else if (span.StartsWith("procs_blocked"))
+            else if (key.SequenceEqual("procs_running"u8))
             {
-                BlockedTasks = ExtractInt32(span);
+                RunnableTasks = ParseInt32(NextToken(ref line));
             }
-            else if (span.StartsWith("softirq"))
+            else if (key.SequenceEqual("procs_blocked"u8))
             {
-                SoftIrq = ExtractUInt64(span);
+                BlockedTasks = ParseInt32(NextToken(ref line));
+            }
+            else if (key.SequenceEqual("softirq"u8))
+            {
+                SoftIrq = ParseUInt64(NextToken(ref line));
             }
         }
 
@@ -116,53 +159,33 @@ public sealed class SystemStat
     }
     // ReSharper restore StringLiteralTypo
 
-    private void UpdateCpuValue(ReadOnlySpan<char> span)
+    private static void UpdateCpuValue(CpuStat stat, ReadOnlySpan<byte> values)
     {
-        var range = (Span<Range>)stackalloc Range[12];
-        span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
-
-        var stat = span[range[0]] is "cpu" ? CpuTotal : FindCpu(span[range[0]]);
-
-        stat.User = UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var value) ? value : 0;
-        stat.Nice = UInt64.TryParse(span[range[2]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.System = UInt64.TryParse(span[range[3]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.Idle = UInt64.TryParse(span[range[4]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.IoWait = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.Irq = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.SoftIrq = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.Steal = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.Guest = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out value) ? value : 0;
-        stat.GuestNice = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out value) ? value : 0;
+        stat.User = ParseUInt64(NextToken(ref values));
+        stat.Nice = ParseUInt64(NextToken(ref values));
+        stat.System = ParseUInt64(NextToken(ref values));
+        stat.Idle = ParseUInt64(NextToken(ref values));
+        stat.IoWait = ParseUInt64(NextToken(ref values));
+        stat.Irq = ParseUInt64(NextToken(ref values));
+        stat.SoftIrq = ParseUInt64(NextToken(ref values));
+        stat.Steal = ParseUInt64(NextToken(ref values));
+        stat.Guest = ParseUInt64(NextToken(ref values));
+        stat.GuestNice = ParseUInt64(NextToken(ref values));
     }
 
-    private CpuStat FindCpu(ReadOnlySpan<char> name)
+    // A core seen for the first time is added (and never removed)
+    private CpuStat FindCpu(ReadOnlySpan<byte> name)
     {
         foreach (var core in cpuCores)
         {
-            if (core.Name.AsSpan().Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (name.SequenceEqual(core.RawName))
             {
                 return core;
             }
         }
 
-        var cpu = new CpuStat(name.ToString());
+        var cpu = new CpuStat(name);
         cpuCores.Add(cpu);
         return cpu;
-    }
-
-    //--------------------------------------------------------------------------------
-    // Helper
-    //--------------------------------------------------------------------------------
-
-    private static ulong ExtractUInt64(ReadOnlySpan<char> span)
-    {
-        var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
-    }
-
-    private static int ExtractInt32(ReadOnlySpan<char> span)
-    {
-        var range = (Span<Range>)stackalloc Range[3];
-        return (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) > 1) && Int32.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

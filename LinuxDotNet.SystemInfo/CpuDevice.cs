@@ -3,9 +3,13 @@ namespace LinuxDotNet.SystemInfo;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
 public sealed class CpuCore
 {
-    private readonly string frequencyPath;
+    private readonly KernelFile file;
+
+    private bool closed;
 
     public DateTime UpdateAt { get; private set; }
 
@@ -17,11 +21,18 @@ public sealed class CpuCore
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal CpuCore(string name, string frequencyPath)
+    // Takes over the file (closed by the owner CpuDevice)
+    internal CpuCore(string name, KernelFile file)
     {
         Name = name;
-        this.frequencyPath = frequencyPath;
+        this.file = file;
         Update();
+    }
+
+    internal void Close()
+    {
+        closed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -30,12 +41,14 @@ public sealed class CpuCore
 
     public bool Update()
     {
-        if (!FileHelper.TryReadText(frequencyPath, out var text))
+        ObjectDisposedException.ThrowIf(closed, this);
+
+        if (!file.Read())
         {
             return false;
         }
 
-        Frequency = UInt64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Frequency = ParseUInt64(TrimEnd(file.Content));
 
         UpdateAt = DateTime.Now;
 
@@ -45,7 +58,9 @@ public sealed class CpuCore
 
 public sealed class CpuPower
 {
-    private readonly string energyPath;
+    private readonly KernelFile file;
+
+    private bool closed;
 
     public DateTime UpdateAt { get; private set; }
 
@@ -57,25 +72,35 @@ public sealed class CpuPower
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal CpuPower(string name, string energyPath)
+    // Takes over the file (closed by the owner CpuDevice)
+    internal CpuPower(string name, KernelFile file)
     {
         Name = name;
-        this.energyPath = energyPath;
+        this.file = file;
         Update();
+    }
+
+    internal void Close()
+    {
+        closed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
     // Update
     //--------------------------------------------------------------------------------
 
+    // energy_uj may be readable only by root, then this returns false
     public bool Update()
     {
-        if (!FileHelper.TryReadText(energyPath, out var text))
+        ObjectDisposedException.ThrowIf(closed, this);
+
+        if (!file.Read())
         {
             return false;
         }
 
-        Energy = UInt64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Energy = ParseUInt64(TrimEnd(file.Content));
 
         UpdateAt = DateTime.Now;
 
@@ -83,20 +108,49 @@ public sealed class CpuPower
     }
 }
 
-public sealed partial class CpuDevice
+public sealed partial class CpuDevice : IDisposable
 {
-    public IReadOnlyList<CpuCore> Cores { get; }
+    private const string CpuPath = "/sys/devices/system/cpu";
 
-    public IReadOnlyList<CpuPower> Powers { get; }
+    private readonly CpuCore[] cores;
+
+    private readonly CpuPower[] powers;
+
+    private bool disposed;
+
+    public IReadOnlyList<CpuCore> Cores => cores;
+
+    public IReadOnlyList<CpuPower> Powers => powers;
 
     //--------------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal CpuDevice()
+    private CpuDevice(CpuCore[] cores, CpuPower[] powers)
     {
-        Cores = GetCores();
-        Powers = GetPowers();
+        this.cores = cores;
+        this.powers = powers;
+    }
+
+    internal static CpuDevice Create() => new(GetCores(), GetPowers());
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        foreach (var core in cores)
+        {
+            core.Close();
+        }
+
+        foreach (var power in powers)
+        {
+            power.Close();
+        }
     }
 
     //--------------------------------------------------------------------------------
@@ -109,9 +163,19 @@ public sealed partial class CpuDevice
     // ReSharper disable StringLiteralTypo
     private static CpuCore[] GetCores()
     {
+        string[] dirs;
+        try
+        {
+            dirs = Directory.GetDirectories(CpuPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+
         var cores = new List<CpuCore>();
 
-        foreach (var dir in Directory.GetDirectories("/sys/devices/system/cpu"))
+        foreach (var dir in dirs)
         {
             var name = Path.GetFileName(dir);
             if (!CpuCoreRegex().IsMatch(name))
@@ -125,7 +189,7 @@ public sealed partial class CpuDevice
                 continue;
             }
 
-            cores.Add(new CpuCore(name, path));
+            cores.Add(new CpuCore(name, new KernelFile(path, bufferSize: 64, singleRead: true)));
         }
 
 #pragma warning disable IDE0028
@@ -151,8 +215,9 @@ public sealed partial class CpuDevice
                 }
             }
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // Ignore
         }
 
 #pragma warning disable IDE0028
@@ -177,7 +242,8 @@ public sealed partial class CpuDevice
             return;
         }
 
-        powers.Add(new CpuPower(name, energyPath));
+        // The power is created even when energy_uj is not readable (only by root on some systems)
+        powers.Add(new CpuPower(name, new KernelFile(energyPath, bufferSize: 64, singleRead: true)));
     }
     // ReSharper restore StringLiteralTypo
 
@@ -187,12 +253,14 @@ public sealed partial class CpuDevice
 
     public void Update()
     {
-        foreach (var core in Cores)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        foreach (var core in cores)
         {
             core.Update();
         }
 
-        foreach (var power in Powers)
+        foreach (var power in powers)
         {
             power.Update();
         }

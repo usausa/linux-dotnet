@@ -1,12 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
 public sealed class HardwareSensor
 {
-    private readonly string valuePath;
+    private readonly KernelFile file;
+
+    private bool closed;
 
     public DateTime UpdateAt { get; private set; }
 
@@ -20,12 +23,19 @@ public sealed class HardwareSensor
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal HardwareSensor(string valuePath, string type, string label)
+    // Takes over the file (closed by the owner HardwareMonitor)
+    internal HardwareSensor(KernelFile file, string type, string label)
     {
-        this.valuePath = valuePath;
+        this.file = file;
         Type = type;
         Label = label;
         Update();
+    }
+
+    internal void Close()
+    {
+        closed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -34,12 +44,14 @@ public sealed class HardwareSensor
 
     public bool Update()
     {
-        if (!FileHelper.TryReadText(valuePath, out var text))
+        ObjectDisposedException.ThrowIf(closed, this);
+
+        if (!file.Read())
         {
             return false;
         }
 
-        Value = Int64.TryParse(text.AsSpan().Trim(), CultureInfo.InvariantCulture, out var value) ? value : 0;
+        Value = ParseInt64(TrimEnd(file.Content));
 
         UpdateAt = DateTime.Now;
 
@@ -47,8 +59,12 @@ public sealed class HardwareSensor
     }
 }
 
-public sealed partial class HardwareMonitor
+public sealed partial class HardwareMonitor : IDisposable
 {
+    private const string HardwareMonitorPath = "/sys/class/hwmon";
+
+    private bool disposed;
+
     public string Name { get; }
 
     public string Type { get; }
@@ -59,11 +75,25 @@ public sealed partial class HardwareMonitor
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal HardwareMonitor(string name, string type, IReadOnlyList<HardwareSensor> sensors)
+    private HardwareMonitor(string name, string type, IReadOnlyList<HardwareSensor> sensors)
     {
         Name = name;
         Type = type;
         Sensors = sensors;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        foreach (var sensor in Sensors)
+        {
+            sensor.Close();
+        }
     }
 
     //--------------------------------------------------------------------------------
@@ -72,16 +102,41 @@ public sealed partial class HardwareMonitor
 
     internal static IReadOnlyList<HardwareMonitor> GetMonitors()
     {
+        if (!Directory.Exists(HardwareMonitorPath))
+        {
+            return [];
+        }
+
+        string[] dirs;
+        try
+        {
+            dirs = Directory.GetDirectories(HardwareMonitorPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+
         var monitors = new List<HardwareMonitor>();
 
-        foreach (var dir in Directory.GetDirectories("/sys/class/hwmon"))
+        foreach (var dir in dirs)
         {
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(dir);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                continue;
+            }
+
             var sensors = new List<HardwareSensor>();
 
             var monitorName = FileHelper.ReadTrimmedText(Path.Combine(dir, "name"));
             var monitorType = FileHelper.ReadTrimmedText(Path.Combine(dir, "device/type"));
 
-            foreach (var file in Directory.GetFiles(dir))
+            foreach (var file in files)
             {
                 if (file.EndsWith("_input", StringComparison.Ordinal))
                 {
@@ -90,7 +145,7 @@ public sealed partial class HardwareMonitor
                     var labelPath = Path.Combine(dir, filename.Replace("_input", "_label", StringComparison.Ordinal));
                     var sensorLabel = FileHelper.ReadTrimmedText(labelPath);
 
-                    sensors.Add(new HardwareSensor(file, sensorType, sensorLabel));
+                    sensors.Add(new HardwareSensor(new KernelFile(file, bufferSize: 64, singleRead: true), sensorType, sensorLabel));
                 }
             }
 

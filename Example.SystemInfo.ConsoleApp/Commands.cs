@@ -164,7 +164,7 @@ public sealed class UptimeCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var uptime = PlatformProvider.GetUptime();
+        using var uptime = PlatformProvider.GetUptime();
 
         var elapsed = uptime.Elapsed;
         Console.WriteLine($"Uptime: {(int)elapsed.TotalDays}d {elapsed.Hours:D2}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}");
@@ -181,7 +181,7 @@ public sealed class StatCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
     {
-        var stat = PlatformProvider.GetSystemStat();
+        using var stat = PlatformProvider.GetSystemStat();
 
         using var cts = new CancellationTokenSource();
 #pragma warning disable SA1107
@@ -260,7 +260,7 @@ public sealed class LoadCommand : ICommandHandler
 
         while (!cts.Token.IsCancellationRequested)
         {
-            var load = PlatformProvider.GetLoadAverage();
+            using var load = PlatformProvider.GetLoadAverage();
 
             Console.Clear();
             Console.WriteLine($"Load Average (CPUs: {cpuCount})");
@@ -281,7 +281,7 @@ public sealed class MemoryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var memory = PlatformProvider.GetMemoryStat();
+        using var memory = PlatformProvider.GetMemoryStat();
         var used = memory.MemoryTotal - memory.MemoryAvailable;
         var usagePct = memory.MemoryTotal > 0 ? (double)used / memory.MemoryTotal * 100 : 0;
 
@@ -317,7 +317,7 @@ public sealed class VirtualCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var vm = PlatformProvider.GetVirtualMemoryStat();
+        using var vm = PlatformProvider.GetVirtualMemoryStat();
 
         Console.WriteLine($"PageIn:            {vm.PageIn}");
         Console.WriteLine($"PageOut:           {vm.PageOut}");
@@ -380,7 +380,7 @@ public sealed class MountCommand : ICommandHandler
             Console.WriteLine($"  Options:    {mount.Option}");
             Console.WriteLine($"  IsLocal:    {mount.IsLocal}");
 
-            var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
+            using var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
             var used = usage.TotalSize > usage.FreeSize ? usage.TotalSize - usage.FreeSize : 0UL;
             var usagePercent = (used + usage.AvailableSize) > 0
                 ? (double)used / (used + usage.AvailableSize) * 100
@@ -402,7 +402,7 @@ public sealed class DiskCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
     {
-        var disk = PlatformProvider.GetDiskStat();
+        using var disk = PlatformProvider.GetDiskStat();
 
         using var cts = new CancellationTokenSource();
 #pragma warning disable SA1107
@@ -448,7 +448,7 @@ public sealed class NetworkCommand : ICommandHandler
 {
     public async ValueTask ExecuteAsync(CommandContext context)
     {
-        var network = PlatformProvider.GetNetworkStat();
+        using var network = PlatformProvider.GetNetworkStat();
 
         using var cts = new CancellationTokenSource();
 #pragma warning disable SA1107
@@ -497,7 +497,7 @@ public sealed class TcpCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var tcp = PlatformProvider.GetTcpStat();
+        using var tcp = PlatformProvider.GetTcpStat();
 
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
@@ -524,7 +524,7 @@ public sealed class Tcp6Command : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var tcp = PlatformProvider.GetTcp6Stat();
+        using var tcp = PlatformProvider.GetTcp6Stat();
 
         Console.WriteLine($"Established: {tcp.Established}");
         Console.WriteLine($"SynSent:     {tcp.SynSent}");
@@ -551,7 +551,7 @@ public sealed class WirelessCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var wireless = PlatformProvider.GetWirelessStat();
+        using var wireless = PlatformProvider.GetWirelessStat();
         foreach (var wif in wireless.Interfaces)
         {
             Console.WriteLine($"Interface:         {wif.Interface}");
@@ -580,7 +580,7 @@ public sealed class ProcessCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var process = PlatformProvider.GetProcessSummary();
+        using var process = PlatformProvider.GetProcessSummary();
 
         Console.WriteLine($"ProcessCount: {process.ProcessCount}");
         Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
@@ -648,7 +648,7 @@ public sealed class FdCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var fd = PlatformProvider.GetFileHandleStat();
+        using var fd = PlatformProvider.GetFileHandleStat();
 
         Console.WriteLine($"Allocated: {fd.Allocated}");
         Console.WriteLine($"Used:      {fd.Used}");
@@ -666,7 +666,7 @@ public sealed class CpuCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var cpu = PlatformProvider.GetCpuDevice();
+        using var cpu = PlatformProvider.GetCpuDevice();
         var hw = PlatformProvider.GetHardware();
         var maxFreqKHz = hw.CpuFrequencyMax / 1000;
         if ((maxFreqKHz == 0) && (cpu.Cores.Count > 0))
@@ -702,7 +702,7 @@ public sealed class AcCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var adapter = PlatformProvider.GetMainsDevice();
+        using var adapter = PlatformProvider.GetMainsDevice();
 
         Console.WriteLine(adapter.Supported ? $"Online: {adapter.Online}" : "No adapter found");
 
@@ -718,7 +718,7 @@ public sealed class BatteryCommand : ICommandHandler
 {
     public ValueTask ExecuteAsync(CommandContext context)
     {
-        var battery = PlatformProvider.GetBatteryDevice();
+        using var battery = PlatformProvider.GetBatteryDevice();
 
         if (battery.Supported)
         {
@@ -747,13 +747,24 @@ public sealed class HwmonCommand : ICommandHandler
     public ValueTask ExecuteAsync(CommandContext context)
     {
         var monitors = PlatformProvider.GetHardwareMonitors();
-        foreach (var monitor in monitors)
+        try
         {
-            var type = String.IsNullOrEmpty(monitor.Type) ? string.Empty : $" ({monitor.Type})";
-            Console.WriteLine($"[{monitor.Name}]{type}");
-            foreach (var sensor in monitor.Sensors)
+            foreach (var monitor in monitors)
             {
-                Console.WriteLine($"  {sensor.Label,-16} {FormatSensorValue(sensor.Type, sensor.Value)}");
+                var type = String.IsNullOrEmpty(monitor.Type) ? string.Empty : $" ({monitor.Type})";
+                Console.WriteLine($"[{monitor.Name}]{type}");
+                foreach (var sensor in monitor.Sensors)
+                {
+                    Console.WriteLine($"  {sensor.Label,-16} {FormatSensorValue(sensor.Type, sensor.Value)}");
+                }
+            }
+        }
+        finally
+        {
+            // Each monitor must be disposed
+            foreach (var monitor in monitors)
+            {
+                monitor.Dispose();
             }
         }
 

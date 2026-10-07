@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
-using System.Globalization;
 
-public sealed class LoadAverage
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class LoadAverage : IDisposable
 {
+    private readonly KernelFile file;
+
+    private bool disposed;
+
     public DateTime UpdateAt { get; private set; }
 
     public double Average1 { get; private set; }
@@ -17,33 +22,51 @@ public sealed class LoadAverage
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal LoadAverage()
+    private LoadAverage(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    // ReSharper disable StringLiteralTypo
+    internal static LoadAverage Create()
+    {
+        var instance = new LoadAverage(new KernelFile("/proc/loadavg"));
+        instance.Update();
+        return instance;
+    }
+    // ReSharper restore StringLiteralTypo
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
     // Update
     //--------------------------------------------------------------------------------
 
-    // ReSharper disable StringLiteralTypo
     public bool Update()
     {
-        if (!FileHelper.TryReadText("/proc/loadavg", out var text))
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
         {
             return false;
         }
 
-        var span = text.AsSpan();
-        var range = (Span<Range>)stackalloc Range[5];
-        span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries);
-        Average1 = Double.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var v1) ? v1 : 0;
-        Average5 = Double.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var v5) ? v5 : 0;
-        Average15 = Double.TryParse(span[range[2]], CultureInfo.InvariantCulture, out var v15) ? v15 : 0;
+        var line = TrimEnd(file.Content);
+        Average1 = ParseDouble(NextToken(ref line));
+        Average5 = ParseDouble(NextToken(ref line));
+        Average15 = ParseDouble(NextToken(ref line));
 
         UpdateAt = DateTime.Now;
 
         return true;
     }
-    // ReSharper restore StringLiteralTypo
 }

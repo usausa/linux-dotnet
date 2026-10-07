@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Globalization;
+using System.Text;
+
+using static LinuxDotNet.SystemInfo.KernelFileParser;
 
 public sealed class WirelessStatEntry
 {
     internal bool Live { get; set; }
+
+    // Name in /proc/net/wireless to find the entry without creating a string
+    internal byte[] RawName { get; }
 
     public string Interface { get; }
 
@@ -33,15 +38,20 @@ public sealed class WirelessStatEntry
 
     public ulong MissedBeacon { get; internal set; }
 
-    internal WirelessStatEntry(string interfaceName)
+    internal WirelessStatEntry(ReadOnlySpan<byte> interfaceName)
     {
-        Interface = interfaceName;
+        RawName = interfaceName.ToArray();
+        Interface = Encoding.UTF8.GetString(interfaceName);
     }
 }
 
-public sealed class WirelessStat
+public sealed class WirelessStat : IDisposable
 {
+    private readonly KernelFile file;
+
     private readonly List<WirelessStatEntry> interfaces = [];
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; internal set; }
 
@@ -51,9 +61,27 @@ public sealed class WirelessStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal WirelessStat()
+    private WirelessStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static WirelessStat Create()
+    {
+        var instance = new WirelessStat(new KernelFile("/proc/net/wireless"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -62,62 +90,70 @@ public sealed class WirelessStat
 
     public bool Update()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
+        {
+            return false;
+        }
+
         foreach (var wireless in interfaces)
         {
             wireless.Live = false;
         }
 
         var added = false;
-        try
+        var remaining = file.Content;
+        _ = TryReadLine(ref remaining, out _);
+        _ = TryReadLine(ref remaining, out _);
+        while (TryReadLine(ref remaining, out var line))
         {
-            var range = (Span<Range>)stackalloc Range[12];
-            using var reader = new StreamReader("/proc/net/wireless");
-            reader.ReadLine();
-            reader.ReadLine();
-            while (reader.ReadLine() is { } line)
+            // The name, status, link, level, noise and the counters (11 or more tokens)
+            var name = NextToken(ref line).TrimEnd((byte)':');
+            var status = NextToken(ref line);
+            var link = NextToken(ref line);
+            var level = NextToken(ref line);
+            var noise = NextToken(ref line);
+            var discardedNetworkId = NextToken(ref line);
+            var discardedCrypt = NextToken(ref line);
+            var discardedFragment = NextToken(ref line);
+            var discardedRetry = NextToken(ref line);
+            var discardedMisc = NextToken(ref line);
+            var missedBeacon = NextToken(ref line);
+            if (missedBeacon.IsEmpty)
             {
-                range.Clear();
-                var span = line.AsSpan();
-                if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 11)
-                {
-                    continue;
-                }
-
-                var name = span[range[0]].TrimEnd(':');
-                var wireless = default(WirelessStatEntry);
-                foreach (var item in interfaces)
-                {
-                    if (item.Interface.AsSpan().Equals(name, StringComparison.Ordinal))
-                    {
-                        wireless = item;
-                        break;
-                    }
-                }
-
-                if (wireless == null)
-                {
-                    wireless = new WirelessStatEntry(name.ToString());
-                    interfaces.Add(wireless);
-                    added = true;
-                }
-
-                wireless.Live = true;
-
-                wireless.Status = Int32.TryParse(span[range[1]], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var status) ? status : 0;
-                wireless.LinkQuality = Double.TryParse(span[range[2]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityLink) ? qualityLink : 0;
-                wireless.SignalLevel = Double.TryParse(span[range[3]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityLevel) ? qualityLevel : 0;
-                wireless.NoiseLevel = Double.TryParse(span[range[4]].TrimEnd('.'), CultureInfo.InvariantCulture, out var qualityNoise) ? qualityNoise : 0;
-                wireless.DiscardedNetworkId = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out var discardedNetworkId) ? discardedNetworkId : 0;
-                wireless.DiscardedCrypt = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out var discardedCrypt) ? discardedCrypt : 0;
-                wireless.DiscardedFragment = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out var discardedFragment) ? discardedFragment : 0;
-                wireless.DiscardedRetry = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out var discardedRetry) ? discardedRetry : 0;
-                wireless.DiscardedMisc = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out var discardedMisc) ? discardedMisc : 0;
-                wireless.MissedBeacon = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out var missedBeacon) ? missedBeacon : 0;
+                continue;
             }
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return false;
+
+            var wireless = default(WirelessStatEntry);
+            foreach (var item in interfaces)
+            {
+                if (name.SequenceEqual(item.RawName))
+                {
+                    wireless = item;
+                    break;
+                }
+            }
+
+            if (wireless == null)
+            {
+                wireless = new WirelessStatEntry(name);
+                interfaces.Add(wireless);
+                added = true;
+            }
+
+            wireless.Live = true;
+
+            wireless.Status = ParseStatus(status);
+            wireless.LinkQuality = ParseDouble(link.TrimEnd((byte)'.'));
+            wireless.SignalLevel = ParseDouble(level.TrimEnd((byte)'.'));
+            wireless.NoiseLevel = ParseDouble(noise.TrimEnd((byte)'.'));
+            wireless.DiscardedNetworkId = ParseUInt64(discardedNetworkId);
+            wireless.DiscardedCrypt = ParseUInt64(discardedCrypt);
+            wireless.DiscardedFragment = ParseUInt64(discardedFragment);
+            wireless.DiscardedRetry = ParseUInt64(discardedRetry);
+            wireless.DiscardedMisc = ParseUInt64(discardedMisc);
+            wireless.MissedBeacon = ParseUInt64(missedBeacon);
         }
 
         for (var i = interfaces.Count - 1; i >= 0; i--)
@@ -136,5 +172,16 @@ public sealed class WirelessStat
         UpdateAt = DateTime.Now;
 
         return true;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
+    // The same as Int32.TryParse with NumberStyles.HexNumber: up to 32 bits as a two's complement value, otherwise 0
+    private static int ParseStatus(ReadOnlySpan<byte> span)
+    {
+        var value = ParseHex(span);
+        return value <= UInt32.MaxValue ? unchecked((int)value) : 0;
     }
 }

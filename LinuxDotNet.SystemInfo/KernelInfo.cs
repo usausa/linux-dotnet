@@ -31,7 +31,7 @@ public sealed class KernelInfo
     //--------------------------------------------------------------------------------
 
     // ReSharper disable StringLiteralTypo
-    internal KernelInfo()
+    private KernelInfo()
     {
         OsType = ReadProcFile("sys/kernel/ostype");
         OsRelease = ReadProcFile("sys/kernel/osrelease");
@@ -46,6 +46,8 @@ public sealed class KernelInfo
         ParseBootTime();
     }
     // ReSharper restore StringLiteralTypo
+
+    internal static KernelInfo Create() => new();
 
     //--------------------------------------------------------------------------------
     // Helper

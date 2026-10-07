@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
-using System.Globalization;
 
-public sealed class FileHandleStat
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class FileHandleStat : IDisposable
 {
+    private readonly KernelFile file;
+
+    private bool disposed;
+
     public DateTime UpdateAt { get; private set; }
 
     public ulong Allocated { get; private set; }
@@ -17,9 +22,27 @@ public sealed class FileHandleStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal FileHandleStat()
+    private FileHandleStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static FileHandleStat Create()
+    {
+        var instance = new FileHandleStat(new KernelFile("/proc/sys/fs/file-nr"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -28,29 +51,21 @@ public sealed class FileHandleStat
 
     public bool Update()
     {
-        if (!FileHelper.TryReadText("/proc/sys/fs/file-nr", out var text))
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
         {
             return false;
         }
 
-        var span = text.AsSpan();
-        var range = (Span<Range>)stackalloc Range[4];
-        span.Split(range, '\t', StringSplitOptions.RemoveEmptyEntries);
-        Allocated = ParseUInt64(span[range[0]]);
-        Used = ParseUInt64(span[range[1]]);
-        Max = ParseUInt64(span[range[2]]);
+        // Three numbers separated by tabs
+        var line = TrimEnd(file.Content);
+        Allocated = ParseUInt64(NextToken(ref line));
+        Used = ParseUInt64(NextToken(ref line));
+        Max = ParseUInt64(NextToken(ref line));
 
         UpdateAt = DateTime.Now;
 
         return true;
-    }
-
-    //--------------------------------------------------------------------------------
-    // Helper
-    //--------------------------------------------------------------------------------
-
-    private static ulong ParseUInt64(ReadOnlySpan<char> source)
-    {
-        return UInt64.TryParse(source, CultureInfo.InvariantCulture, out var result) ? result : 0;
     }
 }

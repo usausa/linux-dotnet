@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
-using System.Globalization;
 
-public sealed class MemoryStat
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class MemoryStat : IDisposable
 {
+    private readonly KernelFile file;
+
+    private bool disposed;
+
     public DateTime UpdateAt { get; private set; }
 
     public ulong MemoryTotal { get; private set; }
@@ -67,9 +72,27 @@ public sealed class MemoryStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal MemoryStat()
+    private MemoryStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static MemoryStat Create()
+    {
+        var instance = new MemoryStat(new KernelFile("/proc/meminfo"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -78,105 +101,135 @@ public sealed class MemoryStat
 
     public bool Update()
     {
-        var range = (Span<Range>)stackalloc Range[3];
-        using var reader = new StreamReader("/proc/meminfo");
-        while (reader.ReadLine() is { } line)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
         {
-            range.Clear();
-            var span = line.AsSpan();
-            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 2)
+            return false;
+        }
+
+        var remaining = file.Content;
+        while (TryReadLine(ref remaining, out var line))
+        {
+            var key = NextToken(ref line);
+            var value = NextToken(ref line);
+            if (value.IsEmpty)
             {
                 continue;
             }
 
-            var value = span[range[1]];
             // ReSharper disable StringLiteralTypo
-            switch (span[range[0]])
+            if (key.SequenceEqual("MemTotal:"u8))
             {
-                case "MemTotal:":
-                    MemoryTotal = ParseUInt64(value);
-                    break;
-                case "MemAvailable:":
-                    MemoryAvailable = ParseUInt64(value);
-                    break;
-                case "MemFree:":
-                    MemoryFree = ParseUInt64(value);
-                    break;
-                case "Buffers:":
-                    Buffers = ParseUInt64(value);
-                    break;
-                case "Cached:":
-                    Cached = ParseUInt64(value);
-                    break;
-                case "SwapCached:":
-                    SwapCached = ParseUInt64(value);
-                    break;
-                case "Active(anon):":
-                    ActiveAnonymous = ParseUInt64(value);
-                    break;
-                case "Inactive(anon):":
-                    InactiveAnonymous = ParseUInt64(value);
-                    break;
-                case "Active(file):":
-                    ActiveFile = ParseUInt64(value);
-                    break;
-                case "Inactive(file):":
-                    InactiveFile = ParseUInt64(value);
-                    break;
-                case "Unevictable:":
-                    Unevictable = ParseUInt64(value);
-                    break;
-                case "Mlocked:":
-                    MemoryLocked = ParseUInt64(value);
-                    break;
-                case "SwapTotal:":
-                    SwapTotal = ParseUInt64(value);
-                    break;
-                case "SwapFree:":
-                    SwapFree = ParseUInt64(value);
-                    break;
-                case "Dirty:":
-                    Dirty = ParseUInt64(value);
-                    break;
-                case "Writeback:":
-                    Writeback = ParseUInt64(value);
-                    break;
-                case "AnonPages:":
-                    AnonymousPages = ParseUInt64(value);
-                    break;
-                case "Mapped:":
-                    Mapped = ParseUInt64(value);
-                    break;
-                case "Shmem:":
-                    SharedMemory = ParseUInt64(value);
-                    break;
-                case "KReclaimable:":
-                    KernelReclaimable = ParseUInt64(value);
-                    break;
-                case "Slab:":
-                    SlabTotal = ParseUInt64(value);
-                    break;
-                case "SReclaimable:":
-                    SlabReclaimable = ParseUInt64(value);
-                    break;
-                case "SUnreclaim:":
-                    SlabUnreclaimable = ParseUInt64(value);
-                    break;
-                case "KernelStack:":
-                    KernelStack = ParseUInt64(value);
-                    break;
-                case "PageTables:":
-                    PageTables = ParseUInt64(value);
-                    break;
-                case "CommitLimit:":
-                    CommitLimit = ParseUInt64(value);
-                    break;
-                case "Committed_AS:":
-                    CommittedAddressSpace = ParseUInt64(value);
-                    break;
-                case "HardwareCorrupted:":
-                    HardwareCorrupted = ParseUInt64(value);
-                    break;
+                MemoryTotal = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("MemAvailable:"u8))
+            {
+                MemoryAvailable = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("MemFree:"u8))
+            {
+                MemoryFree = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Buffers:"u8))
+            {
+                Buffers = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Cached:"u8))
+            {
+                Cached = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("SwapCached:"u8))
+            {
+                SwapCached = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Active(anon):"u8))
+            {
+                ActiveAnonymous = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Inactive(anon):"u8))
+            {
+                InactiveAnonymous = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Active(file):"u8))
+            {
+                ActiveFile = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Inactive(file):"u8))
+            {
+                InactiveFile = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Unevictable:"u8))
+            {
+                Unevictable = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Mlocked:"u8))
+            {
+                MemoryLocked = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("SwapTotal:"u8))
+            {
+                SwapTotal = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("SwapFree:"u8))
+            {
+                SwapFree = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Dirty:"u8))
+            {
+                Dirty = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Writeback:"u8))
+            {
+                Writeback = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("AnonPages:"u8))
+            {
+                AnonymousPages = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Mapped:"u8))
+            {
+                Mapped = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Shmem:"u8))
+            {
+                SharedMemory = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("KReclaimable:"u8))
+            {
+                KernelReclaimable = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Slab:"u8))
+            {
+                SlabTotal = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("SReclaimable:"u8))
+            {
+                SlabReclaimable = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("SUnreclaim:"u8))
+            {
+                SlabUnreclaimable = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("KernelStack:"u8))
+            {
+                KernelStack = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("PageTables:"u8))
+            {
+                PageTables = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("CommitLimit:"u8))
+            {
+                CommitLimit = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("Committed_AS:"u8))
+            {
+                CommittedAddressSpace = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("HardwareCorrupted:"u8))
+            {
+                HardwareCorrupted = ParseUInt64(value);
             }
             // ReSharper restore StringLiteralTypo
         }
@@ -185,11 +238,4 @@ public sealed class MemoryStat
 
         return true;
     }
-
-    //--------------------------------------------------------------------------------
-    // Helper
-    //--------------------------------------------------------------------------------
-
-    private static ulong ParseUInt64(ReadOnlySpan<char> span) =>
-        UInt64.TryParse(span, CultureInfo.InvariantCulture, out var result) ? result : 0;
 }

@@ -263,14 +263,14 @@ Console.WriteLine($"MaxFileCountPerProcess: {kernel.MaxFileCountPerProcess}");
 ### Uptime
 
 ```csharp
-var uptime = PlatformProvider.GetUptime();
+using var uptime = PlatformProvider.GetUptime();
 Console.WriteLine($"Uptime: {uptime.Uptime}");
 ```
 
 ### Stat
 
 ```csharp
-var stat = PlatformProvider.GetSystemStat();
+using var stat = PlatformProvider.GetSystemStat();
 Console.WriteLine($"Interrupt:      {stat.Interrupt}");
 Console.WriteLine($"ContextSwitch:  {stat.ContextSwitch}");
 Console.WriteLine($"SoftIrq:        {stat.SoftIrq}");
@@ -292,7 +292,7 @@ Console.WriteLine($"GuestNice:      {stat.CpuCores.Sum(static x => x.GuestNice)}
 ### LoadAverage
 
 ```csharp
-var load = PlatformProvider.GetLoadAverage();
+using var load = PlatformProvider.GetLoadAverage();
 Console.WriteLine($"Average1:  {load.Average1:F2}");
 Console.WriteLine($"Average5:  {load.Average5:F2}");
 Console.WriteLine($"Average15: {load.Average15:F2}");
@@ -301,7 +301,7 @@ Console.WriteLine($"Average15: {load.Average15:F2}");
 ### Memory
 
 ```csharp
-var memory = PlatformProvider.GetMemoryStat();
+using var memory = PlatformProvider.GetMemoryStat();
 Console.WriteLine($"MemoryTotal:     {memory.MemoryTotal}");
 Console.WriteLine($"MemoryAvailable: {memory.MemoryAvailable}");
 Console.WriteLine($"Buffers:         {memory.Buffers}");
@@ -311,7 +311,7 @@ Console.WriteLine($"Cached:          {memory.Cached}");
 ### VirtualMemory
 
 ```csharp
-var vm = PlatformProvider.GetVirtualMemoryStat();
+using var vm = PlatformProvider.GetVirtualMemoryStat();
 Console.WriteLine($"PageIn:            {vm.PageIn}");
 Console.WriteLine($"PageOut:           {vm.PageOut}");
 Console.WriteLine($"SwapIn:            {vm.SwapIn}");
@@ -352,7 +352,7 @@ foreach (var mount in mounts)
     Console.WriteLine($"Options:       {mount.Option}");
     Console.WriteLine($"IsLocal:       {mount.IsLocal}");
 
-    var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
+    using var usage = PlatformProvider.GetFileSystemUsage(mount.MountPoint);
     Console.WriteLine($"TotalSize:     {usage.TotalSize}");
     Console.WriteLine($"FreeSize:      {usage.FreeSize}");
     Console.WriteLine($"AvailableSize: {usage.AvailableSize}");
@@ -364,7 +364,7 @@ foreach (var mount in mounts)
 ### DiskStat
 
 ```csharp
-var disk = PlatformProvider.GetDiskStat();
+using var disk = PlatformProvider.GetDiskStat();
 foreach (var device in disk.Devices)
 {
     Console.WriteLine($"Name:           {device.Name}");
@@ -385,7 +385,7 @@ foreach (var device in disk.Devices)
 ### NetworkStat
 
 ```csharp
-var network = PlatformProvider.GetNetworkStat();
+using var network = PlatformProvider.GetNetworkStat();
 foreach (var nif in network.Interfaces)
 {
     Console.WriteLine($"Interface:    {nif.Interface}");
@@ -411,8 +411,8 @@ foreach (var nif in network.Interfaces)
 ### Tcp/Tcp6
 
 ```csharp
-var tcp = PlatformProvider.GetTcpStat();
-var tcp6 = PlatformProvider.GetTcp6Stat();
+using var tcp = PlatformProvider.GetTcpStat();
+using var tcp6 = PlatformProvider.GetTcp6Stat();
 Console.WriteLine($"Established: {tcp.Established}");
 Console.WriteLine($"SynSent:     {tcp.SynSent}");
 Console.WriteLine($"SynRecv:     {tcp.SynRecv}");
@@ -430,7 +430,7 @@ Console.WriteLine($"Total:       {tcp.Total}");
 ### ProcessSummary
 
 ```csharp
-var process = PlatformProvider.GetProcessSummary();
+using var process = PlatformProvider.GetProcessSummary();
 Console.WriteLine($"ProcessCount: {process.ProcessCount}");
 Console.WriteLine($"ThreadCount:  {process.ThreadCount}");
 ```
@@ -457,7 +457,7 @@ static string TruncateName(string name, int maxLength) => name.Length <= maxLeng
 ### FileDescriptor
 
 ```csharp
-var fd = PlatformProvider.GetFileHandleStat();
+using var fd = PlatformProvider.GetFileHandleStat();
 
 Console.WriteLine($"Allocated: {fd.Allocated}");
 Console.WriteLine($"Used:      {fd.Used}");
@@ -467,7 +467,7 @@ Console.WriteLine($"Max:       {fd.Max}");
 ### Cpu
 
 ```csharp
-var cpu = PlatformProvider.GetCpuDevice();
+using var cpu = PlatformProvider.GetCpuDevice();
 
 Console.WriteLine("Frequency");
 foreach (var core in cpu.Cores)
@@ -488,7 +488,7 @@ if (cpu.Powers.Count > 0)
 ### Mains
 
 ```csharp
-var adapter = PlatformProvider.GetMainsDevice();
+using var adapter = PlatformProvider.GetMainsDevice();
 if (adapter.Supported)
 {
     Console.WriteLine($"Online: {adapter.Online}");
@@ -502,7 +502,7 @@ else
 ### Battery
 
 ```csharp
-var battery = PlatformProvider.GetBatteryDevice();
+using var battery = PlatformProvider.GetBatteryDevice();
 if (battery.Supported)
 {
     Console.WriteLine($"Capacity:   {battery.Capacity}");
@@ -532,6 +532,12 @@ foreach (var monitor in monitors)
         Console.WriteLine($"Label:   {sensor.Label}");
         Console.WriteLine($"Value:   {sensor.Value}");
     }
+}
+
+// Each monitor must be disposed
+foreach (var monitor in monitors)
+{
+    monitor.Dispose();
 }
 ```
 

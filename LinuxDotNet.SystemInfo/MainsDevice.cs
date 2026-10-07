@@ -2,11 +2,18 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class MainsDevice
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class MainsDevice : IDisposable
 {
     private const string PowerSupplyPath = "/sys/class/power_supply";
 
     private readonly string path;
+
+    // Created only when an adapter is found
+    private readonly KernelFile? onlineFile;
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; private set; }
 
@@ -18,10 +25,31 @@ public sealed class MainsDevice
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal MainsDevice()
+    private MainsDevice(string path)
     {
-        path = FindAdapter();
-        Update();
+        this.path = path;
+        if (Supported)
+        {
+            onlineFile = new KernelFile(Path.Combine(path, "online"), bufferSize: 64, singleRead: true);
+        }
+    }
+
+    internal static MainsDevice Create()
+    {
+        var instance = new MainsDevice(FindAdapter());
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        onlineFile?.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -30,12 +58,15 @@ public sealed class MainsDevice
 
     public bool Update()
     {
-        if (!Supported)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (onlineFile is null)
         {
             return false;
         }
 
-        Online = ReadFile("online") == "1";
+        // An unreadable file is offline
+        Online = onlineFile.Read() && TrimEnd(onlineFile.Content).SequenceEqual("1"u8);
 
         UpdateAt = DateTime.Now;
 
@@ -50,22 +81,24 @@ public sealed class MainsDevice
     {
         if (Directory.Exists(PowerSupplyPath))
         {
-            foreach (var dir in Directory.GetDirectories(PowerSupplyPath))
+            try
             {
-                var file = Path.Combine(dir, "type");
-                if (FileHelper.TryReadText(file, out var type) &&
-                    type.AsSpan().Trim().StartsWith("Mains", StringComparison.OrdinalIgnoreCase))
+                foreach (var dir in Directory.GetDirectories(PowerSupplyPath))
                 {
-                    return dir;
+                    var file = Path.Combine(dir, "type");
+                    if (FileHelper.TryReadText(file, out var type) &&
+                        type.AsSpan().Trim().StartsWith("Mains", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return dir;
+                    }
                 }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Ignore
             }
         }
 
         return string.Empty;
-    }
-
-    private string ReadFile(string name)
-    {
-        return FileHelper.ReadTrimmedText(Path.Combine(path, name));
     }
 }

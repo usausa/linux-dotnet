@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Globalization;
+using System.Text;
+
+using static LinuxDotNet.SystemInfo.KernelFileParser;
 
 public sealed class NetworkStatEntry
 {
     internal bool Live { get; set; }
+
+    // Name in /proc/net/dev to find the entry without creating a string
+    internal byte[] RawName { get; }
 
     public string Interface { get; }
 
@@ -40,15 +45,23 @@ public sealed class NetworkStatEntry
 
     public ulong TxCompressed { get; internal set; }
 
-    internal NetworkStatEntry(string interfaceName)
+    internal NetworkStatEntry(ReadOnlySpan<byte> interfaceName)
     {
-        Interface = interfaceName;
+        RawName = interfaceName.ToArray();
+        Interface = Encoding.UTF8.GetString(interfaceName);
     }
 }
 
-public sealed class NetworkStat
+public sealed class NetworkStat : IDisposable
 {
+    // Counters after the interface name
+    private const int ValueCount = 16;
+
+    private readonly KernelFile file;
+
     private readonly List<NetworkStatEntry> interfaces = [];
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; internal set; }
 
@@ -58,9 +71,27 @@ public sealed class NetworkStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal NetworkStat()
+    private NetworkStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static NetworkStat Create()
+    {
+        var instance = new NetworkStat(new KernelFile("/proc/net/dev"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -69,67 +100,66 @@ public sealed class NetworkStat
 
     public bool Update()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
+        {
+            return false;
+        }
+
         foreach (var network in interfaces)
         {
             network.Live = false;
         }
 
+        var values = (Span<ulong>)stackalloc ulong[ValueCount];
         var added = false;
-        try
+        var remaining = file.Content;
+        _ = TryReadLine(ref remaining, out _);
+        while (TryReadLine(ref remaining, out var line))
         {
-            var range = (Span<Range>)stackalloc Range[18];
-            using var reader = new StreamReader("/proc/net/dev");
-            reader.ReadLine();
-            while (reader.ReadLine() is { } line)
+            // The name and the counters (17 or more tokens, the second header line has 16)
+            var name = NextToken(ref line).TrimEnd((byte)':');
+            if (!TryParseValues(ref line, values))
             {
-                range.Clear();
-                var span = line.AsSpan();
-                if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 17)
-                {
-                    continue;
-                }
-
-                var name = span[range[0]].TrimEnd(':');
-                var network = default(NetworkStatEntry);
-                foreach (var item in interfaces)
-                {
-                    if (item.Interface.AsSpan().Equals(name, StringComparison.Ordinal))
-                    {
-                        network = item;
-                        break;
-                    }
-                }
-
-                if (network == null)
-                {
-                    network = new NetworkStatEntry(name.ToString());
-                    interfaces.Add(network);
-                    added = true;
-                }
-
-                network.Live = true;
-
-                network.RxBytes = UInt64.TryParse(span[range[1]], CultureInfo.InvariantCulture, out var rxBytes) ? rxBytes : 0;
-                network.RxPackets = UInt64.TryParse(span[range[2]], CultureInfo.InvariantCulture, out var rxPackets) ? rxPackets : 0;
-                network.RxErrors = UInt64.TryParse(span[range[3]], CultureInfo.InvariantCulture, out var rxErrors) ? rxErrors : 0;
-                network.RxDropped = UInt64.TryParse(span[range[4]], CultureInfo.InvariantCulture, out var rxDropped) ? rxDropped : 0;
-                network.RxFifo = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out var rxFifo) ? rxFifo : 0;
-                network.RxFrame = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out var rxFrame) ? rxFrame : 0;
-                network.RxCompressed = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out var rxCompressed) ? rxCompressed : 0;
-                network.RxMulticast = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out var rxMulticast) ? rxMulticast : 0;
-                network.TxBytes = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out var txBytes) ? txBytes : 0;
-                network.TxPackets = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out var txPackets) ? txPackets : 0;
-                network.TxErrors = UInt64.TryParse(span[range[11]], CultureInfo.InvariantCulture, out var txErrors) ? txErrors : 0;
-                network.TxDropped = UInt64.TryParse(span[range[12]], CultureInfo.InvariantCulture, out var txDropped) ? txDropped : 0;
-                network.TxFifo = UInt64.TryParse(span[range[13]], CultureInfo.InvariantCulture, out var txFifo) ? txFifo : 0;
-                network.TxCollisions = UInt64.TryParse(span[range[14]], CultureInfo.InvariantCulture, out var txCollisions) ? txCollisions : 0;
-                network.TxCarrier = UInt64.TryParse(span[range[15]], CultureInfo.InvariantCulture, out var txCarrier) ? txCarrier : 0;
-                network.TxCompressed = UInt64.TryParse(span[range[16]], CultureInfo.InvariantCulture, out var txCompressed) ? txCompressed : 0;
+                continue;
             }
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
-        {
-            return false;
+
+            var network = default(NetworkStatEntry);
+            foreach (var item in interfaces)
+            {
+                if (name.SequenceEqual(item.RawName))
+                {
+                    network = item;
+                    break;
+                }
+            }
+
+            if (network == null)
+            {
+                network = new NetworkStatEntry(name);
+                interfaces.Add(network);
+                added = true;
+            }
+
+            network.Live = true;
+
+            network.RxBytes = values[0];
+            network.RxPackets = values[1];
+            network.RxErrors = values[2];
+            network.RxDropped = values[3];
+            network.RxFifo = values[4];
+            network.RxFrame = values[5];
+            network.RxCompressed = values[6];
+            network.RxMulticast = values[7];
+            network.TxBytes = values[8];
+            network.TxPackets = values[9];
+            network.TxErrors = values[10];
+            network.TxDropped = values[11];
+            network.TxFifo = values[12];
+            network.TxCollisions = values[13];
+            network.TxCarrier = values[14];
+            network.TxCompressed = values[15];
         }
 
         for (var i = interfaces.Count - 1; i >= 0; i--)
@@ -146,6 +176,27 @@ public sealed class NetworkStat
         }
 
         UpdateAt = DateTime.Now;
+
+        return true;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
+    // Parses the next values.Length tokens (false when the line has fewer tokens)
+    private static bool TryParseValues(ref ReadOnlySpan<byte> line, scoped Span<ulong> values)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            var token = NextToken(ref line);
+            if (token.IsEmpty)
+            {
+                return false;
+            }
+
+            values[i] = ParseUInt64(token);
+        }
 
         return true;
     }

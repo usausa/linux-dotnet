@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Globalization;
+using System.Text;
+
+using static LinuxDotNet.SystemInfo.KernelFileParser;
 
 public sealed class DiskStatEntry
 {
     internal bool Live { get; set; }
+
+    // Name in /proc/diskstats to find the entry without creating a string
+    internal byte[] RawName { get; }
 
     public string Name { get; }
 
@@ -30,15 +35,23 @@ public sealed class DiskStatEntry
 
     public ulong WeightIoTime { get; internal set; }
 
-    internal DiskStatEntry(string name)
+    internal DiskStatEntry(ReadOnlySpan<byte> name)
     {
-        Name = name;
+        RawName = name.ToArray();
+        Name = Encoding.UTF8.GetString(name);
     }
 }
 
-public sealed class DiskStat
+public sealed class DiskStat : IDisposable
 {
+    // Counters after the device name
+    private const int ValueCount = 11;
+
+    private readonly KernelFile file;
+
     private readonly List<DiskStatEntry> devices = [];
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; internal set; }
 
@@ -48,9 +61,27 @@ public sealed class DiskStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal DiskStat()
+    private DiskStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static DiskStat Create()
+    {
+        var instance = new DiskStat(new KernelFile("/proc/diskstats"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -59,34 +90,41 @@ public sealed class DiskStat
 
     public bool Update()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
+        {
+            return false;
+        }
+
         foreach (var item in devices)
         {
             item.Live = false;
         }
 
-        var range = (Span<Range>)stackalloc Range[21];
-        using var reader = new StreamReader("/proc/diskstats");
+        var values = (Span<ulong>)stackalloc ulong[ValueCount];
         var added = false;
-        while (reader.ReadLine() is { } line)
+        var remaining = file.Content;
+        while (TryReadLine(ref remaining, out var line))
         {
-            range.Clear();
-            var span = line.AsSpan();
-            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 14)
-            {
-                continue;
-            }
-
-            var deviceClass = Int32.TryParse(span[range[0]], CultureInfo.InvariantCulture, out var m) ? (DeviceClass)m : DeviceClass.Unknown;
+            // major minor name and the counters (14 or more tokens)
+            var deviceClass = (DeviceClass)ParseInt32(NextToken(ref line));
             if (!deviceClass.IsPhysicalStorage())
             {
                 continue;
             }
 
-            var name = span[range[2]];
+            _ = NextToken(ref line);
+            var name = NextToken(ref line);
+            if (!TryParseValues(ref line, values))
+            {
+                continue;
+            }
+
             var device = default(DiskStatEntry);
             foreach (var item in devices)
             {
-                if (item.Name.AsSpan().Equals(name, StringComparison.Ordinal))
+                if (name.SequenceEqual(item.RawName))
                 {
                     device = item;
                     break;
@@ -95,24 +133,24 @@ public sealed class DiskStat
 
             if (device == null)
             {
-                device = new DiskStatEntry(name.ToString());
+                device = new DiskStatEntry(name);
                 devices.Add(device);
                 added = true;
             }
 
             device.Live = true;
 
-            device.ReadCompleted = UInt64.TryParse(span[range[3]], CultureInfo.InvariantCulture, out var readCompleted) ? readCompleted : 0;
-            device.ReadMerged = UInt64.TryParse(span[range[4]], CultureInfo.InvariantCulture, out var readMerged) ? readMerged : 0;
-            device.ReadSectors = UInt64.TryParse(span[range[5]], CultureInfo.InvariantCulture, out var readSectors) ? readSectors : 0;
-            device.ReadTime = UInt64.TryParse(span[range[6]], CultureInfo.InvariantCulture, out var readTime) ? readTime : 0;
-            device.WriteCompleted = UInt64.TryParse(span[range[7]], CultureInfo.InvariantCulture, out var writeCompleted) ? writeCompleted : 0;
-            device.WriteMerged = UInt64.TryParse(span[range[8]], CultureInfo.InvariantCulture, out var writeMerged) ? writeMerged : 0;
-            device.WriteSectors = UInt64.TryParse(span[range[9]], CultureInfo.InvariantCulture, out var writeSectors) ? writeSectors : 0;
-            device.WriteTime = UInt64.TryParse(span[range[10]], CultureInfo.InvariantCulture, out var writeTime) ? writeTime : 0;
-            device.IosInProgress = UInt64.TryParse(span[range[11]], CultureInfo.InvariantCulture, out var iosInProgress) ? iosInProgress : 0;
-            device.IoTime = UInt64.TryParse(span[range[12]], CultureInfo.InvariantCulture, out var ioTime) ? ioTime : 0;
-            device.WeightIoTime = UInt64.TryParse(span[range[13]], CultureInfo.InvariantCulture, out var weightIoTime) ? weightIoTime : 0;
+            device.ReadCompleted = values[0];
+            device.ReadMerged = values[1];
+            device.ReadSectors = values[2];
+            device.ReadTime = values[3];
+            device.WriteCompleted = values[4];
+            device.WriteMerged = values[5];
+            device.WriteSectors = values[6];
+            device.WriteTime = values[7];
+            device.IosInProgress = values[8];
+            device.IoTime = values[9];
+            device.WeightIoTime = values[10];
         }
 
         for (var i = devices.Count - 1; i >= 0; i--)
@@ -129,6 +167,27 @@ public sealed class DiskStat
         }
 
         UpdateAt = DateTime.Now;
+
+        return true;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Helper
+    //--------------------------------------------------------------------------------
+
+    // Parses the next values.Length tokens (false when the line has fewer tokens)
+    private static bool TryParseValues(ref ReadOnlySpan<byte> line, scoped Span<ulong> values)
+    {
+        for (var i = 0; i < values.Length; i++)
+        {
+            var token = NextToken(ref line);
+            if (token.IsEmpty)
+            {
+                return false;
+            }
+
+            values[i] = ParseUInt64(token);
+        }
 
         return true;
     }

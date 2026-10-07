@@ -2,9 +2,13 @@ namespace LinuxDotNet.SystemInfo;
 
 using System;
 
-public sealed class TcpStat
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class TcpStat : IDisposable
 {
-    private readonly string path;
+    private readonly KernelFile file;
+
+    private bool disposed;
 
     public DateTime UpdateAt { get; private set; }
 
@@ -38,10 +42,27 @@ public sealed class TcpStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal TcpStat(int? version = null)
+    private TcpStat(KernelFile file)
     {
-        path = $"/proc/net/tcp{version}";
-        Update();
+        this.file = file;
+    }
+
+    internal static TcpStat Create(int? version)
+    {
+        var instance = new TcpStat(new KernelFile($"/proc/net/tcp{version}"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -50,6 +71,8 @@ public sealed class TcpStat
 
     public bool Update()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
         Established = 0;
         SynSent = 0;
         SynRecv = 0;
@@ -63,64 +86,63 @@ public sealed class TcpStat
         Closing = 0;
         Total = 0;
 
-        try
-        {
-            var range = (Span<Range>)stackalloc Range[5];
-            using var reader = new StreamReader(path);
-            reader.ReadLine();
-            while (reader.ReadLine() is { } line)
-            {
-                range.Clear();
-                var span = line.AsSpan();
-                if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 5)
-                {
-                    continue;
-                }
-
-                var stat = span[range[3]];
-                switch (stat)
-                {
-                    case "01":
-                        Established++;
-                        break;
-                    case "02":
-                        SynSent++;
-                        break;
-                    case "03":
-                        SynRecv++;
-                        break;
-                    case "04":
-                        FinWait1++;
-                        break;
-                    case "05":
-                        FinWait2++;
-                        break;
-                    case "06":
-                        TimeWait++;
-                        break;
-                    case "07":
-                        Close++;
-                        break;
-                    case "08":
-                        CloseWait++;
-                        break;
-                    case "09":
-                        LastAck++;
-                        break;
-                    case "0A":
-                        Listen++;
-                        break;
-                    case "0B":
-                        Closing++;
-                        break;
-                }
-
-                Total++;
-            }
-        }
-        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        if (!file.Read())
         {
             return false;
+        }
+
+        var remaining = file.Content;
+        _ = TryReadLine(ref remaining, out _);
+        while (TryReadLine(ref remaining, out var line))
+        {
+            // sl local_address rem_address st ... (5 or more tokens)
+            _ = NextToken(ref line);
+            _ = NextToken(ref line);
+            _ = NextToken(ref line);
+            var state = NextToken(ref line);
+            if (NextToken(ref line).IsEmpty)
+            {
+                continue;
+            }
+
+            switch (ParseHex(state))
+            {
+                case 0x01:
+                    Established++;
+                    break;
+                case 0x02:
+                    SynSent++;
+                    break;
+                case 0x03:
+                    SynRecv++;
+                    break;
+                case 0x04:
+                    FinWait1++;
+                    break;
+                case 0x05:
+                    FinWait2++;
+                    break;
+                case 0x06:
+                    TimeWait++;
+                    break;
+                case 0x07:
+                    Close++;
+                    break;
+                case 0x08:
+                    CloseWait++;
+                    break;
+                case 0x09:
+                    LastAck++;
+                    break;
+                case 0x0A:
+                    Listen++;
+                    break;
+                case 0x0B:
+                    Closing++;
+                    break;
+            }
+
+            Total++;
         }
 
         UpdateAt = DateTime.Now;

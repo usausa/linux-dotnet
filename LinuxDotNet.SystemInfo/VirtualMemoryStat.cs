@@ -1,10 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
 using System;
-using System.Globalization;
 
-public sealed class VirtualMemoryStat
+using static LinuxDotNet.SystemInfo.KernelFileParser;
+
+public sealed class VirtualMemoryStat : IDisposable
 {
+    private readonly KernelFile file;
+
+    private bool disposed;
+
     public DateTime UpdateAt { get; private set; }
 
     // Page
@@ -45,9 +50,27 @@ public sealed class VirtualMemoryStat
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal VirtualMemoryStat()
+    private VirtualMemoryStat(KernelFile file)
     {
-        Update();
+        this.file = file;
+    }
+
+    internal static VirtualMemoryStat Create()
+    {
+        var instance = new VirtualMemoryStat(new KernelFile("/proc/vmstat"));
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        file.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -57,53 +80,66 @@ public sealed class VirtualMemoryStat
     // ReSharper disable StringLiteralTypo
     public bool Update()
     {
-        var range = (Span<Range>)stackalloc Range[3];
-        using var reader = new StreamReader("/proc/vmstat");
-        while (reader.ReadLine() is { } line)
+        ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!file.Read())
         {
-            range.Clear();
-            var span = line.AsSpan();
-            if (span.Split(range, ' ', StringSplitOptions.RemoveEmptyEntries) < 2)
+            return false;
+        }
+
+        var remaining = file.Content;
+        while (TryReadLine(ref remaining, out var line))
+        {
+            var key = NextToken(ref line);
+            var value = NextToken(ref line);
+            if (value.IsEmpty)
             {
                 continue;
             }
 
-            var value = span[range[1]];
-            switch (span[range[0]])
+            if (key.SequenceEqual("pgpgin"u8))
             {
-                case "pgpgin":
-                    PageIn = ParseUInt64(value);
-                    break;
-                case "pgpgout":
-                    PageOut = ParseUInt64(value);
-                    break;
-                case "pswpin":
-                    SwapIn = ParseUInt64(value);
-                    break;
-                case "pswpout":
-                    SwapOut = ParseUInt64(value);
-                    break;
-                case "pgfault":
-                    PageFaults = ParseUInt64(value);
-                    break;
-                case "pgmajfault":
-                    MajorPageFaults = ParseUInt64(value);
-                    break;
-                case "pgsteal_kswapd":
-                    StealKernel = ParseUInt64(value);
-                    break;
-                case "pgsteal_direct":
-                    StealDirect = ParseUInt64(value);
-                    break;
-                case "pgscan_kswapd":
-                    ScanKernel = ParseUInt64(value);
-                    break;
-                case "pgscan_direct":
-                    ScanDirect = ParseUInt64(value);
-                    break;
-                case "oom_kill":
-                    OutOfMemoryKiller = ParseUInt64(value);
-                    break;
+                PageIn = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgpgout"u8))
+            {
+                PageOut = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pswpin"u8))
+            {
+                SwapIn = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pswpout"u8))
+            {
+                SwapOut = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgfault"u8))
+            {
+                PageFaults = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgmajfault"u8))
+            {
+                MajorPageFaults = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgsteal_kswapd"u8))
+            {
+                StealKernel = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgsteal_direct"u8))
+            {
+                StealDirect = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgscan_kswapd"u8))
+            {
+                ScanKernel = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("pgscan_direct"u8))
+            {
+                ScanDirect = ParseUInt64(value);
+            }
+            else if (key.SequenceEqual("oom_kill"u8))
+            {
+                OutOfMemoryKiller = ParseUInt64(value);
             }
         }
 
@@ -112,11 +148,4 @@ public sealed class VirtualMemoryStat
         return true;
     }
     // ReSharper restore StringLiteralTypo
-
-    //--------------------------------------------------------------------------------
-    // Helper
-    //--------------------------------------------------------------------------------
-
-    private static ulong ParseUInt64(ReadOnlySpan<char> span) =>
-        UInt64.TryParse(span, CultureInfo.InvariantCulture, out var result) ? result : 0;
 }

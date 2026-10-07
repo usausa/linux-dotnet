@@ -523,34 +523,34 @@ strace -f -c -e trace=openat,close,read,pread64,lseek,newfstatat,statx -o ~/hand
 
 ### 2-1. 基盤
 
-- [ ] I-1 `KernelFile.cs` を追加した（§4.2。Phase 0 の結論に合わせて `singleRead` や pread P/Invoke を反映する）
-- [ ] I-2 `KernelFileParser.cs` を追加した（§4.3）
+- [x] I-1 `KernelFile.cs` を追加した（§4.2。Phase 0 の結論に合わせて `singleRead` や pread P/Invoke を反映する）
+- [x] I-2 `KernelFileParser.cs` を追加した（§4.3）
 
 ### 2-2. ◎ sysfs 系（Hold(N)、再オープン対象）
 
-- [ ] I-3 `HardwareSensor`（KernelFile を保持し、`internal Close()` を持つ）と `HardwareMonitor`（IDisposable、`internal static GetMonitors()` は維持）
-- [ ] I-4 `CpuCore`、`CpuPower`、`CpuDevice`（IDisposable、`Create()`）
-- [ ] I-5 `BatteryDevice`（6つの KernelFile。`Status` は変化したときだけ string を作る。`Supported` は維持）
-- [ ] I-6 `MainsDevice`
+- [x] I-3 `HardwareSensor`（KernelFile を保持し、`internal Close()` を持つ）と `HardwareMonitor`（IDisposable、`internal static GetMonitors()` は維持）
+- [x] I-4 `CpuCore`、`CpuPower`、`CpuDevice`（IDisposable、`Create()`）
+- [x] I-5 `BatteryDevice`（6つの KernelFile。`Status` は変化したときだけ string を作る。`Supported` は維持）
+- [x] I-6 `MainsDevice`
 
 ### 2-3. ○ /proc 系（Hold）
 
-- [ ] I-7 `SystemStat`
-- [ ] I-8 `MemoryStat`
-- [ ] I-9 `VirtualMemoryStat`
-- [ ] I-10 `DiskStat`
-- [ ] I-11 `NetworkStat`
-- [ ] I-12 `TcpStat`（`Create(int? version)`。§4.5 に従う）
-- [ ] I-13 `WirelessStat`
-- [ ] I-14 `LoadAverage`、`Uptime`、`FileHandleStat`
+- [x] I-7 `SystemStat`
+- [x] I-8 `MemoryStat`
+- [x] I-9 `VirtualMemoryStat`
+- [x] I-10 `DiskStat`
+- [x] I-11 `NetworkStat`
+- [x] I-12 `TcpStat`（`Create(int? version)`。§4.5 に従う）
+- [x] I-13 `WirelessStat`
+- [x] I-14 `LoadAverage`、`Uptime`、`FileHandleStat`
 
 ### 2-4. △ その他
 
-- [ ] I-15 `ProcessSummary`（OneShot。§4.6）
-- [ ] I-16 `FileSystemUsage`（None。`Create(string path)`）
-- [ ] I-17 スナップショット型のファクトリ化: `HardwareInfo`、`KernelInfo`（`internal static Create()`）。`MountInfo`、`PartitionInfo`、`ProcessInfo`、`UsbDevice` は既存の static メソッドのままでよい
-- [ ] I-18 `PlatformProvider` を全部ファクトリ呼び出しに変えた
-- [ ] I-19 `Update()` の経路から `StreamReader`、`File.ReadAllText`、`FileHelper` の呼び出しがなくなったことを grep で確認した
+- [x] I-15 `ProcessSummary`（OneShot。§4.6）
+- [x] I-16 `FileSystemUsage`（None。`Create(string path)`）
+- [x] I-17 スナップショット型のファクトリ化: `HardwareInfo`、`KernelInfo`（`internal static Create()`）。`MountInfo`、`PartitionInfo`、`ProcessInfo`、`UsbDevice` は既存の static メソッドのままでよい
+- [x] I-18 `PlatformProvider` を全部ファクトリ呼び出しに変えた
+- [x] I-19 `Update()` の経路から `StreamReader`、`File.ReadAllText`、`FileHelper` の呼び出しがなくなったことを grep で確認した
 
 ```bash
 grep -n -E "StreamReader|ReadAllText|FileHelper\." LinuxDotNet.SystemInfo/*.cs
@@ -558,10 +558,10 @@ grep -n -E "StreamReader|ReadAllText|FileHelper\." LinuxDotNet.SystemInfo/*.cs
 
 ### 2-5. サンプルとドキュメント
 
-- [ ] I-20 `Example.SystemInfo.ConsoleApp` を `using var` などで Dispose する形に直した
-- [ ] I-21 `README.md` に使用例があれば、Dispose する形に直した
-- [ ] I-22 `dotnet build -c Release`（ソリューション全体、net8.0 と net10.0）が警告ゼロで通った
-- [ ] I-23 コミットした
+- [x] I-20 `Example.SystemInfo.ConsoleApp` を `using var` などで Dispose する形に直した
+- [x] I-21 `README.md` に使用例があれば、Dispose する形に直した
+- [x] I-22 `dotnet build -c Release`（ソリューション全体、net8.0 と net10.0）が警告ゼロで通った
+- [x] I-23 コミットした
 
 ---
 
@@ -942,3 +942,37 @@ x64 VM（`strace -f -c`、(1000回 − 0回) ÷ 1000）:
 - **H-1（CPU の offline/online）は VM では行わない**: cpufreq がないので `CpuCore` を確認できず、VM で動いているサービスにも影響するため。実機で行う。
 - **Phase 0 の補足確認（VM）**: `pread_check.py` で、/proc のファイルはすべて `changed` または `same` で、1回の pread で全体が返った（`/proc/vmstat` は 4,095 バイトで、`wc -c` と一致）。`WorkSystemInfoMonitor poc`（net10.0）でも、`/proc/uptime` の値が保持したハンドルのまま更新された。sysfs の対象ファイルは VM にはない。
 - **B-5（VM）**: `/proc/net/tcp` 1,050 バイト、`/proc/net/tcp6` 1,029 バイト、`/proc/stat` 1,250 バイト。x64 実機の Phase 0 では `/proc/net/tcp6` が 10,966 バイトだった。1MB を超えることは現実的にないので、`TcpStat` はチャンク処理にしない（§4.5）。
+
+#### Phase 2 の実装メモ（2026-10-07）
+
+- 実装は Opus のサブエージェントが行い、差分を監査した。指示書の §4 のとおりで、修正が必要な点はなかった。
+- **ビルド**: `dotnet build LinuxDotNet.slnx -c Release --no-incremental` は、net8.0 と net10.0 の両方で警告 0、エラー 0。警告の抑止は追加していない。
+- **I-19 の grep の結果**: `Update()` の経路にはない。残っているのは次の 3 種類だけ。
+  - 作成時の処理: `BatteryDevice.FindBattery`、`MainsDevice.FindAdapter`、`CpuDevice.AddCpuPower`、`HardwareMonitor.GetMonitors`
+  - `FileHelper` 自体
+  - スナップショット型: `HardwareInfo`、`KernelInfo`、`MountInfo`、`PartitionInfo`、`ProcessInfo`、`UsbDevice`
+- **子クラス（`CpuCore`、`CpuPower`、`HardwareSensor`）の持ち方**
+  - 親のファクトリが `KernelFile` を作り、子の internal コンストラクタに渡す。子は `internal Close()` を持つ。
+  - 子が自分で `KernelFile` を作ると CA1001 が出ることを、事前に確かめた。この形なら CA1001、CA2000、CA2213 は出ない。
+- **§4 との小さな違い**
+  - `KernelFile.Path` は自動プロパティにした（IDE0032 のため）。
+  - `ParseUInt64` は先頭の `+` を受け付け、`-` があれば 0 を返す（`UInt64.TryParse` と同じ結果）。
+  - `DiskStat` と `NetworkStat` は、カウンタ列を `stackalloc` した `Span<ulong>` に読む private メソッドを持つ。
+  - `WirelessStat.Status` は、`Int32.TryParse(HexNumber)` と同じ結果になるようにした。
+  - `CpuDevice` の Cores と Powers は配列で持つ（`Update()` の foreach でアロケーションしない）。
+  - ファクトリの中のディレクトリの列挙では、`IOException` と `UnauthorizedAccessException` を捕捉する。`/sys/class/hwmon` がなければ空のリストを返す。
+  - `ProcessSummary` は `FileSystemEnumerable<int>` で pid を列挙し、`File.OpenHandle` と `RandomAccess.Read` でインスタンスのバッファに読む。パス文字列は pid ごとに作る。§4.6 のオプション（`/proc/<pid>/stat` を読む方式）は実装していない。
+- **以前の実装との挙動の違い**: 実際のカーネルの出力では起きない。
+  - 区切りとして空白とタブの両方を受け付ける。
+  - sysfs の値は末尾だけを Trim する。そのため、先頭に空白があると 0 になる。
+  - TCP の状態は 16 進の数値で比べる。
+  - CPU 名はバイト列の完全一致で照合する。以前は大文字小文字を区別しない比較だった。
+  - ファイルがないときは、例外ではなく false や空の結果になる（D5 の意図どおり）。
+- **Windows での事前確認（サブエージェント）**: 偽の /proc と /sys を用意し、以前のソースと新しいソースで全公開プロパティを比べた。net8.0 と net10.0 で、すべて一致した。
+  - パーサーは、境界値と乱数 2 万件で `TryParse` と一致した。
+  - Hold のクラスは、`Update()` 100 回の割り当てが 0 B だった。
+  - 実際の procfs と sysfs での挙動は、Phase 3 で確かめる。
+- **§4.2 の flock の説明は不正確**
+  - .NET は Unix で読み取り用に開くとき、`FileShare.ReadWrite` でも `flock(LOCK_SH|LOCK_NB)` を取る。`FileShare.None` なら `LOCK_EX` になる。
+  - 影響は開くときだけで、読み直しのたびに起きるわけではない（以前の実装も同じ）。Phase 4 の strace で確かめる。
+- **README の既存の誤り（今回は直していない。後で検討）**: SystemInfo の使用例に、存在しないメンバー名が残っている（`uptime.Uptime`、`stat.ProcessRunning`、`stat.ProcessBlocked`、`kernel.MaxProcessCount`、`vm.PageFault`、`vm.MajorPageFault` など）。

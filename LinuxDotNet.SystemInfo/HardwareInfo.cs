@@ -68,7 +68,7 @@ public sealed class HardwareInfo
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal HardwareInfo()
+    private HardwareInfo()
     {
         Vendor = ReadDmiFile("sys_vendor");
         ProductName = ReadDmiFile("product_name");
@@ -90,6 +90,8 @@ public sealed class HardwareInfo
 
         PageSize = (ulong)Environment.SystemPageSize;
     }
+
+    internal static HardwareInfo Create() => new();
 
     private void ParseCpuInfo()
     {

@@ -2,8 +2,11 @@ namespace LinuxDotNet.SystemInfo;
 
 using static LinuxDotNet.SystemInfo.NativeMethods;
 
-public sealed class FileSystemUsage
+// statfs by path on every Update (a held handle would prevent umount), so no resource is held
+public sealed class FileSystemUsage : IDisposable
 {
+    private bool disposed;
+
     public string Path { get; }
 
     public DateTime UpdateAt { get; private set; }
@@ -24,10 +27,21 @@ public sealed class FileSystemUsage
     // Constructor
     //--------------------------------------------------------------------------------
 
-    internal FileSystemUsage(string path)
+    private FileSystemUsage(string path)
     {
         Path = path;
-        Update();
+    }
+
+    internal static FileSystemUsage Create(string path)
+    {
+        var instance = new FileSystemUsage(path);
+        instance.Update();
+        return instance;
+    }
+
+    public void Dispose()
+    {
+        disposed = true;
     }
 
     //--------------------------------------------------------------------------------
@@ -36,6 +50,8 @@ public sealed class FileSystemUsage
 
     public bool Update()
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+
         var buf = default(statfs);
         if (statfs64(Path, ref buf) != 0)
         {
