@@ -11,7 +11,6 @@ public sealed class BatteryDevice : IDisposable
 
     private readonly string path;
 
-    // The files are created only when a battery is found
     private readonly KernelFile? capacityFile;
 
     private readonly KernelFile? statusFile;
@@ -24,7 +23,6 @@ public sealed class BatteryDevice : IDisposable
 
     private readonly KernelFile? chargeFullFile;
 
-    // Bytes of the current Status, to create the string only when they change
     private byte[] statusBytes = [];
 
     private bool disposed;
@@ -161,11 +159,9 @@ public sealed class BatteryDevice : IDisposable
     private static KernelFile CreateValueFile(string path, string name) =>
         new(Path.Combine(path, name), bufferSize: 64, singleRead: true);
 
-    // An unreadable file is 0
     private static int ReadInt32(KernelFile? file) =>
         (file is not null) && file.Read() ? ParseInt32(TrimEnd(file.Content)) : 0;
 
-    // An unreadable file is 0
     private static long ReadInt64(KernelFile? file) =>
         (file is not null) && file.Read() ? ParseInt64(TrimEnd(file.Content)) : 0;
 }

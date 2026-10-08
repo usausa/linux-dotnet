@@ -5,7 +5,6 @@ using System.Buffers.Text;
 // Parses the content of a KernelFile as bytes, without creating strings
 internal static class KernelFileParser
 {
-    // Magnitude limits of the signed types (the negative side is one larger)
     private const ulong Int64PositiveLimit = Int64.MaxValue;
     private const ulong Int64NegativeLimit = Int64PositiveLimit + 1;
     private const ulong Int32PositiveLimit = Int32.MaxValue;
@@ -15,7 +14,6 @@ internal static class KernelFileParser
     // Line and token
     //--------------------------------------------------------------------------------
 
-    // Takes the next line without '\n' from remaining (the last line may have no '\n')
     public static bool TryReadLine(ref ReadOnlySpan<byte> remaining, out ReadOnlySpan<byte> line)
     {
         if (remaining.IsEmpty)
@@ -39,7 +37,6 @@ internal static class KernelFileParser
         return true;
     }
 
-    // Skips spaces and tabs and takes the next token from span (empty when there is no token left)
     public static ReadOnlySpan<byte> NextToken(ref ReadOnlySpan<byte> span)
     {
         var start = span.IndexOfAnyExcept((byte)' ', (byte)'\t');
@@ -61,7 +58,6 @@ internal static class KernelFileParser
         return token[..end];
     }
 
-    // Removes the trailing '\n', '\r', ' ' and '\t'
     public static ReadOnlySpan<byte> TrimEnd(ReadOnlySpan<byte> span)
     {
         var length = span.Length;
@@ -77,13 +73,9 @@ internal static class KernelFileParser
     // Number
     //--------------------------------------------------------------------------------
 
-    // The Parse methods return 0 for an empty span, an invalid character or an overflow (the same as TryParse ? value : 0)
-
-    // Accepts one leading '+' ('-' is 0 as UInt64.TryParse gives 0 or fails for it)
     public static ulong ParseUInt64(ReadOnlySpan<byte> span) =>
         !SkipSign(ref span) && TryParseDigits(span, UInt64.MaxValue, out var value) ? value : 0;
 
-    // Accepts one leading '-' or '+'
     public static long ParseInt64(ReadOnlySpan<byte> span)
     {
         var negative = SkipSign(ref span);
@@ -95,7 +87,6 @@ internal static class KernelFileParser
         return negative ? unchecked(-(long)value) : (long)value;
     }
 
-    // Accepts one leading '-' or '+'
     public static int ParseInt32(ReadOnlySpan<byte> span)
     {
         var negative = SkipSign(ref span);
@@ -107,7 +98,6 @@ internal static class KernelFileParser
         return negative ? unchecked(-(int)value) : (int)value;
     }
 
-    // Hexadecimal digits (0-9, a-f, A-F) without a prefix
     public static ulong ParseHex(ReadOnlySpan<byte> span)
     {
         if (span.IsEmpty)
@@ -130,7 +120,6 @@ internal static class KernelFileParser
         return value;
     }
 
-    // The whole span must be a number
     public static double ParseDouble(ReadOnlySpan<byte> span) =>
         Utf8Parser.TryParse(span, out double value, out var consumed) && (consumed == span.Length) ? value : 0;
 
@@ -138,7 +127,6 @@ internal static class KernelFileParser
     // Helper
     //--------------------------------------------------------------------------------
 
-    // Removes a leading '-' or '+' and returns whether it was '-'
     private static bool SkipSign(ref ReadOnlySpan<byte> span)
     {
         if (span.IsEmpty || (span[0] is not ((byte)'-' or (byte)'+')))
@@ -151,7 +139,6 @@ internal static class KernelFileParser
         return negative;
     }
 
-    // Parses decimal digits up to max (false for an empty span, a non-digit or a value over max)
     private static bool TryParseDigits(ReadOnlySpan<byte> span, ulong max, out ulong value)
     {
         value = 0;

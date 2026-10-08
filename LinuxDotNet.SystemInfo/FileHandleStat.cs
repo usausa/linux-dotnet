@@ -58,7 +58,6 @@ public sealed class FileHandleStat : IDisposable
             return false;
         }
 
-        // Three numbers separated by tabs
         var line = TrimEnd(file.Content);
         Allocated = ParseUInt64(NextToken(ref line));
         Used = ParseUInt64(NextToken(ref line));

@@ -23,7 +23,6 @@ public sealed class HardwareSensor
     // Constructor
     //--------------------------------------------------------------------------------
 
-    // Takes over the file (closed by the owner HardwareMonitor)
     internal HardwareSensor(KernelFile file, string type, string label)
     {
         this.file = file;
@@ -145,7 +144,6 @@ public sealed partial class HardwareMonitor : IDisposable
                     var labelPath = Path.Combine(dir, filename.Replace("_input", "_label", StringComparison.Ordinal));
                     var sensorLabel = FileHelper.ReadTrimmedText(labelPath);
 
-                    // A sensor whose input file could not be opened is not added
                     var input = new KernelFile(file, bufferSize: 64, singleRead: true);
                     var sensor = new HardwareSensor(input, sensorType, sensorLabel);
                     if (!input.Opened)
@@ -158,7 +156,6 @@ public sealed partial class HardwareMonitor : IDisposable
                 }
             }
 
-            // The monitor is added even when it has no sensor
             monitors.Add(new HardwareMonitor(monitorName, monitorType, sensors));
         }
 

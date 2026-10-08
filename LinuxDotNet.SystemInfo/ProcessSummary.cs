@@ -5,15 +5,10 @@ using System.IO.Enumeration;
 
 using static LinuxDotNet.SystemInfo.KernelFileParser;
 
-// ProcessCount is the number of processes visible in /proc (the pid directories, counted without opening anything per process).
-// ThreadCount is the number of threads (tasks, including kernel threads) that currently exist on the whole system, taken from
-// /proc/loadavg. In a container with its own pid namespace, or with the hidepid mount option, ProcessCount counts only the
-// visible processes while ThreadCount is for the whole system.
 public sealed class ProcessSummary : IDisposable
 {
     private const string ProcPath = "/proc";
 
-    // Same as Directory.EnumerateDirectories (no attribute is skipped)
     private static readonly EnumerationOptions ProcessDirectoryOptions = new() { AttributesToSkip = 0 };
 
     private readonly KernelFile file;
@@ -66,7 +61,7 @@ public sealed class ProcessSummary : IDisposable
             return false;
         }
 
-        // The 4th field is running/total (e.g. 0.22 0.08 0.19 1/382 964112), and the total is the number of threads
+        // 4 field is running/total (e.g. 0.22 0.08 0.19 1/382 964112)
         var line = TrimEnd(file.Content);
         _ = NextToken(ref line);
         _ = NextToken(ref line);
@@ -78,11 +73,7 @@ public sealed class ProcessSummary : IDisposable
         int process;
         try
         {
-            // The pid directories are only counted (nothing is opened for each process)
-            var processes = new FileSystemEnumerable<bool>(
-                ProcPath,
-                static (ref _) => true,
-                ProcessDirectoryOptions)
+            var processes = new FileSystemEnumerable<bool>(ProcPath, static (ref _) => true, ProcessDirectoryOptions)
             {
                 ShouldIncludePredicate = static (ref entry) => IsProcessId(entry.FileName) && entry.IsDirectory
             };
@@ -106,7 +97,6 @@ public sealed class ProcessSummary : IDisposable
     // Helper
     //--------------------------------------------------------------------------------
 
-    // All digits
     private static bool IsProcessId(ReadOnlySpan<char> name) =>
         Int32.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out _);
 }

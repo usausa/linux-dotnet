@@ -7,7 +7,6 @@ using static LinuxDotNet.SystemInfo.KernelFileParser;
 
 public sealed class CpuStat
 {
-    // Name in /proc/stat (cpu, cpu0, ...) to find the entry without creating a string
     internal byte[] RawName { get; }
 
     public string Name { get; }
@@ -173,7 +172,6 @@ public sealed class SystemStat : IDisposable
         stat.GuestNice = ParseUInt64(NextToken(ref values));
     }
 
-    // A core seen for the first time is added (and never removed)
     private CpuStat FindCpu(ReadOnlySpan<byte> name)
     {
         foreach (var core in cpuCores)

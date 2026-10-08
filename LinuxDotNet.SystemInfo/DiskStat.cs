@@ -8,7 +8,6 @@ public sealed class DiskStatEntry
 {
     internal bool Live { get; set; }
 
-    // Name in /proc/diskstats to find the entry without creating a string
     internal byte[] RawName { get; }
 
     public string Name { get; }
@@ -175,7 +174,6 @@ public sealed class DiskStat : IDisposable
     // Helper
     //--------------------------------------------------------------------------------
 
-    // Parses the next values.Length tokens (false when the line has fewer tokens)
     private static bool TryParseValues(ref ReadOnlySpan<byte> line, scoped Span<ulong> values)
     {
         for (var i = 0; i < values.Length; i++)

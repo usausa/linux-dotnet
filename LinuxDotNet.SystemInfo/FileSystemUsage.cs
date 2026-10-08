@@ -2,7 +2,6 @@ namespace LinuxDotNet.SystemInfo;
 
 using static LinuxDotNet.SystemInfo.NativeMethods;
 
-// statfs by path on every Update (a held handle would prevent umount), so no resource is held
 public sealed class FileSystemUsage : IDisposable
 {
     private bool disposed;

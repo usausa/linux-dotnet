@@ -8,7 +8,6 @@ public sealed class NetworkStatEntry
 {
     internal bool Live { get; set; }
 
-    // Name in /proc/net/dev to find the entry without creating a string
     internal byte[] RawName { get; }
 
     public string Interface { get; }
@@ -54,7 +53,6 @@ public sealed class NetworkStatEntry
 
 public sealed class NetworkStat : IDisposable
 {
-    // Counters after the interface name
     private const int ValueCount = 16;
 
     private readonly KernelFile file;
@@ -184,7 +182,6 @@ public sealed class NetworkStat : IDisposable
     // Helper
     //--------------------------------------------------------------------------------
 
-    // Parses the next values.Length tokens (false when the line has fewer tokens)
     private static bool TryParseValues(ref ReadOnlySpan<byte> line, scoped Span<ulong> values)
     {
         for (var i = 0; i < values.Length; i++)

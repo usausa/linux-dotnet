@@ -10,7 +10,6 @@ public sealed class MainsDevice : IDisposable
 
     private readonly string path;
 
-    // Created only when an adapter is found
     private readonly KernelFile? onlineFile;
 
     private bool disposed;
@@ -65,7 +64,6 @@ public sealed class MainsDevice : IDisposable
             return false;
         }
 
-        // An unreadable file is offline
         Online = onlineFile.Read() && TrimEnd(onlineFile.Content).SequenceEqual("1"u8);
 
         UpdateAt = DateTime.Now;

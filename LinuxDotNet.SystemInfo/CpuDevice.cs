@@ -21,7 +21,6 @@ public sealed class CpuCore
     // Constructor
     //--------------------------------------------------------------------------------
 
-    // Takes over the file (closed by the owner CpuDevice)
     internal CpuCore(string name, KernelFile file)
     {
         Name = name;
@@ -72,7 +71,6 @@ public sealed class CpuPower
     // Constructor
     //--------------------------------------------------------------------------------
 
-    // Takes over the file (closed by the owner CpuDevice)
     internal CpuPower(string name, KernelFile file)
     {
         Name = name;
@@ -188,8 +186,6 @@ public sealed partial class CpuDevice : IDisposable
                 continue;
             }
 
-            // A core whose scaling_cur_freq could not be opened is not added. A core that is offline is added: its file can be
-            // opened (the read fails with EBUSY), and it is read again when the core comes online
             var file = new KernelFile(path, bufferSize: 64, singleRead: true);
             var core = new CpuCore(name, file);
             if (!file.Opened)
@@ -251,8 +247,6 @@ public sealed partial class CpuDevice : IDisposable
             return;
         }
 
-        // A power whose energy_uj could not be opened is not added (energy_uj is readable only by root on some systems, so
-        // Powers is empty for other users)
         var file = new KernelFile(energyPath, bufferSize: 64, singleRead: true);
         var power = new CpuPower(name, file);
         if (!file.Opened)

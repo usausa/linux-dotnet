@@ -8,7 +8,6 @@ public sealed class WirelessStatEntry
 {
     internal bool Live { get; set; }
 
-    // Name in /proc/net/wireless to find the entry without creating a string
     internal byte[] RawName { get; }
 
     public string Interface { get; }
@@ -108,7 +107,6 @@ public sealed class WirelessStat : IDisposable
         _ = TryReadLine(ref remaining, out _);
         while (TryReadLine(ref remaining, out var line))
         {
-            // The name, status, link, level, noise and the counters (11 or more tokens)
             var name = NextToken(ref line).TrimEnd((byte)':');
             var status = NextToken(ref line);
             var link = NextToken(ref line);
@@ -178,7 +176,6 @@ public sealed class WirelessStat : IDisposable
     // Helper
     //--------------------------------------------------------------------------------
 
-    // The same as Int32.TryParse with NumberStyles.HexNumber: up to 32 bits as a two's complement value, otherwise 0
     private static int ParseStatus(ReadOnlySpan<byte> span)
     {
         var value = ParseHex(span);

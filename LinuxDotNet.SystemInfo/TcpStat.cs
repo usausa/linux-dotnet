@@ -95,7 +95,6 @@ public sealed class TcpStat : IDisposable
         _ = TryReadLine(ref remaining, out _);
         while (TryReadLine(ref remaining, out var line))
         {
-            // sl local_address rem_address st ... (5 or more tokens)
             _ = NextToken(ref line);
             _ = NextToken(ref line);
             _ = NextToken(ref line);
