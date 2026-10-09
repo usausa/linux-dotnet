@@ -1,17 +1,15 @@
 namespace LinuxDotNet.SystemInfo;
 
-using System.Globalization;
-using System.IO.Enumeration;
+using System.Runtime.InteropServices;
 
 using static LinuxDotNet.SystemInfo.KernelFileParser;
+using static LinuxDotNet.SystemInfo.NativeMethods;
 
 public sealed class ProcessSummary : IDisposable
 {
-    private const string ProcPath = "/proc";
-
-    private static readonly EnumerationOptions ProcessDirectoryOptions = new() { AttributesToSkip = 0 };
-
     private readonly KernelFile file;
+
+    private readonly SafeDirectoryHandle directory;
 
     private bool disposed;
 
@@ -25,14 +23,15 @@ public sealed class ProcessSummary : IDisposable
     // Constructor
     //--------------------------------------------------------------------------------
 
-    private ProcessSummary(KernelFile file)
+    private ProcessSummary(KernelFile file, SafeDirectoryHandle directory)
     {
         this.file = file;
+        this.directory = directory;
     }
 
     internal static ProcessSummary Create()
     {
-        var instance = new ProcessSummary(new KernelFile("/proc/loadavg"));
+        var instance = new ProcessSummary(new KernelFile("/proc/loadavg"), new SafeDirectoryHandle(opendir("/proc")));
         instance.Update();
         return instance;
     }
@@ -46,6 +45,7 @@ public sealed class ProcessSummary : IDisposable
 
         disposed = true;
         file.Dispose();
+        directory.Dispose();
     }
 
     //--------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ public sealed class ProcessSummary : IDisposable
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        if (!file.Read())
+        if (!file.Read() || directory.IsInvalid)
         {
             return false;
         }
@@ -70,17 +70,8 @@ public sealed class ProcessSummary : IDisposable
         var separator = tasks.IndexOf((byte)'/');
         var thread = (separator >= 0) ? ParseInt32(tasks[(separator + 1)..]) : 0;
 
-        int process;
-        try
-        {
-            var processes = new FileSystemEnumerable<bool>(ProcPath, static (ref _) => true, ProcessDirectoryOptions)
-            {
-                ShouldIncludePredicate = static (ref entry) => IsProcessId(entry.FileName) && entry.IsDirectory
-            };
-
-            process = processes.Count();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        var process = CountProcesses();
+        if (process < 0)
         {
             return false;
         }
@@ -97,6 +88,41 @@ public sealed class ProcessSummary : IDisposable
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static bool IsProcessId(ReadOnlySpan<char> name) =>
-        Int32.TryParse(name, NumberStyles.None, CultureInfo.InvariantCulture, out _);
+    private unsafe int CountProcesses()
+    {
+        rewinddir(directory);
+
+        var count = 0;
+        while (true)
+        {
+            var entry = readdir64(directory);
+            if (entry is null)
+            {
+                return Marshal.GetLastPInvokeError() == 0 ? count : -1;
+            }
+
+            if ((entry->d_type == DT_DIR) && IsProcessId(entry->d_name))
+            {
+                count++;
+            }
+        }
+    }
+
+    private static unsafe bool IsProcessId(byte* name)
+    {
+        if (*name == 0)
+        {
+            return false;
+        }
+
+        for (; *name != 0; name++)
+        {
+            if ((uint)(*name - '0') > 9)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

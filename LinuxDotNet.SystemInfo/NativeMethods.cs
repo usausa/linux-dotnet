@@ -17,6 +17,8 @@ internal static partial class NativeMethods
 
     public const short SC_CLK_TCK = 2;
 
+    public const byte DT_DIR = 4;
+
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------
@@ -42,6 +44,16 @@ internal static partial class NativeMethods
         public ulong f_spare4;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct dirent64
+    {
+        public ulong d_ino;
+        public long d_off;
+        public ushort d_reclen;
+        public byte d_type;
+        public fixed byte d_name[256];
+    }
+
     //------------------------------------------------------------------------
     // Method
     //------------------------------------------------------------------------
@@ -51,4 +63,16 @@ internal static partial class NativeMethods
 
     [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
     public static partial int statfs64(string path, ref statfs buf);
+
+    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+    public static partial IntPtr opendir(string name);
+
+    [LibraryImport("libc")]
+    public static partial void rewinddir(SafeDirectoryHandle dirp);
+
+    [LibraryImport("libc", SetLastError = true)]
+    public static partial dirent64* readdir64(SafeDirectoryHandle dirp);
+
+    [LibraryImport("libc")]
+    public static partial int closedir(IntPtr dirp);
 }
