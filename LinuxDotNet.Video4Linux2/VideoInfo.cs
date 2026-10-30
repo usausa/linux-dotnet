@@ -236,9 +236,7 @@ public sealed class VideoInfo
             index++;
         }
 
-#pragma warning disable IDE0028
         return formats.OrderBy(static x => x.PixelFormat).ToList();
-#pragma warning restore IDE0028
     }
 
     private static List<Resolution> GetSupportedResolutions(int fd, uint pixelFormat)
@@ -270,9 +268,7 @@ public sealed class VideoInfo
             index++;
         }
 
-#pragma warning disable IDE0028
         return resolutions.OrderBy(static x => x.Width).ThenBy(static x => x.Height).ToList();
-#pragma warning restore IDE0028
     }
 
     private static List<FrameInterval> GetFrameIntervals(int fd, uint pixelFormat, Resolution resolution)
@@ -307,9 +303,7 @@ public sealed class VideoInfo
             index++;
         }
 
-#pragma warning disable IDE0028
         return intervals.Distinct().OrderByDescending(static x => x.FramesPerSecond).ToList();
-#pragma warning restore IDE0028
     }
 
     private static string ResolveDevice(string device)

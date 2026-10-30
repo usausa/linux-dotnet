@@ -197,9 +197,7 @@ public sealed partial class CpuDevice : IDisposable
             cores.Add(core);
         }
 
-#pragma warning disable IDE0028
         return cores.OrderBy(static x => Int32.TryParse(x.Name.AsSpan(3), NumberStyles.None, CultureInfo.InvariantCulture, out var number) ? number : Int32.MaxValue).ToArray();
-#pragma warning restore IDE0028
     }
     // ReSharper restore StringLiteralTypo
 
@@ -225,9 +223,7 @@ public sealed partial class CpuDevice : IDisposable
             // Ignore
         }
 
-#pragma warning disable IDE0028
         return powers.ToArray();
-#pragma warning restore IDE0028
     }
 
     //--------------------------------------------------------------------------------
