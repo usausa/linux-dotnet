@@ -17,7 +17,7 @@ public static class DiskInfoExtensions
         var mountPoints = GetMountPoints();
 
         var index = 0u;
-        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => (x is not null) && IsPartition(disk.DiskType, diskName, x)).OrderBy(x => x))
+        foreach (var name in Directory.GetDirectories(blockPath).Select(Path.GetFileName).Where(x => (x is not null) && IsPartition(disk.DiskType, diskName, x)).OrderBy(x => x, StringComparer.Ordinal))
         {
             var deviceName = $"/dev/{name}";
             var sectors = Helper.ReadFileAsUInt64(Path.Combine(blockPath, name!, "size")) ?? 0;

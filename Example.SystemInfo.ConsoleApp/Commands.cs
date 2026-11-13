@@ -608,7 +608,7 @@ public sealed class ProcessesCommand : ICommandHandler
 #pragma warning disable CA1308
         var sorted = Sort.ToLowerInvariant() switch
         {
-            "name" => processes.OrderBy(p => p.Name),
+            "name" => processes.OrderBy(p => p.Name, StringComparer.Ordinal),
             "cpu" => processes.OrderByDescending(p => p.UserTime + p.SystemTime),
             "memory" => processes.OrderByDescending(p => p.ResidentMemorySize),
             _ => processes.OrderBy(p => p.ProcessId)

@@ -212,7 +212,7 @@ public sealed partial class CpuDevice : IDisposable
             if (Directory.Exists(intelPath))
             {
                 AddCpuPower(powers, intelPath);
-                foreach (var dir in Directory.GetDirectories(intelPath).Where(static x => Path.GetFileName(x).StartsWith("intel-rapl:0:", StringComparison.Ordinal)).OrderBy(static x => x))
+                foreach (var dir in Directory.GetDirectories(intelPath).Where(static x => Path.GetFileName(x).StartsWith("intel-rapl:0:", StringComparison.Ordinal)).OrderBy(static x => x, StringComparer.Ordinal))
                 {
                     AddCpuPower(powers, dir);
                 }

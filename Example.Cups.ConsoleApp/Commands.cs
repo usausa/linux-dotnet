@@ -82,7 +82,7 @@ public sealed class AttributeCommand : ICommandHandler
         var attributes = CupsPrinter.GetPrinterAttributes(Printer);
 
         Console.WriteLine($"Printer: {Printer}");
-        foreach (var key in attributes.Keys.OrderBy(static x => x))
+        foreach (var key in attributes.Keys.OrderBy(static x => x, StringComparer.Ordinal))
         {
             var values = attributes[key];
             Console.WriteLine($"  {key}: {String.Join(", ", values)}");
