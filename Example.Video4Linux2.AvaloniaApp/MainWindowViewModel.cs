@@ -165,8 +165,7 @@ public partial class MainWindowViewModel : ExtendViewModelBase
         dispatcher.Post(UpdateBitmap);
     }
 
-    // ReSharper disable once RedundantUnsafeContext
-    private unsafe void UpdateBitmap()
+    private void UpdateBitmap()
     {
         if (IsDisposed || (bufferManager is null))
         {
