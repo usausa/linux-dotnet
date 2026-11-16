@@ -124,6 +124,10 @@ internal static partial class NativeMethods
     // poll
     public const short POLLIN = 0x0001;
 
+    // errno
+    public const int EINTR = 4;
+    public const int EAGAIN = 11;
+
     //------------------------------------------------------------------------
     // Struct
     //------------------------------------------------------------------------

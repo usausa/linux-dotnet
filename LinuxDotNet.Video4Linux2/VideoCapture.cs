@@ -3,6 +3,7 @@ namespace LinuxDotNet.Video4Linux2;
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using static LinuxDotNet.Video4Linux2.NativeMethods;
 
@@ -75,6 +76,8 @@ public sealed class VideoCapture : IDisposable
 
 #pragma warning disable CA1003
     public event Action<FrameBuffer>? FrameCaptured;
+
+    public event Action<int>? CaptureFailed;
 #pragma warning restore CA1003
 
     private readonly Lock sync = new();
@@ -503,9 +506,22 @@ public sealed class VideoCapture : IDisposable
                 fd = fd,
                 events = POLLIN
             };
-            if (poll(ref fds, 1, 100) <= 0)
+            var ready = poll(ref fds, 1, 100);
+            if (ready == 0)
             {
                 continue;
+            }
+
+            if (ready < 0)
+            {
+                var error = Marshal.GetLastPInvokeError();
+                if (error == EINTR)
+                {
+                    continue;
+                }
+
+                CaptureFailed?.Invoke(error);
+                return;
             }
 
             // De-queue buffer
@@ -514,7 +530,14 @@ public sealed class VideoCapture : IDisposable
             buffer.memory = V4L2_MEMORY_MMAP;
             if (ioctl(fd, VIDIOC_DQBUF, (IntPtr)(&buffer)) < 0)
             {
-                continue;
+                var error = Marshal.GetLastPInvokeError();
+                if ((error == EINTR) || (error == EAGAIN))
+                {
+                    continue;
+                }
+
+                CaptureFailed?.Invoke(error);
+                return;
             }
 
             if (buffer.index < buffers.Length)

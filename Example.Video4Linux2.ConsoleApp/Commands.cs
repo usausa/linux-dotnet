@@ -199,6 +199,11 @@ public sealed class CaptureCommand : ICommandHandler
                 jpeg = 0;
             }
         };
+        capture.CaptureFailed += error =>
+        {
+            Console.SetCursorPosition(0, 1);
+            Console.WriteLine($"Capture failed: errno={error}");
+        };
 
         capture.StartCapture();
 

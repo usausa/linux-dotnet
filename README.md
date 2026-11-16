@@ -659,6 +659,17 @@ capture.FrameCaptured += frame =>
 capture.StartCapture();
 ```
 
+### Capture failure
+
+```csharp
+capture.CaptureFailed += error =>
+{
+    // The capture stopped, for example the device was removed (error is errno)
+};
+```
+
+`CaptureFailed` is raised on the capture thread. Call `StopCapture` or `Close` after it.
+
 ### Capture MJPEG
 
 ```csharp
