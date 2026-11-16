@@ -153,7 +153,11 @@ public sealed class VideoInfo
 
     public override string ToString() => $"{Name} ({Device})";
 
+#if NET11_0_OR_GREATER
+    public static VideoInfo GetVideoInfo(string path)
+#else
     public static unsafe VideoInfo GetVideoInfo(string path)
+#endif
     {
         var fd = open(path, O_RDWR);
         if (fd < 0)
@@ -210,7 +214,11 @@ public sealed class VideoInfo
         }
     }
 
+#if NET11_0_OR_GREATER
+    private static List<VideoFormat> GetSupportedFormats(int fd)
+#else
     private static unsafe List<VideoFormat> GetSupportedFormats(int fd)
+#endif
     {
         var formats = new List<VideoFormat>();
 
@@ -411,7 +419,7 @@ public sealed class VideoInfo
 }
 
 #pragma warning disable CA1034
-public static class Extensions
+public static class VideoInfoExtensions
 {
     extension(VideoInfo info)
     {

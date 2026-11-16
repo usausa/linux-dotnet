@@ -257,7 +257,11 @@ public sealed class UsbDevice
             return string.Empty;
         }
 
+#if NET11_0_OR_GREATER
+        var dot = name.LastIndexOf('.', StringComparison.Ordinal);
+#else
         var dot = name.LastIndexOf('.');
+#endif
         if (dot >= 0)
         {
             return name[..dot];

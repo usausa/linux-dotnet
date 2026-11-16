@@ -143,7 +143,11 @@ public sealed class VideoControl
     // Helper
     //--------------------------------------------------------------------------------
 
+#if NET11_0_OR_GREATER
+    internal static List<VideoControl> Query(int fd)
+#else
     internal static unsafe List<VideoControl> Query(int fd)
+#endif
     {
         var controls = new List<VideoControl>();
 
@@ -202,7 +206,11 @@ public sealed class VideoControl
         return ioctl(fd, VIDIOC_S_CTRL, (IntPtr)(&control)) >= 0;
     }
 
+#if NET11_0_OR_GREATER
+    private static List<VideoControlMenuItem> QueryMenu(int fd, uint id, int minimum, int maximum, bool integer)
+#else
     private static unsafe List<VideoControlMenuItem> QueryMenu(int fd, uint id, int minimum, int maximum, bool integer)
+#endif
     {
         var items = new List<VideoControlMenuItem>();
         for (var index = minimum; index <= maximum; index++)

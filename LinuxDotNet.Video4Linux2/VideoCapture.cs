@@ -77,11 +77,7 @@ public sealed class VideoCapture : IDisposable
     public event Action<FrameBuffer>? FrameCaptured;
 #pragma warning restore CA1003
 
-#if NET9_0_OR_GREATER
     private readonly Lock sync = new();
-#else
-    private readonly object sync = new();
-#endif
 
     private readonly string path;
 
@@ -355,7 +351,11 @@ public sealed class VideoCapture : IDisposable
         }
     }
 
+#if NET11_0_OR_GREATER
+    private bool SnapshotCore(IBufferWriter<byte> writer, int timeout)
+#else
     private unsafe bool SnapshotCore(IBufferWriter<byte> writer, int timeout)
+#endif
     {
         if (!IsOpen || IsCapturing)
         {

@@ -24,11 +24,7 @@ public sealed class GameController : IDisposable
 
     private static readonly TimeSpan StopWait = TimeSpan.FromSeconds(5);
 
-#if NET9_0_OR_GREATER
     private readonly Lock sync = new();
-#else
-    private readonly object sync = new();
-#endif
 
     private readonly string deviceFile;
 

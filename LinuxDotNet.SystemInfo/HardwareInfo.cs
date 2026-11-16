@@ -219,12 +219,20 @@ public sealed class HardwareInfo
         }
 
         size = size.Trim().ToUpperInvariant();
+#if NET11_0_OR_GREATER
+        if (size.EndsWith('K', StringComparison.Ordinal))
+#else
         if (size.EndsWith('K'))
+#endif
         {
             return UInt64.TryParse(size[..^1], CultureInfo.InvariantCulture, out var kb) ? kb : 0;
         }
 
+#if NET11_0_OR_GREATER
+        if (size.EndsWith('M', StringComparison.Ordinal))
+#else
         if (size.EndsWith('M'))
+#endif
         {
             return UInt64.TryParse(size[..^1], CultureInfo.InvariantCulture, out var mb) ? mb * 1024 : 0;
         }

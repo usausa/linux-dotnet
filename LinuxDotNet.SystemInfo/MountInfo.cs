@@ -71,9 +71,7 @@ public sealed class MountInfo
     };
     // ReSharper restore StringLiteralTypo
 
-#if NET9_0_OR_GREATER
     private static readonly Dictionary<string, MountOption>.AlternateLookup<ReadOnlySpan<char>> OptionLookup = OptionMap.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
 
     public string MountPoint { get; }
 
@@ -168,21 +166,7 @@ public sealed class MountInfo
 
     private static bool TryGetOption(ReadOnlySpan<char> key, out MountOption value)
     {
-#if NET9_0_OR_GREATER
         return OptionLookup.TryGetValue(key, out value);
-#else
-        foreach (var pair in OptionMap)
-        {
-            if (key.Equals(pair.Key, StringComparison.OrdinalIgnoreCase))
-            {
-                value = pair.Value;
-                return true;
-            }
-        }
-
-        value = MountOption.None;
-        return false;
-#endif
     }
 
     private static bool IsOctalDigit(char value) => value is >= '0' and <= '7';
