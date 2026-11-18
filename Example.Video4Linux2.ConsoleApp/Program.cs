@@ -1,3 +1,5 @@
+using System.CommandLine.Help;
+
 using Example.Video4Linux2.ConsoleApp;
 
 using Smart.CommandLine.Hosting;
@@ -8,6 +10,12 @@ builder.ConfigureCommands(commands =>
     commands.ConfigureRootCommand(root =>
     {
         root.WithDescription("Video4Linux2 example");
+        root.Configure(static command =>
+        {
+            var help = command.Options.OfType<HelpOption>().First();
+            help.Aliases.Remove("-h");
+            help.Aliases.Remove("/h");
+        });
     });
 
     commands.AddCommands();
