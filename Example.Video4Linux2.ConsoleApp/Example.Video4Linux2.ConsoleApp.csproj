@@ -5,7 +5,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <!--<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>-->
-    <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
